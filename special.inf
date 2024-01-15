@@ -1226,7 +1226,7 @@ has animate;
     if (n in location) {
         print "^", (The) n, " walks off";
         if (dir ~= in_obj or out_obj or u_obj && dir ~= d_obj)
-            print " to the ", (DirectionName) dir.door_dir;
+            print " to the ", (LanguageDirection) dir.door_dir;
         print ".^";
     }
     if (dest == 0) remove n;  ! This seems odd - if dest bogus, 'unlink' NPC?
