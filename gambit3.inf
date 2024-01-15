@@ -1,0 +1,463 @@
+
+! (level 3)
+
+Class Gambit_Room_Lev3_Class
+   with description "You are on the surface of a floating stone \
+cube. The red light from below seems a bit brighter here.",
+        name "stone" "cube" "light",
+has light;
+
+Object GAMBIT_31 "On Giant White Cube"
+   class Gambit_Room_Lev3_Class
+   with w_to
+        [ i ;
+          i = CheckGambit(n312,0,3);
+          if (i ~= 2) return i;
+          else return GAMBIT_W31;
+        ],
+        s_to 
+        [ i ;
+          i = CheckGambit(n313,0,3);
+          if (i ~= 2) return i;
+          else return GAMBIT_W32;
+        ],
+;
+
+Object GAMBIT_32 "On Giant White Cube"
+   class Gambit_Room_Lev3_Class
+   with e_to
+        [ i ;
+          i = CheckGambit(n324,0,3);
+          if (i ~= 2) return i;
+          else return GAMBIT_W31;
+        ],
+        w_to
+        [ i ;
+          i = CheckGambit(n322,0,3);
+          if (i ~= 2) return i;
+          else return GAMBIT_W31;
+        ],
+        s_to 
+        [ i ;
+          i = CheckGambit(n323,0,3);
+          if (i ~= 2) return i;
+          else return GAMBIT_W32;
+        ],
+;
+
+Object GAMBIT_33 "On Giant White Cube"
+   class Gambit_Room_Lev3_Class
+   with e_to
+        [ i ;
+          i = CheckGambit(n334,0,3);
+          if (i ~= 2) return i;
+          else return GAMBIT_W31;
+        ],
+        s_to
+        [ i ;
+          i = CheckGambit(n333,0,3);
+          if (i ~= 2) return i;
+          else return GAMBIT_W32;
+        ],
+;
+
+Object GAMBIT_34 "On Giant White Cube"
+   class Gambit_Room_Lev3_Class
+   with w_to
+        [ i ;
+          i = CheckGambit(n342,0,3);
+          if (i ~= 2) return i;
+          else return GAMBIT_W31;
+        ],
+        n_to 
+        [ i ;
+          i = CheckGambit(n341,0,3);
+          if (i ~= 2) return i;
+          else return GAMBIT_W32;
+        ],   
+        s_to 
+        [ i ;
+          i = CheckGambit(n343,0,3);
+          if (i ~= 2) return i;
+          else return GAMBIT_W32;
+        ],   
+;
+
+Object GAMBIT_35 "On Giant White Cube"
+   class Gambit_Room_Lev3_Class
+   with e_to
+        [ i ;
+          i = CheckGambit(n354,0,3);
+          if (i ~= 2) return i;
+          else return GAMBIT_W31;
+        ],
+        w_to
+        [ i ;
+          i = CheckGambit(n352,0,3);
+          if (i ~= 2) return i;
+          else return GAMBIT_W31;
+        ],
+        n_to 
+        [ i ;
+          i = CheckGambit(n351,0,3);
+          if (i ~= 2) return i;
+          else return GAMBIT_W32;
+        ],   
+        s_to 
+        [ i ;
+          i = CheckGambit(n353,0,3);
+          if (i ~= 2) return i;
+          else return GAMBIT_W32;
+        ],   
+;
+       
+Object GAMBIT_36 "On Giant White Cube"
+   class Gambit_Room_Lev3_Class
+   with e_to
+        [ i ;
+          i = CheckGambit(n364,0,3);
+          if (i ~= 2) return i;
+          else return GAMBIT_W31;
+        ],
+        n_to 
+        [ i ;
+          i = CheckGambit(n361,0,3);
+          if (i ~= 2) return i;
+          else return GAMBIT_W32;
+        ],   
+        s_to 
+        [ i ;
+          i = CheckGambit(n363,0,3);
+          if (i ~= 2) return i;
+          else return GAMBIT_W32;
+        ],   
+;
+
+Object GAMBIT_37 "On Giant White Cube"
+   class Gambit_Room_Lev3_Class
+   with w_to
+        [ i ;
+          i = CheckGambit(n372,0,3);
+          if (i ~= 2) return i;
+          else return GAMBIT_W31;
+        ],
+        n_to 
+        [ i ;
+          i = CheckGambit(n371,0,3);
+          if (i ~= 2) return i;
+          else return GAMBIT_W32;
+        ],   
+;
+
+Object GAMBIT_38 "On Giant White Cube"
+   class Gambit_Room_Lev3_Class
+   with w_to
+        [ i ;
+          i = CheckGambit(n382,0,3);
+          if (i ~= 2) return i;
+          else return GAMBIT_W31;
+        ],
+        n_to 
+        [ i ;
+          i = CheckGambit(n381,0,3);
+          if (i ~= 2) return i;
+          else return GAMBIT_W32;
+        ],
+        e_to
+        [ i ;
+          i = CheckGambit(n384,0,3);
+          if (i ~= 2) return i;
+          else return GAMBIT_W31;
+        ],
+;
+
+Object GAMBIT_39 "On Giant White Cube"
+   class Gambit_Room_Lev3_Class
+   with e_to
+        [ i ;
+          i = CheckGambit(n394,0,3);
+          if (i ~= 2) return i;
+          else return GAMBIT_W31;
+        ],
+        n_to 
+        [ i ;
+          i = CheckGambit(n381,0,3);
+          if (i ~= 2) return i;
+          else return GAMBIT_W32;
+        ],   
+;
+
+
+! (level 3 niches)
+ 
+Object n313 "southern niche" GAMBIT_31
+   class niche_class
+   with name "southern",
+        counter_niche n341,
+        niche_dir 3;
+Object n312 "western niche" GAMBIT_31
+   class niche_class
+   with name "western",
+        counter_niche n324,
+        niche_dir 2;
+
+Object n324 "eastern niche" GAMBIT_32
+   class niche_class
+   with name "eastern",
+        counter_niche n312,
+        niche_dir 4;
+Object n323 "southern niche" GAMBIT_32
+   class niche_class
+   with name "southern",
+        counter_niche n351,
+        niche_dir 3;
+Object n322 "western niche" GAMBIT_32
+   class niche_class
+   with name "western",
+        counter_niche n334,
+        niche_dir 2;
+
+Object n334 "eastern niche" GAMBIT_33
+   class niche_class
+   with name "eastern",
+        counter_niche n322,
+        niche_dir 4;
+Object n333 "southern niche" GAMBIT_33
+   class niche_class
+   with name "southern",
+        counter_niche n361,
+        niche_dir 3;
+
+Object n341 "northern niche" GAMBIT_34
+   class niche_class
+   with name "northern",
+        counter_niche n313,
+        niche_dir 1;
+Object n342 "western niche" GAMBIT_34
+   class niche_class
+   with name "western",
+        counter_niche n354,
+        niche_dir 2;
+Object n343 "southern niche" GAMBIT_34
+   class niche_class
+   with name "southern",
+        counter_niche n371,
+        niche_dir 3;
+
+Object n351 "northern niche" GAMBIT_35
+   class niche_class
+   with name "northern",
+        counter_niche n323,
+        niche_dir 1;
+Object n354 "eastern niche" GAMBIT_35
+   class niche_class
+   with name "eastern",
+        counter_niche n342,
+        niche_dir 4;
+Object n352 "western niche" GAMBIT_35
+   class niche_class
+   with name "western",
+        counter_niche n364,
+        niche_dir 2;
+Object n353 "southern niche" GAMBIT_35
+   class niche_class
+   with name "southern",
+        counter_niche n381,
+        niche_dir 3;
+
+Object n364 "eastern niche" GAMBIT_36
+   class niche_class
+   with name "eastern",
+        counter_niche n352,
+        niche_dir 4;
+Object n361 "northern niche" GAMBIT_36
+   class niche_class
+   with name "northern",
+        counter_niche n333,
+        niche_dir 1;
+Object n363 "southern niche" GAMBIT_36
+   class niche_class
+   with name "southern",
+        counter_niche n391,
+        niche_dir 3;
+
+Object n371 "northern niche" GAMBIT_37
+   class niche_class
+   with name "northern",
+        counter_niche n343,
+        niche_dir 1;
+Object n372 "western niche" GAMBIT_37
+   class niche_class
+   with name "western",
+        counter_niche n384,
+        niche_dir 2;
+
+Object n381 "northern niche" GAMBIT_38
+   class niche_class
+   with name "northern",
+        counter_niche n353,
+        niche_dir 1;
+Object n382 "western niche" GAMBIT_38
+   class niche_class
+   with name "western",
+        counter_niche n394,
+        niche_dir 2;
+Object n384 "eastern niche" GAMBIT_38
+   class niche_class
+   with name "eastern",
+        counter_niche n372,
+        niche_dir 4;
+
+Object n391 "northern niche" GAMBIT_39
+   class niche_class
+   with name "northern",
+        counter_niche n363,
+        niche_dir 1;
+Object n394 "eastern niche" GAMBIT_39
+   class niche_class
+   with name "eastern",
+        counter_niche n382,
+        niche_dir 4;
+
+! (level 3 initial wood beam layout)
+! wood beam, as two 'halves'
+
+Object p31 "pine beam" n322 class pine_beam_class;
+Object p311 "pine beam" n334 class pine_beam_class with number 99;
+
+! (side note: with balsa beams, 2nd side need not be 99, since 
+! it will always break on the first try, and the default number is 0
+Object b31 "balsa beam" n312 class balsa_beam_class;
+Object b311 "balsa beam" n324 class balsa_beam_class;
+Object b32 "balsa beam" n313 class balsa_beam_class;
+Object b321 "balsa beam" n341 class balsa_beam_class;
+Object b33 "balsa beam" n323 class balsa_beam_class;
+Object b331 "balsa beam" n351 class balsa_beam_class;
+Object b34 "balsa beam" n333 class balsa_beam_class;
+Object b341 "balsa beam" n361 class balsa_beam_class;
+Object b35 "balsa beam" n342 class balsa_beam_class;
+Object b351 "balsa beam" n354 class balsa_beam_class;
+Object b36 "balsa beam" n352 class balsa_beam_class;
+Object b361 "balsa beam" n364 class balsa_beam_class;
+Object b37 "balsa beam" n343 class balsa_beam_class;
+Object b371 "balsa beam" n371 class balsa_beam_class;
+Object b38 "balsa beam" n353 class balsa_beam_class;
+Object b381 "balsa beam" n381 class balsa_beam_class;
+Object b39 "balsa beam" n363 class balsa_beam_class;
+Object b391 "balsa beam" n391 class balsa_beam_class;
+Object b3a "balsa beam" n372 class balsa_beam_class;
+Object b3a1 "balsa beam" n384 class balsa_beam_class;
+Object b3b "balsa beam" n382 class balsa_beam_class;
+Object b3b1 "balsa beam" n394 class balsa_beam_class;
+
+
+! extra goodies...
+
+Object Gambit_hole "large round hole" GAMBIT_37
+   with name "hole" "round",
+        initial "In the center of the room is a large round \
+hole, going straight down through the floating cube.",
+        description "A large round hole cut straight through the \
+giant cube you stand on. All you need is a huge square peg.",
+        size 30,
+        before [;
+          Enter:
+            if (fire_spirit in GAMBIT_37)
+               "The towering fire spirit blocks your way!";
+            print "^You close your eyes and jump straight \
+into the hole! There is a bright flash of light...^";
+            Achieved(5);
+            PlayerTo(GAMBIT_11);
+            return 2;
+          Receive:
+            if (fire_spirit in GAMBIT_37)
+               "The towering fire spirit is in your way!";
+            move noun to GAMBIT_11;
+            print "You drop "; DefArt(noun); 
+            " into the hole. There is a bright flash of light, and \
+the object disappears!";
+          Rub, Push, Pull, Touch, Squeeze, Turn, Shake:
+"I don't know how to do that to a giant hole.";
+        ],
+        after [;
+          Search:
+             if (fire_spirit in GAMBIT_37)
+               "The towering fire spirit fills the hole currently!";
+else "Looking through the hole, you can see a reddish haze \
+far below.";
+        ],
+   has static container open enterable;
+
+! rod piece -- SMOKE
+Object smoke_rod_piece "smoke rod piece" GAMBIT_37
+  class rod_class,
+  with name "smoke",
+       initial "Sitting on the floor is a short smoke-colored rod.",
+       description "It's a short section of a rod made of some \
+undeterminable hard substance, \
+colored smoke. A piece of the Rod of \
+the Ancients, no doubt!",
+;
+
+
+Object fire_spirit "fire spirit" GAMBIT_37
+  with name "spirit",
+       description "It looks like a tower of animated flame.",
+       each_turn [ i ;
+       ! spirit attack
+       ! (in general, the 4 spirits are _very_ dangerous.
+       ! There's a 1/5 chance of killing outright, and 2
+       ! chances of doing 10 and 5 points of damage respectively.
+       ! In short, the player needs to realize it's time to swanko,
+       ! and do so, quickly)
+       if (self hasnt general) {
+            give self general ~concealed;    
+            "^Suddenly, a flash of flame bursts through the hole \
+in the center of the cube! A living tower of flame attacks!";            
+       }
+       i = random(5);
+       if (i == 1) {
+          deadflag = 1;
+          "^The fire creature engulfs you in a deadly inferno! \
+You are burned to a crisp.";          
+       }
+       if (i == 2) 
+          Player_HP_CUR = Player_HP_CUR - 10;
+       if (i==3) 
+          Player_HP_CUR = Player_HP_CUR - 5;
+       if (Player_HP_CUR <= 0) {
+          deadflag = 1;
+          "^The last blow from the fire spirit was too much for \
+you, I'm afraid to say. The spirit senses your \
+weakness and engulfs you in flame.";          
+       } 
+       print "^The fir spirit ";
+       if (i==2)
+          "singes you with a jet of fire!";
+       if (i==3) {
+          "sends a small ball of \
+flame your way! You get slightly burned!";          
+       }
+       "tries to torch you in a sheet of \
+flame, but you evade just in time!";       
+       ],
+       before [;
+          Cast:
+            if (the_spell_was == swanko_spell) {
+               remove self;
+               "As you speak the chant, the fire spirit falls back \
+in fear! You finish the chant, and the fire spirit \
+dissipates into harmless smoke, banished!";
+            }
+            print "Crackling flame drowns out your chant.^";
+       ],
+       life [ ;
+          Attack: 
+            if (random(20) >= 8)
+            "You strike the fire creature, but your attack passes \
+            harmlessly through it! You hear a crackling noise \
+that could pass for laughter.";            
+            "You attack the fire spirit, but miss!";
+          default: "It's too busy trying to kill you.";
+       ],
+   has animate concealed;   

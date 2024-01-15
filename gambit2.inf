@@ -1,0 +1,353 @@
+
+! (level 2)
+
+Class Gambit_Room_Lev2_Class
+   with description "You are on the surface of a floating stone \
+cube. You can barely see another cube floating far above you in the \ 
+dim red light that illuminates the entire area.",
+        name "stone" "cube" "light",
+has light;
+
+Object GAMBIT_21 "On Giant White Cube"
+   class Gambit_Room_Lev2_Class
+   with w_to
+        [ i ;
+          i = CheckGambit(n212,n312,2);
+          if (i ~= 2) return i;
+          else return GAMBIT_W21;
+        ],
+        s_to 
+        [ i ;
+          i = CheckGambit(n213,n313,2);
+          if (i ~= 2) return i;
+          else return GAMBIT_W22;
+        ],
+;
+
+Object GAMBIT_22 "On Giant White Cube"
+   class Gambit_Room_Lev2_Class
+   with e_to
+        [ i ;
+          i = CheckGambit(n224,n324,2);
+          if (i ~= 2) return i;
+          else return GAMBIT_W21;
+        ],
+        w_to
+        [ i ;
+          i = CheckGambit(n222,n322,2);
+          if (i ~= 2) return i;
+          else return GAMBIT_W21;
+        ],
+        s_to 
+        [ i ;
+          i = CheckGambit(n223,n323,2);
+          if (i ~= 2) return i;
+          else return GAMBIT_W22;
+        ],
+;
+
+Object GAMBIT_23 "On Giant White Cube"
+   class Gambit_Room_Lev2_Class
+   with e_to
+        [ i ;
+          i = CheckGambit(n234,n334,2);
+          if (i ~= 2) return i;
+          else return GAMBIT_W21;
+        ],
+        s_to
+        [ i ;
+          i = CheckGambit(n233,n333,2);
+          if (i ~= 2) return i;
+          else return GAMBIT_W22;
+        ],
+;
+
+Object GAMBIT_24 "On Giant White Cube"
+   class Gambit_Room_Lev2_Class
+   with w_to
+        [ i ;
+          i = CheckGambit(n242,n342,2);
+          if (i ~= 2) return i;
+          else return GAMBIT_W21;
+        ],
+        n_to 
+        [ i ;
+          i = CheckGambit(n241,n341,2);
+          if (i ~= 2) return i;
+          else return GAMBIT_W22;
+        ],   
+        s_to 
+        [ i ;
+          i = CheckGambit(n243,n343,2);
+          if (i ~= 2) return i;
+          else return GAMBIT_W22;
+        ],   
+;
+
+Object GAMBIT_25 "On Giant White Cube"
+   class Gambit_Room_Lev2_Class
+   with e_to
+        [ i ;
+          i = CheckGambit(n254,n354,2);
+          if (i ~= 2) return i;
+          else return GAMBIT_W21;
+        ],
+        w_to
+        [ i ;
+          i = CheckGambit(n252,n352,2);
+          if (i ~= 2) return i;
+          else return GAMBIT_W21;
+        ],
+        n_to 
+        [ i ;
+          i = CheckGambit(n251,n351,2);
+          if (i ~= 2) return i;
+          else return GAMBIT_W22;
+        ],   
+        s_to 
+        [ i ;
+          i = CheckGambit(n253,n353,2);
+          if (i ~= 2) return i;
+          else return GAMBIT_W22;
+        ],   
+;
+       
+Object GAMBIT_26 "On Giant White Cube"
+   class Gambit_Room_Lev2_Class
+   with e_to
+        [ i ;
+          i = CheckGambit(n264,n364,2);
+          if (i ~= 2) return i;
+          else return GAMBIT_W21;
+        ],
+        n_to 
+        [ i ;
+          i = CheckGambit(n261,n361,2);
+          if (i ~= 2) return i;
+          else return GAMBIT_W22;
+        ],   
+        s_to 
+        [ i ;
+          i = CheckGambit(n263,n363,2);
+          if (i ~= 2) return i;
+          else return GAMBIT_W22;
+        ],   
+;
+
+Object GAMBIT_27 "On Giant White Cube"
+   class Gambit_Room_Lev2_Class
+   with w_to
+        [ i ;
+          i = CheckGambit(n272,n372,2);
+          if (i ~= 2) return i;
+          else return GAMBIT_W21;
+        ],
+        n_to 
+        [ i ;
+          i = CheckGambit(n271,n371,2);
+          if (i ~= 2) return i;
+          else return GAMBIT_W22;
+        ],   
+;
+
+Object GAMBIT_28 "On Giant White Cube"
+   class Gambit_Room_Lev2_Class
+   with w_to
+        [ i ;
+          i = CheckGambit(n282,n382,2);
+          if (i ~= 2) return i;
+          else return GAMBIT_W21;
+        ],
+        n_to 
+        [ i ;
+          i = CheckGambit(n281,n381,2);
+          if (i ~= 2) return i;
+          else return GAMBIT_W22;
+        ],
+        e_to
+        [ i ;
+          i = CheckGambit(n284,n384,2);
+          if (i ~= 2) return i;
+          else return GAMBIT_W21;
+        ],
+;
+
+Object GAMBIT_29 "On Giant White Cube"
+   class Gambit_Room_Lev2_Class
+   with e_to
+        [ i ;
+          i = CheckGambit(n294,n394,2);
+          if (i ~= 2) return i;
+          else return GAMBIT_W21;
+        ],
+        n_to 
+        [ i ;
+          i = CheckGambit(n281,n381,2);
+          if (i ~= 2) return i;
+          else return GAMBIT_W22;
+        ],   
+;
+
+
+! (level 2 niches)
+ 
+Object n213 "southern niche" GAMBIT_21
+   class niche_class
+   with name "southern",
+        counter_niche n241,
+        niche_dir 3;
+Object n212 "western niche" GAMBIT_21
+   class niche_class
+   with name "western",
+        counter_niche n224,
+        niche_dir 2;
+
+Object n224 "eastern niche" GAMBIT_22
+   class niche_class
+   with name "eastern",
+        counter_niche n212,
+        niche_dir 4;
+Object n223 "southern niche" GAMBIT_22
+   class niche_class
+   with name "southern",
+        counter_niche n251,
+        niche_dir 3;
+Object n222 "western niche" GAMBIT_22
+   class niche_class
+   with name "western",
+        counter_niche n234,
+        niche_dir 2;
+
+Object n234 "eastern niche" GAMBIT_23
+   class niche_class
+   with name "eastern",
+        counter_niche n222,
+        niche_dir 4;
+Object n233 "southern niche" GAMBIT_23
+   class niche_class
+   with name "southern",
+        counter_niche n261,
+        niche_dir 3;
+
+Object n241 "northern niche" GAMBIT_24
+   class niche_class
+   with name "northern",
+        counter_niche n213,
+        niche_dir 1;
+Object n242 "western niche" GAMBIT_24
+   class niche_class
+   with name "western",
+        counter_niche n254,
+        niche_dir 2;
+Object n243 "southern niche" GAMBIT_24
+   class niche_class
+   with name "southern",
+        counter_niche n271,
+        niche_dir 3;
+
+Object n251 "northern niche" GAMBIT_25
+   class niche_class
+   with name "northern",
+        counter_niche n223,
+        niche_dir 1;
+Object n254 "eastern niche" GAMBIT_25
+   class niche_class
+   with name "eastern",
+        counter_niche n242,
+        niche_dir 4;
+Object n252 "western niche" GAMBIT_25
+   class niche_class
+   with name "western",
+        counter_niche n264,
+        niche_dir 2;
+Object n253 "southern niche" GAMBIT_25
+   class niche_class
+   with name "southern",
+        counter_niche n281,
+        niche_dir 3;
+
+Object n264 "eastern niche" GAMBIT_26
+   class niche_class
+   with name "eastern",
+        counter_niche n252,
+        niche_dir 4;
+Object n261 "northern niche" GAMBIT_26
+   class niche_class
+   with name "northern",
+        counter_niche n233,
+        niche_dir 1;
+Object n263 "southern niche" GAMBIT_26
+   class niche_class
+   with name "southern",
+        counter_niche n291,
+        niche_dir 3;
+
+Object n271 "northern niche" GAMBIT_27
+   class niche_class
+   with name "northern",
+        counter_niche n243,
+        niche_dir 1;
+Object n272 "western niche" GAMBIT_27
+   class niche_class
+   with name "western",
+        counter_niche n284,
+        niche_dir 2;
+
+Object n281 "northern niche" GAMBIT_28
+   class niche_class
+   with name "northern",
+        counter_niche n253,
+        niche_dir 1;
+Object n282 "western niche" GAMBIT_28
+   class niche_class
+   with name "western",
+        counter_niche n294,
+        niche_dir 2;
+Object n284 "eastern niche" GAMBIT_28
+   class niche_class
+   with name "eastern",
+        counter_niche n272,
+        niche_dir 4;
+
+Object n291 "northern niche" GAMBIT_29
+   class niche_class
+   with name "northern",
+        counter_niche n263,
+        niche_dir 1;
+Object n294 "eastern niche" GAMBIT_29
+   class niche_class
+   with name "eastern",
+        counter_niche n282,
+        niche_dir 4;
+
+! (level 2 initial wood beam layout)
+
+Object e21 "ebony beam" n282 class ebony_beam_class;
+Object e211 "ebony beam" n294 class ebony_beam_class with number 99;
+
+Object p21 "pine beam" n213 class pine_beam_class;
+Object p211 "pine beam" n241 class pine_beam_class with number 99;
+Object p22 "pine beam" n243 class pine_beam_class;
+Object p221 "pine beam" n271 class pine_beam_class with number 99;
+Object p23 "pine beam" n242 class pine_beam_class;
+Object p231 "pine beam" n254 class pine_beam_class with number 99;
+Object p24 "pine beam" n252 class pine_beam_class;
+Object p241 "pine beam" n264 class pine_beam_class with number 99;
+
+! (side note: with balsa beams, 2nd side need not be 99, since 
+! it will always break on the first try, and the default number is 0
+Object b21 "balsa beam" n212 class balsa_beam_class;
+Object b211 "balsa beam" n224 class balsa_beam_class;
+Object b22 "balsa beam" n222 class balsa_beam_class;
+Object b221 "balsa beam" n234 class balsa_beam_class;
+Object b23 "balsa beam" n223 class balsa_beam_class;
+Object b231 "balsa beam" n251 class balsa_beam_class;
+Object b24 "balsa beam" n233 class balsa_beam_class;
+Object b241 "balsa beam" n261 class balsa_beam_class;
+Object b25 "balsa beam" n253 class balsa_beam_class;
+Object b251 "balsa beam" n281 class balsa_beam_class;
+Object b26 "balsa beam" n263 class balsa_beam_class;
+Object b261 "balsa beam" n291 class balsa_beam_class;
+Object b27 "balsa beam" n272 class balsa_beam_class;
+Object b271 "balsa beam" n284 class balsa_beam_class;
+

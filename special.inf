@@ -1,0 +1,1736 @@
+! *********************************************************************
+! SPECIAL.INF  -- Add-on for SPIRITWRAK
+! Contains: 'specials' that I wanted to keep separate from
+! the other 'city-based' .INF files (Atrii, NPC homes)
+! *********************************************************************
+
+! ----------------- (Frobar's home) -------------------------
+
+Object FROBAR_Foyer "Entrance Foyer"
+   with description "You are in the Entrance Foyer of a \
+small but tasteful home. The exit is to the southwest. \
+The general area is tastefully done in maroon carpeting \
+and brass fixtures. Another room lies to the north.",
+   name "maroon" "carpeting" "brass" "fixtures",
+   sw_to FROBAR_Ent,
+   out_to FROBAR_Ent,
+   n_to FROBAR_Parlor,
+   has light;
+   
+Object FROBAR_Parlor "Parlor"
+   with description "You are in a very decorative parlor. \
+Various furnishings of high quality are arranged around \
+an enormous rug with intricate golden symbols in the weave \
+design. Open doorways lead south, north, east and west.",
+   name "rug" "doorways" "furnishings" "symbols",
+   s_to FROBAR_Foyer,
+   n_to FROBAR_Bedroom,
+   e_to FROBAR_Study,
+   w_to FROBAR_Lounge,
+   has light;
+
+Object frobar_plant "large potted plant" FROBAR_Parlor
+   with name "plant" "large" "potted",
+   initial "A large potted plant sits in one corner.",
+   description "A well-tended house-plant.",
+   before [;
+      Cast:
+         if (the_spell_was == throck_spell) {
+            "The plant seems even healthier now.";   
+!            if (Frobar in FROBAR_Bedroom) 
+! (couldn't think of a proper reaction...:)
+         }
+   ],        
+   has static;
+                    
+Object FROBAR_Lounge "Lounge"
+   with description "A large room here apparently serves as a lounge \
+for entertaining. The walls and furniture all have interesting \
+design work that gives an impression of dignified age. A doorway \
+heads east.",
+   name "furniture" "doorway",
+   e_to FROBAR_Parlor,
+   has light;
+   
+Object FROBAR_Study "Study"
+   with description "This is a study room with fancy wood paneling and \
+plush carpeting. There is an exit to the west.",
+   name "wood" "paneling" "carpeting",
+   w_to FROBAR_Parlor,
+   has light;
+
+Nearby FROBAR_shelves "large bookshelf"
+   with name "shelves" "shelf" "bookshelf",
+        initial "A large bookshelf takes up most of the north wall.",
+        description "It's filled with odds and ends, mostly uninteresting.",
+        capacity 30,
+   has static supporter;
+
+Object FROBAR_Journal "plain journal" FROBAR_shelves
+   with name "journal" "plain",
+   ! weight 15, 
+   size 15,
+   description "This is a short journal of notes that \
+Frobar was keeping. The contents are quite dull, mostly \
+consisting of entries like ~Remember to water plant~ and \
+so forth. In fact, the only non-trivial entry follows:^^\
+~Perhaps today I will go visit Barsap's latest creation. \
+Then again, maybe I won't. This so-called 'Gambit' of his \
+is supposed to be some silly diversion where people can \
+hop around floating platforms trying to reach the southeast \
+corner \
+platform on the bottom level, just so they can get \
+teleported back to the top, and start all over again! \
+Can this be a monetarily beneficial thing? I doubt it.~";
+
+! (twisted -- four ancient ones)
+Object p5 "twisted parchment" FROBAR_shelves
+   class parchment_class,
+   with name "twisted",
+description "~...understand. I, like many of the Order, \
+have understood that the greatest Saints of our Order were \
+the Three, those Three that we know as the Ancient Ones. \
+Why then, do I find in ancient cairns, in hidden temples, \
+and in versions of the Scriptures found in unsettled lands, \
+that _four_ beings that called themselves the Ancient Ones \
+did do battle with evil and were defeated? This surely is \
+not to be believed, but I...~";
+
+Object FROBAR_Desk "large wood desk" FROBAR_Study
+   with name "desk",
+        description "A massive wood desk carved from a single block of wood.",
+        capacity 20,
+   has static supporter;
+   
+Object FROBAR_Bedroom "Bedroom"
+   with description "A nice cozy bedroom. The exit is south.",
+   s_to FROBAR_Parlor,
+   has light;
+   
+Object FROBAR_bed "large bed" FROBAR_Bedroom
+   with name "bed",
+        description "A large comfortable-looking bed.",
+        before [;
+           LookUnder: "Sorry, no monsters here.";
+        ],
+   has static enterable supporter;
+   
+!Object FROBAR_Painting "large painting" FROBAR_Bedroom
+!   with name "painting",
+!        initial "There is a large painting hanging on the wall.",
+!        description [;
+!        if (self hasnt general)
+!        "It appears to be an oil painting of a \
+!        scroll on a table.  A small note on the frame says, \
+!        ~Still-life with Scroll, -FF, 791~";
+!        else
+!        "It appears to be an oil painting of a \
+!        table.  A small note on the frame says, \
+!        ~Still-life, -FF, 791~";
+!        ],
+!        before [;
+!           Touch, Rub, Push:
+!              if (self hasnt general) {
+!                 give self general;
+!                 move painted_scroll to player;
+!                 Achieved(23);
+!                 print "As you touch the painting, your hands \
+!run across the scroll, and the oil takes on a three-dimensional \
+!quality!  You ignore the strange sensations as you reach \
+!into the painting, and withdraw the scroll";
+!                 if (Frobar in FROBAR_Bedroom) 
+!                    "!  Frobar watches the events over your \
+!shoulder, and seems puzzled.  ~Now, why didn't I ever think to try \
+!that,~ he muses.";
+!                 else "!";
+!              }
+!              else 
+!                 "The painting seems to be nothing more than \
+!an oil painting now.";
+!        ],
+!   has static;
+
+! ----------------- (Thief's home) -------------------------
+   
+Object THIEF_Bottom_of_staircase "Wondrous Stairway"
+   with description "An enormous spiral staircase seems to wind miles \
+above your head in this curious column-like chamber. Strange \
+points of light brighten the chamber from above. \
+To the west is a small exit.",
+   name "points" "light" "staircase" "stairway" "stairs",
+! TODO -- fix this weirdness...
+   u_to THIEF_Ent,
+   w_to "You can't go that way.",  ! but later...
+   before [;
+      Go: 
+         if (noun == u_obj)
+            print "^You begin the long trek upwards. Strangely, \
+            the stair seems to twist and move as you step on it, \
+            turning like a corkscrew, until you are \
+            graciously deposited at the top, far above your \
+            previous location.^";
+   ],
+   has light;
+         
+   
+Object THIEF_Ent "Fancy Hall"
+   with description "This must be an apartment or penthouse in the \
+skyscraper. You are in a very high hall, with black slate stone \
+walls that seem to reflect shadows everywhere. There is a room \
+to the north. The southern edge of this room drops off into the \
+darkness, followed by a long spiral staircase. The ceiling overhead \
+seems to have tiny points of light like a night sky.",
+     name "slate" "shadows" "staircase" "points" "light",
+     d_to THIEF_Bottom_of_staircase,
+     n_to THIEF_Foyer,
+   has light;
+
+Object THIEF_Foyer "Magnificent Foyer"
+   with description "This is an exceptionally grand entrance foyer, \
+with sweeping arched ceilings and sparkling chandeliers. The \
+room is dimly lit. Open hallways lead south and west.",
+   name "chandeliers",
+   s_to THIEF_Ent,
+   w_to THIEF_Lounge,
+   has light;
+   
+Object THIEF_Lounge "Fancy Lounge"
+   with description "A tastefully overdone lounge with tapestries \
+and gold enamel finished walls. The room is dimly lit, although \
+you see no windows or other sources of light. Open hallways lead \
+east and west.",
+   name "tapestries" "enamel",
+   e_to THIEF_Foyer,
+   w_to THIEF_Storeroom,
+   has light;
+
+Object THIEF_Journal "short journal" THIEF_Lounge
+   with name "journal",
+   initial "There's an open journal sitting here.",
+   ! weight 15, 
+   size 15,
+   description "This appears to be a short collection of notes:^^\
+   ~TIPS ON CRACKING THE NEW FROBOZZCO 3-DIAL COMBO LOCKS: ^\
+   Remember, there's a slight flaw in the design. For every \
+   correct number in the correct dial, pressing the opening button \
+   with cause a small click. Dials with the correct number in the \
+   wrong dial place will cause a small thunk. The lock mechanism \
+   scans for correct numbers in correct places first, and then \
+   for correct numbers in the wrong place in the 'remaining dials'. \
+   Simple! But don't forget, closing the locks will automatically \
+   lock and reset the dials!^^\
+   NEW FLATHEAD PAINTING: ^\
+   I've completed making the copy of the new Leonardo Flathead painting, \
+   received courtesy of the Royal Museum. Glad to say my skills in \
+   art forgery are undiminished -- I can barely tell the difference \
+   between the two myself! I'll soon replace the original with the \
+   copy, and no one will be the wiser!~";
+         
+
+Object THIEF_Storeroom "Workroom"
+   with description [;
+      print "A sight to inspire even the most avaricious, this \
+       storeroom is filled with all sorts of rare and precious treasures. \
+       A hallway leads east";
+      if (self hasnt general)
+         print ". You notice that the west wall appears to be made of \
+solid granite";
+      ".";
+   ],
+   name "hallway",
+   e_to THIEF_Lounge,
+   before [;
+      Examine:
+         if ((noun == w_obj) && (self hasnt general))
+            "The west wall is a solid piece of granite, which \
+seems very odd, considering the other walls are clearly made of \
+slate.";
+      Cast:
+         if ((the_spell_was==ledak_spell) && (Painting_FAKE in self)) {
+            if (Painting_REAL in self)
+               print "One of the paintings";
+            else print "The painting";
+            remove Painting_FAKE;
+            " is surrounded by a yellow glow! It crumbles into \
+dust!";
+         }
+   ],
+   has light;   
+   
+Nearby THIEF_treasure "precious treasures"
+   with name "treasure" "jewels" "gemstones" "artifacts",
+        description "Piles of rare gemstones, precious jewelry, \
+        priceless artifacts, and other treasures line the walls \
+        here.",
+        before [;
+           Take:
+           "Fortunately, your high moral standing allows you \
+           the benefit of having no need for such materials of excess.";
+        ],
+   has scenery;
+
+Object pasta "pile of fettucini carbonari"
+   with name "pile" "fettucini" "carbonari" "pasta",
+        description "A large pile of fettucini dripping in \
+carbonari sauce.",
+        before [;
+           Eat:
+              if (self hasnt general) {
+                 give self general;
+                 "You manage to stuff yourself with pasta, \
+but there's still quite a lot left."; 
+              }
+              else 
+                 "You've already had enough of this stuff \
+to last a lifetime. Just the thought of eating more is enough to \
+make you queasy.";
+        ],
+        size 16,        
+   has edible;
+
+Object c50 "coin" class coin_class;
+   
+Object Painting_FAKE "priceless painting" THIEF_Storeroom
+   with name "painting",
+        plural "priceless paintings",
+        short_name "priceless painting",
+        description "It's a beautiful oil painting of a dark stormy \
+scene. On the horizon, you can see the edges of mountaintops. Near \
+the top of the painting, two winged figures are carrying a lone \
+individual towards a break in the clouds, where a bright white light \
+seems to emanate.",
+        ! weight 25, 
+        size 25,
+        before [;
+        Drop:
+            if (location == Museum_north) { ! player returned fake painting to museum! 
+               remove self;
+               "A museum curator appears and takes the \
+painting. With an expert eye, he looks closely at it. ~This is \
+a fake! I warn you sir, art forgery is a dangerous game.~ He \
+leaves, much disgusted.";              
+            }
+        Take:
+            if (Painting_REAL in parent(self))
+               "They both look so genuine! You can't decide!";
+        Cast:
+            if (the_spell_was == ledak_spell) {
+               remove self;
+               "One of the paintings is surrounded by a bright \
+yellow glow, and disintegrates!";
+            }
+        Search:
+               if (Painting_REAL in parent(self))
+                  "Search which one? Goodness, you can't decide!";
+        ],        
+        ;
+                   
+
+! -------------ETHEREAL PLANE OF ATRII ------------
+
+Object ATRII_1 "Ethereal Plane of Atrii"
+   with description "Standing on a featureless gray plane that \
+   stretches to the infinite horizon against a gray sky, you \
+   can only conclude one thing -- you're on the Ethereal Plane \
+   of Atrii. Well, at least it fits the description Brother \
+   Palemon gave you. It seems like you could go in any \
+   direction from here.",
+   cant_go "An invisible force blocks your way!",
+   name "plane" "horizon" "sky",
+   sw_to ATRII_2,
+   se_to ATRII_3,
+   has light;
+   
+Object ATRII_2 "Ethereal Plane of Atrii"
+   with description "Flat, featureless gray is in every direction \
+   you look. Stranger still is the upright rectangular hole in the \
+   fabric of space that stands in the center of this area. \
+   Otherwise, you could wander this gray dimension in any direction, \
+   it seems.",
+   cant_go "An invisible force blocks your way!",
+   ne_to ATRII_1,
+   sw_to ATRII_4,
+   e_to ATRII_3,
+   s_to ATRII_6,
+   has light;
+   
+Nearby ATRII_2_hole "rectangular hole"
+   with name "hole" "rectangle" "opening",
+        description "Surely you are in a place where the very laws of \
+        nature and the Gods work by different rules! Here stands a \
+        rectangular hole, seemingly torn out of the very space you \
+        stand in. You see some curious metal chamber through the \
+        opening, but there is nothing behind the opening.",
+        before [;
+           Enter:
+              print "^You step through and feel your stomach twist. \
+              You stumble past a set of open metal doors into...^";
+              in_atrii = 0;
+              PlayerTo(Skyscraper);
+              return 2;  ! allow, but print nothing...
+        ],
+   has scenery enterable;
+   
+Object ATRII_3 "Ethereal Plane of Atrii"
+   with description "Flat, featureless gray is in every direction \
+   you look. Stranger still is the flat, glass-like square in the \
+   center of the 'floor' of this area. \
+   Otherwise, you could wander this gray dimension in any direction, \
+   it seems.",
+   cant_go "An invisible force blocks your way!",
+   nw_to ATRII_1,
+   w_to ATRII_2,
+   se_to ATRII_5,
+   s_to ATRII_7,
+   has light;
+   
+Nearby ATRII_3_ice "square of ice"
+   with name "square" "ice" "glass-like",
+        description "It looks and feels like a perfect square of ice, \
+        flush with the featureless gray surface you stand on.",
+        before [;
+           Enter:
+ print "You step onto the square, and before you know it, your \
+surroundings shift and start to fade! You feel a \
+sudden chilling wind. The ice seems to lengthen and stretch. The \
+gray plane slowly turns white and bumpy.^";
+              in_atrii = 0;
+              PlayerTo(Frozen_river2);
+              return 2;
+        ],
+   has scenery enterable;
+    
+Object ATRII_4 "Ethereal Plane of Atrii"
+   with description "Flat, featureless gray is in every direction \
+you look. Stranger still is the large black hole to the south. \
+Otherwise, you could wander this gray dimension in any direction, \
+it seems.",
+   cant_go "An invisible force blocks your way!",
+   ne_to ATRII_2,
+   se_to ATRII_6,
+   s_to [; <<Enter ATRII_4_hole>>; ],
+   has light;
+   
+Nearby ATRII_4_hole "black hole"
+   with name "hole" "black",
+        description "It looks like a large hole, probably twice your \
+        height. It's completely black and featureless.",
+        before [;
+           Enter:
+             print "^You step into the black hole. You stumble \
+       forward, surrounded by blacker-than-night darkness.^";
+             in_atrii = 0;
+             PlayerTo(Subway_Tunnel);
+             return 2;
+        ],
+   has scenery enterable;
+   
+! (secret subway tunnel)
+Object Subway_Tunnel "Dark Tunnel"
+   with description "You're in a large dark tunnel that seems \
+   to run north and south. To the south you see light. There \
+   seem to be two metal tracks running along the ground.",
+       s_to GURTH_GUSPlatform,
+       n_to "You walk north, and run into a invisible force!",
+       before [;
+          Go:
+             if (noun==s_obj) {
+                Achieved(25);
+                print "^You step out into an underground chamber. \
+    A burly uniformed figure sees you exit the tunnel and yells, \
+    ~Hey, no playing in the tunnels, pal!~^";
+             }
+       ],
+       each_turn [ i ;
+          i = random(40);
+          if (i > 35)
+             "^You hear a rumbling noise echoed from somewhere, and \
+             the entire tunnel seems to shake! Then, all is quiet.";
+          if (i == 17 or 18) {
+             deadflag = 1;
+             "^Suddenly, without warning, a huge train car appears \
+             heading south! It plows straight into you!";
+          }
+          if (i==6 or 7) 
+             "^Suddenly, a huge train car appears heading north! \
+             You barely avoid getting pulverized! Strangely, \
+             you watch as the train continues north, and \
+             seems disappear into blackness nearby. It's as \
+             though the train was simply removed from the tunnel \
+             somehow.";
+       ],
+;
+
+Nearby ST_tracks "tracks"
+   with name "tracks" "tracks" "metal",
+        description "Two long metal tracks, running north and south. \
+        There's something oddly familiar about them.",
+   has scenery;
+               
+Object ATRII_5 "Ethereal Plane of Atrii"
+   with description "Flat, featureless gray is in every direction \
+   you look. It seems like you could go in any \
+   direction from here.",
+   cant_go "An invisible force blocks your way!",
+   nw_to ATRII_3,
+   sw_to ATRII_7
+   has light;
+   
+Object p9 "ripped parchment" ATRII_5
+   class parchment_class,
+   with name "ripped",
+description "~...now know that the Rod we believe is \
+the Rod of the Ancients, sequestered in our Monastery, is \
+an artifact of evil! Imprisoned inside, \
+true to the scriptures (at least this much is, what \
+isn't, I can nowadays say is much) we know, is Anabais. \
+What is worse, is that this very Rod is an artifact of \
+evil power created by Anabais, in the image of the True \
+Rod of the Ancients, which he planned to use to aid \
+him in his evil gains! \
+Were that evil one free again, and had about him both \
+his brothers and his Rod of Evil, we would witness a \
+reckoning \
+greater than Quendor has ever known! I take relief in \
+the knowledge that he will never be freed, and he will \
+never regain his implement of evil; only an innocent \
+being can break the false rod and \
+free him from his prison, and subsequently, \
+the false rod cannot be regained by Anabais through his \
+own will, or another evil being. \
+In fact, only a being of good again can gather \
+the resulting pieces, and only through this being \
+can Anabais regain his evil artifact, for...~";
+
+
+Object ATRII_6 "Ethereal Plane of Atrii"
+   with description "Flat, featureless gray is in every direction \
+   you look. It seems like you could go in any \
+   direction from here.",
+   cant_go "An invisible force blocks your way!",
+   nw_to ATRII_4,
+   e_to ATRII_7,
+   n_to ATRII_2,
+   se_to ATRII_8,
+   has light;
+   
+Object ATRII_7 "Ethereal Plane of Atrii"
+   with description "Flat, featureless gray is in every direction \
+   you look. Stranger still is the odd-shaped depression in the gray \
+   plane here. \
+   Otherwise, you could wander this gray dimension in any direction, \
+   it seems.",
+   cant_go "An invisible force blocks your way!",
+   ne_to ATRII_5,
+   w_to ATRII_6,
+   sw_to ATRII_8,
+   n_to ATRII_3,
+   has light;
+
+Nearby ATRII_7_depression "depression"
+   with name "depression" "cavity",
+        description "It's a large elongated depression in the gray 'floor'. \
+        The cavity has a flat bottom, and somewhat cigar-like shape.",
+        before [;
+           Enter:
+              print "^You step into the depression. Your very \
+              surroundings start to fade, replaced by sunlight that \
+              makes you squint! The gray plane undulates and \
+              buckles and turns into a great body of water \
+              before your very eyes.^";
+              in_atrii = 0;
+              PlayerTo(sailboat); ! useful if the player 'lost' the boat at sea.
+              return 2;
+        ],
+   has scenery enterable;
+   
+Object ATRII_8 "Ethereal Plane of Atrii"
+   with description "Flat, featureless gray is in every direction \
+   you look. Directly overhead, you notice odd streaks of \
+   light. From here, you could wander this gray dimension in any direction, \
+   it seems.",
+   name "streaks",
+   cant_go "An invisible force blocks your way!",
+   nw_to ATRII_6,
+   ne_to ATRII_7,
+   has light;
+ 
+! ----------- Special Implementor's Residence -----------
+
+Object Imp_Liv "Strange Room"
+   with description [;
+      print "You ";
+      if (player in Imp_Curtains)
+         "can't see much behind these curtains.";
+      else "feel a great sense of dread! Surely, given the way \
+you got here, this must be the domicile of a dreaded Implementor! \
+The entire place feels strange and \
+alien and, well, ~modern~. There's some sort of kitchen to the \
+east. Long curtains cover what must be a window to the south.";
+        ],
+        number 1,
+        e_to Imp_Kitchen,
+        w_to Imp_door,
+        s_to [; <<Enter Imp_Curtains>>; ],
+        each_turn [ ;
+        if (Imp in Imp_Bedroom) {
+           if (Imp_Liv.number == 3) {
+              StartDaemon(Imp); 
+              Imp_Liv.number = 4;
+           }
+           else "^You hear some faint noises to the west.";
+        }
+        ! create some noises if player in curtains
+        if (player in Imp_Curtains) {
+           if (Imp in Imp_Liv)
+              "^You hear some faint noises nearby.";
+           if (Imp in Imp_Kitchen)
+              "^You hear some faint noises to the east.";
+        }
+        ],
+        time_left 0,
+        time_out [;
+            ! if player hasn't 'listened' twice to start Imp, 
+            ! start him anyway (otherwise, in truth, player 
+            ! would be permanently stuck in (my) apartment.
+            if (Imp_Liv.number < 4) {
+              StartDaemon(Imp);
+              Imp_Liv.number = 4;
+            }
+        ], 
+        before [;
+           ! if player actually listens, better noises...
+           Listen:
+        if (Imp in Imp_Bedroom) {
+           if (Imp hasnt general) { ! i.e. -- awake
+              if (Imp_Liv.number == 1) {
+                 Imp_Liv.number = 2;
+                 "It sounds like someone is talking to himself to \
+the west. You hear: ~Now, wait just a second here, the player object \
+is gone! How did that happen?~";
+              }
+              if (Imp_Liv.number == 2) {
+                 Imp_Liv.number = 3;
+                 "It sounds like someone is talking to himself to \
+the west. You hear: ~That can't be right. I must be getting tired. \
+Think I'll make myself a nice hot cup of coffee.~";
+! on next turn via Imp_Liv.each_turn, Imp daemon will be started...
+              }
+              ! otherwise, Imp has already made his rounds and
+              ! returned to bedroom, _not_ falling asleep
+              "You hear someone whistling a merry tune to the west."; 
+           }
+           else
+              "You hear someone snoring loudly to the west.";
+        }
+        if (Imp in Imp_Liv) {
+           if (Imp.number == 1)
+              "You hear someone walking nearby. The footsteps \
+soon fade to the east.";
+           if (Imp.number == 4)
+              "You hear someone walking nearby. The footsteps \
+soon fade to the west.";
+        }
+        if (Imp in Imp_Kitchen) {
+           ! This assumes the daemon will run before the player turn.
+           if (Imp.number == 2) {
+           switch (Imp.weight) {
+           118: print "You hear an irritated voice say, \ 
+~What happened to my coffee maker?~ Slightly softer, you \ 
+hear ~Well, I guess I'll have that iced tea.~";
+           119, 122: print "You hear a voice to the east say, \ 
+~Looks like I've got coffee, thank goodness.~";
+           121: print "You hear a voice to the east say, \ 
+~Great, I'm all out of coffee. Good thing I still have some \ 
+iced tea.~";
+           }  
+           " Shortly after this, you hear sounds of someone to \
+the east starting some kitchen activity.";
+           }
+           else "You hear some brief busy noises from the west, \
+followed by what sounds like someone drinking something. Shortly \
+thereafter, you hear the sounds of someone walking into the area \
+from the east.";
+        }
+        ],
+   has light;       
+
+Nearby Imp_Curtains "set of curtains"
+   with name "curtain" "curtains",
+        description "Some heavy-cloth curtains along the south wall.",
+        before [;
+           Open: "You draw back the curtains and see a sight that \
+beggars the mind! Through the windows, the night sky falls across \
+some unknown landscape, dotted with strange bright points of light. \
+Tall buildings seem to be everywhere. Whatever world you've stumbled \
+onto, it certainly is not your own! You hastily close \
+the curtains.";
+           Enter: print "In an attempt to hide, you part the curtains. ";
+        ],
+   has static enterable;
+
+Object Imp_Kitchen "Strange Kitchen"
+   with description "A room that could be a kitchen, \
+if it didn't seem completely strange. Harsh bright lights seem to \
+be coming from some unknown source. Strange-looking white countertops and \
+cabinets fill the area, along with a curious white closet-like object. \
+A room lies to the west.",
+   name "cabinet" "cabinets" "closet" "refrigerator" "countertops",
+        w_to Imp_Liv,
+   has light;
+   
+Object Coffee_maker "curious machine" Imp_Kitchen
+   with name "machine" "curious",
+        description "A white plastic device that seems to \
+encase a glass pitcher or kettle of some sort. Most odd.",
+        ! weight 15, 
+        size 15,
+;
+
+Object regular_coffee_can "can of regular coffee" Imp_Kitchen
+   with name "can" "coffee" "regular",
+        description [;
+                    "The can reads: ~Brand-X coffee crystals~^^\
+                    ~Rich, mountain-grown flavor.~";
+        ],
+        before [;
+           Open:
+            "You'd need a good can-opener for that.";
+        ],
+        ! weight 15, 
+        size 15,
+;
+
+
+Object Imp_Bedroom "Strange Bedroom"
+   with description "A very curious small bedroom. \
+   A white desk sits here amongst other odd furnishings.",
+   name "furnishings" "bed" "chair",
+   e_to Imp_door,
+   has light;
+   
+!Nearby Imp_Bed "furnishings"   
+!   with name "furnishings" "bed" "chair",
+!        description "Some weird bedroom furniture.",
+!   has scenery;
+
+Object Imp_Desk "desk" Imp_Bedroom
+   with name "desk",
+        description "A white desk, with a strange, modern look.",
+        capacity 6,
+   has scenery supporter;
+
+Object Imp_Computer "strange machine" Imp_Desk
+   with name "machine" "computer",
+        description 
+        [ ;
+           print "It's a strange metal box. On top, perhaps connected in some \
+way, is another metal box with a glass plate on the front. Strange wires \
+seem to be attached to the boxes somehow. \
+In front of the boxes is an odd plastic \
+flat object with rows and rows of plastic buttons labeled every letter in \
+the alphabet";
+           if (self hasnt general) {
+              give self general;
+              print ".^^Looking closer, you notice curious glowing \
+letters on the glass plate. You read the letters, and \
+feel drawn to respond...^^\
+SPIRITWRAK DEVELOPMENT SYSTEM:^\
+(AUTOMATIC OBJECT GARBAGE-COLLECTION)^\
+REMOVE OBJECT IMPENETRABLE_STEEL_WALL? (Y/N) ";
+if (YesOrNo() == 0)  "You press a button labeled ~N~. The strange box \
+emits a tiny beep, and the glass plate is covered with fantastic colorful \
+designs.";
+else {
+	! set-up the secret room 
+	remove steel_wall;
+	give cave_intersection general;
+        Achieved(18);
+"You press a button labeled ~Y~. The strange box \
+emits a tiny beep, and the glass plate is covered with fantastic colorful \
+designs.";
+     }           
+           }
+           else ". The glass plate currently has strange glowing colorful \
+patterns displayed on it.";                                 
+        ],        
+   has static;
+   
+[ ImpSendBack ;
+    print "~I'm afraid you'll have to go back.~ The Implementor \
+snaps his fingers, and suddenly, you're back in...^";    
+    spell_block = 0;
+    StopDaemon(Imp);
+    StopTimer(Imp_Liv);
+    PlayerTo(ATRII_8);
+];   
+   
+Nearby Imp_door "door"
+   with name "door",
+        when_closed [;
+             if (self in Imp_Liv) {
+                if (player notin Imp_Curtains)
+                   "There's a closed door to the west.";
+                else rtrue;
+             }
+             else "There's a closed door to the east.";
+        ],
+        when_open [;
+             if (self in Imp_Liv) {
+                if (player notin Imp_Curtains)
+                   "There's an open door to the west.";
+                else rtrue;
+             }
+             else "There's an open door to the east.";
+        ],
+        description "A plain-looking door. A note \
+attached to it says ~DO NOT DISTURB, IMPLEMENTOR AT WORK~.",
+        door_dir [;
+             if (self in Imp_Liv) return w_to;
+             else return e_to;
+        ], 
+        door_to [;
+             if (self in Imp_Liv) return Imp_Bedroom;
+             else return Imp_Liv;
+        ],
+        found_in Imp_Liv Imp_Bedroom,
+        before [;
+        Open:
+           if ((Imp in Imp_Bedroom) && (Imp hasnt general)) {
+              print "You open the door, revealing a small room with \
+what must be an Implementor sitting behind a desk. The Implementor looks \
+up, startled. ~You're here?~ he says, observantly. ";
+              ImpSendBack();     
+              return 1;                    
+           }             
+        ],
+    has static door openable;
+
+   
+! *************** And, for my final trick, the endgame **************
+
+Object Mystical_Cave "Mystical Cave"
+   with description "You've entered a wondrous natural cave, lit \
+everywhere by reflected light from some sort of purple crystalline substance \
+in the walls. A tunnel exits to the northwest.",
+   name "reflected" "crystal" "crystalline" "substance",
+   number 0,
+   nw_to [;
+      if (Mystical_Cave.number ~= 4)
+         "The purple light in the chamber seems to pulse with energy, \
+and find your way blocked by an invisible force!";
+      else {
+         spell_block = 0;
+         ! fill with things, if necc.
+         print "As you leave, a sudden tremor shakes the \
+cave! You just narrowly avoid a sudden cave-in behind you!^";
+         give cave_intersection ~general;
+         return cave_intersection;      
+      }
+   ],
+   has light;         
+   
+Nearby purple_sphere "purple sphere"
+   with name "sphere" "purple",
+        initial "There's a purple crystal sphere partially embedded \
+in the rock floor here.",
+        description "A large purple sphere that seems to pulse with \
+strange energy.",
+        before [;
+          Push, Touch, Rub:
+            ! various endgame trickery...
+            if (silver_rod_piece in player) {
+               while (child(player)~=0) {
+                  give child(player) ~worn;
+                  move child(player) to Mystical_Cave;
+               }
+               move silver_rod_piece to player;
+               spell_block = 1;
+               print "The sphere pulses with angry energy! It seems to \
+be fighting the silver rod piece you hold! With a sudden burst, you \
+feel your mind reel and your very surroundings change!^";
+               give stone_marker general;
+!               give snowy_intersection general ~visited;
+               give snowy_intersection general;
+               StartTimer(White_Dragon,3);
+               PlayerTo(Dragon_Cave);
+               rtrue;
+            }
+            if (green_rod_piece in player) {
+               while (child(player)~=0) {
+                  give child(player) ~worn;
+                  move child(player) to Mystical_Cave;
+               }
+               move green_rod_piece to player;
+               spell_block = 1;
+               print "The sphere pulses with angry energy! It seems to \
+be fighting the green rod piece you hold! With a sudden burst, you \
+feel your mind reel and your very surroundings change!^";
+               StartTimer(captain,3);
+               PlayerTo(On_Boat);
+               rtrue;
+            }
+            if (red_rod_piece in player) {
+               while (child(player)~=0) {
+                  give child(player) ~worn;
+                  move child(player) to Mystical_Cave;
+               }
+               move red_rod_piece to player;
+               spell_block = 1;
+               print "The sphere pulses with angry energy! It seems to \
+be fighting the red rod piece you hold! With a sudden burst, you \
+feel your mind reel and your very surroundings change!^";
+!               give Stadium_entrance general ~visited;
+!               remove stadium_sign;
+!               remove stadium_statue;
+!               move statue_base to Stadium_entrance;
+               StartTimer(statue_base,2);
+               PlayerTo(Stadium_entrance2);
+               rtrue;
+            }
+            if (brown_rod_piece in player) {
+               while (child(player)~=0) {
+                  give child(player) ~worn;
+                  move child(player) to Mystical_Cave;
+               }
+               move brown_rod_piece to player;
+               spell_block = 1;
+               print "The sphere pulses with angry energy! It seems to \
+be fighting the brown rod piece you hold! With a sudden burst, you \
+feel your mind reel and your very surroundings change!^";
+!               give GURTH_House general ~visited;
+!               move bad_brick to GURTH_House;
+               StartTimer(bad_brick,7);
+               PlayerTo(GURTH_House2);
+               rtrue;
+            }
+            ! default...
+            "A purple blast of force throws you back!";
+        ],
+   has static;                   
+
+Object skeleton "skeleton" Mystical_Cave
+   with name "skeleton" "bones",
+        initial "Lying in one corner of the room is a skeleton.",
+        description "Just some bones, not much else, is all.",
+        before [;
+           Pull, Push, Turn, ThrownAt, Touch, Attack, Rub,
+Cut, Shake, Squeeze, Kiss:
+              remove self;
+              "The skeleton crumbles into dust, as though \
+many years of time had suddenly caught up with it in one \
+moment.";
+        ],
+has static;
+
+! (black -- final parchment of Palemon's final words)
+Object p8 "blackened parchment" Mystical_Cave
+   class parchment_class,
+   with name "blackened",
+description "~I write these final words not in the hope \
+that others will find and heed them, for this is too great \
+a hope in my moment of death, but rather, to try and maintain my mind and soul \
+in the face of the terror I now know is the truth.^^\
+For how can a man survive, knowing that his entire life, \
+his entire belief, has been a ruse, a dupe, from the \
+early beginning? That he has merely been a pawn in a \
+working of evil that cannot be stopped?^^\
+I have fought all manner of terrors, and recovered that which \
+I know is the _true_ Rod of the Ancients, broken and scattered \
+eons ago in the face of great evil. I sought also those \
+ancient spheres that the Four Ancients never had the chance to \
+use against the evil four elemental demons, but alas, I could \
+not find them all, and sequestered those which I did with \
+good people that the elemental evil could not touch.^^\
+Alas, my quest has ended here. I lie trapped here, \
+with the pieces of the true Rod in hand, unable to go forward, trapped by the \
+elemental mystic locks on the rod that prevent it from leaving this \
+very room, yet unable to go back, to leave the rod here and \
+deny the very real danger of the defeat of the Ancients, of \
+the power that the evil elementals hold.^^\
+What is a faith destroyed? Who can help me to believe, in my moment \
+of disbelief?^^\
+--P--~"; 
+
+
+
+
+Object Dragon_Cave "Giant Cavern"
+   with description "You find yourself in a huge cavern. To the west \
+is a large exit that looks out into a void of snow-covered mountains.",
+        name "mountains",
+        w_to "You hesitate. The cave seems to just \
+exit off the side of a mountain, and all you can see below is whiteness. \
+It could be a long way down.",
+        d_to [; <<Jump>>; ],
+        out_to [; <<Jump>>; ],
+        before [;
+            Jump:
+               print "You close your eyes and leap out of the cave! \
+You plummet through silent white winds. \
+Moments later, you fall right into an enormous snowbank, and \
+roll downwards, into...^";
+               PlayerTo(snowy_intersection2);
+               rtrue;
+        ],
+   has light;
+
+Object On_Boat "On strange boat"
+   with description "You are on a long open boat, riding the waves of \
+some great sea. The boat seems to be filled with sailors from \
+some militia.",
+        name "waves" "sea" "mast" "floorboards" "ship" "boat",
+        before [;
+           Drop:
+              if (captain has general) {
+                 if (noun==green_rod_piece) {
+                    remove green_rod_piece;  ! it'll be back           
+                    give shipwreck general;
+                    Mystical_Cave.number = Mystical_Cave.number + 1;
+                    StopTimer(captain);
+                    StopTimer(militia);
+                    print "You drop the green rod and watch it roll near \
+a mast and get stuck in the floorboards.^^\
+There's a load crack! The ship is breaking apart! Sailors \
+scramble in vain for safety! You hang onto the side of the \
+boat, but the vessel rocks wildly, and you fall into the waters. \
+^^As you sink, you notice the waters seem to change to a purplish \
+hue, and you find yourself back in...^";
+                    PlayerTo(Mystical_Cave);
+                    rtrue;
+                 }
+              } 
+              else  
+                "The sailors are holding you fast, so you \
+can't do this at the moment.";
+        ],
+   has light;
+
+Nearby militia "sailors"
+   with name "sailors" "militia" "navy",
+        description "A bunch of dour-looking navy sailors.",
+        time_left 0,
+        time_out [;
+           deadflag = 1;
+           "The ship breaks asunder! Sailors scramble madly \
+and fall into the violent waves! You hear \
+the captain scream ~Blast! I can't swim!~ before the \
+waters cover you completely.";
+        ],
+   has scenery;
+
+Object ENDGAME_ROOM "Nothingness"
+   with description "Nothingness surrounds you. Yet, you feel like \
+your conscious being extends into worlds and dimensions never \
+imagined. You float in a void of total being.",
+        number 0,  ! number of elementals banished
+        each_turn [;
+           switch (ENDGAME_timer.number) {
+           0:  ENDGAME_timer.number = 1; 
+               if (black_elemental in ENDGAME_ROOM) 
+               "^Echoing in your mind, you hear a voice, that you \
+somehow know is from the black sphere. ~Give me the rod priest, \
+and you shall be immortalized as a symbol to an entire civilization!~";
+           1:  ENDGAME_timer.number = 2; 
+               if (smoke_elemental in ENDGAME_ROOM) 
+               "^Echoing in your mind, you hear a voice, that you \
+somehow know is from the smoke-colored sphere. ~Give me the rod priest, \
+and I shall let you be witness to a feat of great magic, never \
+before witnessed!~";
+           2:  ENDGAME_timer.number = 3; 
+               if (gray_elemental in ENDGAME_ROOM) 
+               "^Echoing in your mind, you hear a voice, that you \
+somehow know is from the gray-colored sphere. ~Give me the rod priest, \
+and I will grant you power over all who surround you!~";
+           3:  ENDGAME_timer.number = 4; 
+               if (white_elemental in ENDGAME_ROOM) 
+               "^Echoing in your mind, you hear a voice, that you \
+somehow know is from the white sphere. ~Give me the rod priest, \
+and you will gain the attention of one of the more powerful \
+figures of your time!~";
+           }
+        ],  
+has light;
+
+Object ENDGAME_timer "void" ENDGAME_ROOM
+   with name "void" "nothingness",
+        description "The absence of anything. Yet, at the same \
+time, the sense that everything possible is near.",
+        number 0,
+        time_left 0,
+        time_out [;
+           deadflag = 1;
+           if (ENDGAME_ROOM.number < 3)
+              print "The spheres nearby suddenly converge";
+           else print "The sphere nearby suddenly converges";
+           " towards you! In your mind, you hear \
+~Hesitation, foolish priest, was the downfall of the Ancient \
+Ones~ before you feel the full force of the void.";
+        ],  
+   has scenery;
+
+! *** fake room/encounter for bad ending #x
+Object badend1 "On Giant Cube"
+   with description "You stand on a single giant floating white \
+cube, in the middle of some dimly lit cavern. \
+^^A small newt floats nearby, concentrating on something.^^\
+The newt suddenly opens its eyes! ~What?~ it croaks in \
+surprise. ~Who are you? You've broken my concentration on \
+the spell, you fool!~ the newt croaks. You feel the cube \
+shift, then stop floating! You plummet into the lava you \
+feared was below..."
+   has light;
+
+Object badend2 "Top of Pyramid"
+   with description "You are on top of a pyramid in some \
+ancient city. You see dense jungle to the horizon. \
+An ancient civilization spreads before you, in all its \
+mysterious glory.^^Several robed figures surround you.^^\
+Suddenly, you realize you are tightly bound! One of the \
+figures points towards the horizon and makes a complicated \
+gesture. In a language you do not understand, he seems \
+to make a prayer to some nameless god! Fearing the \
+inevitable, you struggle mightily, but to no avail. \ 
+In moments, the group of robed figures hurls you off the \
+pyramid to your death!"
+   has light;
+
+! *************
+! Creatures
+! *************
+
+Object Imp "Implementor" Imp_Bedroom
+   with name "Implementor",
+        article "an",
+        description [;
+           print "Some Implementor. Looks more like a oddly-dressed \
+young man badly in need of a haircut";
+           if (self has general)
+              ". He's also sound asleep!";
+           else ".";
+        ],
+        describe [;
+           print "^Someone you assume must be an Implementor \
+is here";
+           if (self has general)
+              ", sound asleep.";
+           else ".";
+        ],           
+        number 0,
+        weight 120,  !  about right
+	     life [;
+                ! if asleep, which is usually the case
+	        if (self has general) {
+	           if (action==##WakeOther or ##Attack) {
+	              print "You manage to rouse the Implementor from his \
+slumber. He stares at you, bewildered. ~What are you doing here?~ \
+he asks. ";
+ImpSendBack(); rtrue;
+           }
+	           else
+	           "He appears to be sound asleep right now, and isn't very \
+responsive.";
+           }
+!	        else {
+! (I suppose this is unnecessary. -- i.e. the player shouldn't be able to 
+! interact with the implementor unless the implementor is asleep)
+!	           print "Well, that got his attention. The Implementor \
+!looks completely startled. ~What are you doing here?~  he says. ";
+!ImpSendBack(); rtrue;
+!           }	           	           
+	     ],
+	     daemon [;
+	        ! ASSUMPTION -- daemon started by start event
+                StopTimer(Imp_Liv);
+	        if (Imp.number == 0) {
+	           give Imp_door open;
+	           if ((player in Imp_Liv) && (player notin Imp_Curtains)) {
+	              print "^The door to the west suddenly flies open! \
+A somewhat bedraggled Implementor steps out! He spots you and his \
+jaw drops. ~You, here?~ he says. ";
+ImpSendBack(); rtrue;
+              }	              
+              else 
+                 print "^You hear a door open to the west.^";
+              Imp.number = 1;
+              move Imp to Imp_Liv;
+              }
+           else {
+              ! first a little 'lazy' clause that kicks the player
+              ! out if the Imp is moving around and the player isn't
+              ! in the curtains
+              if ((Imp.number < 5) && (player notin Imp_Curtains)) {
+                 if (Imp in location) print "^The Implementor ";
+                 else print "^From nearby, an Implementor rushes up and \
+";
+                 print " grabs you by the shoulder! \
+~What are you doing here?~ he \
+says. "; ImpSendBack(); return 1;
+              }
+              ! now, otherwise, we move the Imp and set his
+              ! number accordingly.  Room descs and 'Listen'
+              ! traps in Imp_Liv will need to use this info  
+              switch (Imp.number) {
+              ! [step 1, moving to Kitchen]
+              1: move Imp to Imp_Kitchen;
+                 Imp.number = 2;
+                 if (Coffee_maker notin Imp_Kitchen) Imp.weight = 118;
+                 else {
+                    if (regular_coffee_can in Imp_Kitchen) {
+                       Imp.weight = 119;
+                       remove regular_coffee_can;
+                    }
+                    else {
+                       if (decaf_coffee_can in Imp_Kitchen) {
+                          Imp.weight = 122;
+                          remove decaf_coffee_can;
+                       }
+                       else {
+                       ! no coffee, gosh darn it
+                          Imp.weight = 121;
+                       }
+                    }
+                 }
+                 return 0;
+              ! [step 2, making/drinking the beverage]
+              2: Imp.number = 3;
+              ! [step 3, leaving kitchen, back to living room]
+              3: Imp.number = 4;
+                 move Imp to Imp_Liv;
+              ! [step 4, goes back into bedroom]
+              4: Imp.number = 5;
+                 give Imp_door ~open;
+                 if (player in Imp_Curtains) 
+                    print "^You hear a door close to the west.^";
+                 move Imp to Imp_Bedroom;
+!                 move coffee_cup to Imp_Bedroom;
+                 if (Imp.weight == 122)
+                    give Imp general;  ! asleep
+                 StopDaemon(Imp);
+              }                         
+           }	     
+	     ],
+has animate;
+
+!Object coffee_cup "large cup"
+!   with name "cup" "large",
+!        description "A large mug, with the residue of some brown liquid \
+!left in it.",
+        ! weight 5, 
+!        size 4,
+!   has container open;        
+
+! MOVEPRINTNPC routine, from Gareth Rees' 'THIEF.INF' 
+! (TODO -- you really don't need this, since only Frobar moves in this fashion)
+[ MovePrintNPC n dest dir;
+    if (n in location) {
+        print "^", (The) n, " walks off";
+        if (dir ~= in_obj or out_obj or u_obj && dir ~= d_obj)
+            print " to the ", (DirectionName) dir.door_dir;
+        print ".^";
+    }
+    if (dest == 0) remove n;  ! This seems odd - if dest bogus, 'unlink' NPC?
+    else move n to dest;        
+    if (n in location)
+        print "^", (The) n, " walks in.^";
+];
+
+Object White_Dragon "White Dragon" Dragon_Cave
+   with name "dragon" "white" "giant",
+        describe [;
+           print "There is a gigantic white dragon here";
+           if (self has general)
+              " sleeping peacefully.";
+           "!";
+        ],
+        description "A giant white dragon, the size of a small house.",
+        time_left 0,
+        time_out [;
+           give self ~general;
+           if (location == Dragon_Cave) {
+              deadflag = 1;
+              "^The dragon suddenly snorts and wakes! It sees you \
+and attacks! In moments, you are no more...";
+           }
+           else {
+              remove self;
+              give stone_marker ~general;
+              move stone_marker_top to snowy_intersection2;  
+              "^You hear a roar from the east! From out of the \
+sky, a giant white dragon descends! It draws near, spots you, \
+and bellows in rage! You shrink back, and pray for a quick but \
+painless end.^^There is a loud crack! The dragon, in trying to \
+land, almost impales itself on the obelisk marker! Part of the \
+marker breaks off, and the dragon flies off, whimpering in pain!"; 
+           }          
+        ],
+        life [;
+        Attack, ThrowAt, WakeOther:
+deadflag = 1;
+"You disturb the sleeping dragon, who promptly makes you wish \
+you hadn't.";
+        default: "Best not to disturb the dragon, I'd guess.";
+        ],
+  has animate;
+
+Object captain "sea captain" On_Boat
+   with name "captain",
+        description "A rough-looking navy captain.",
+        number 0,
+        each_turn [;
+           if (self hasnt general) {
+              if (captain.number == 0) {
+                 captain.number = 1;
+                 "^You suddenly realize that you are being \
+held fast by two navy sailors! The captain walks forward and \
+points his cutlass near your ear.^^\
+~What we have here, lads, is a stowaway!~ Some sailor cries out \
+~Overboard with the stowaway!~ The captain smiles. \
+~Now, we was planning on feeding you to the groupers, \
+but we could use a scullion in the hold. One things for sure, \
+ye ain't finding passage on this ship if ye ain't aligned with \
+the Antharian Navy cause!~ Some sailor cries out \
+(unnecessarily) ~The Antharian Navy cause!~. ~So, tell us lad, \
+are ye with us? If ye are true, you'll tell me the Antharian \
+Navy patron saint! So speak quickly, lad, if ye wish to stay \
+dry!~";
+              }
+              else "^~Speak up fellow! We havn't got all day!~";
+           } 
+        ],
+        time_left 0,
+        time_out [;
+           deadflag = 1;
+           "The captain sighs. ~Into the water with ye, then,~ \
+he says, and the two sailors push you roughly overboard. \
+You land in the sea with a splash, and struggle to stay afloat. \
+The ship sails off, but oddly, moments later, it seems to \
+stall and start to sink! Before you get a chance to reflect on \
+this, a large grouper swallows you whole.";
+        ], 
+        life [;
+           if (self has general)
+              "The captain's a bit too busy trying to save \
+a sinking ship.";
+           Answer:
+             if (noun=='minirva') {
+                give self general;
+                StopTimer(self);
+                StartTimer(militia,2);
+                "~Aye, that's right. Escort the new scullion \
+down to the hold where --~^^\
+The captain's orders are cut short by a sudden grinding noise, \
+and the boat rocks violently! ~Reef, captain!~ you hear someone \
+cry. ~Blast!~ the captain says, ~quickly men, we've got to --~ \
+But it's too late. The boat starts to tip and sway, and \
+the two sailors release you and hastily try to help raise the \
+rigging!";
+             }
+             else {
+                if (noun=='duncanthrax') {
+                  deadflag = 1;
+                  "The sailors suddenly pale at the mention of \
+Lord Duncanthrax. ~A traitor in our midst, eh?~ the captain \
+shouts and beheads you with one stroke.";
+                }
+                if (noun=='ulysses' or 'odysseus')
+                   "~Nay lad, me thinks that \
+was a sailor.~";                   
+                else "~Nay lad, that doesn't sound right.~";
+             }
+           Attack, ThrowAt, Kiss, Show, Give:
+             "Given that you are in the grips of several \
+strong navy sailors, this is impossible.";
+        ],
+   has animate;
+
+! ***** THE EVIL ELEMENTALS
+Object black_elemental "black sphere" ENDGAME_ROOM
+   with name "anabais" "black" "sphere" "earth",
+        description "A black sphere of energy.",
+        life [;
+           ThrowAt:
+              if (noun==brown_sphere) {
+                 remove self; remove brown_sphere;
+                 ENDGAME_ROOM.number = ENDGAME_ROOM.number + 1;
+                 if (ENDGAME_ROOM.number == 4) {
+                    GameWinner(); rtrue; }
+                 "The black sphere howls in rage and is no more!";
+              }
+           Give:
+              if (noun==TRUEROD) {
+                 remove TRUEROD;
+                 print "You feel a strange foreboding feeling as \
+the black sphere seems to engulf the rod, then you! Your \
+surroundings change once again!^";
+                 deadflag = 1;
+                 PlayerTo(badend2);
+                 rtrue;
+              }
+           default: "The black sphere is unresponsive.";
+        ], 
+   has animate; 
+
+Object smoke_elemental "smoke-colored sphere" ENDGAME_ROOM
+   with name "smoke" "sphere" "fire", ! TODO new name...
+        description "A smoke-filled sphere of energy.",
+        life [;
+           ThrowAt:
+              if (noun==red_sphere) {
+                 remove self; remove red_sphere;
+                 ENDGAME_ROOM.number = ENDGAME_ROOM.number + 1;
+                 if (ENDGAME_ROOM.number == 4) {
+                    GameWinner(); rtrue; }
+                 "The smoke-filled sphere howls in rage and is no more!";
+              }
+           Give:
+              if (noun==TRUEROD) {
+                 remove TRUEROD;
+                 print "You feel a strange foreboding feeling as \
+the smoke-filled sphere seems to engulf the rod, then you! Your \
+surroundings change once again!^";
+                 deadflag = 1;
+                 PlayerTo(badend1);
+                 rtrue;
+              }
+           default: "The smoke-filled sphere is unresponsive.";
+        ], 
+   has animate; 
+
+Object gray_elemental "gray sphere" ENDGAME_ROOM
+   with name "gray" "sphere" "water", ! TODO new name
+        description "A gray sphere of energy.",
+        life [;
+           ThrowAt:
+              if (noun==green_sphere) {
+                 remove self; remove green_sphere;
+                 ENDGAME_ROOM.number = ENDGAME_ROOM.number + 1;
+                 if (ENDGAME_ROOM.number == 4) {
+                    GameWinner(); rtrue; }
+                 "The gray sphere howls in rage and is no more!";
+              }
+           Give:
+              if (noun==TRUEROD) {
+                 remove TRUEROD;
+                 print "You feel a strange foreboding feeling as \
+the gray sphere seems to engulf the rod, then you! Your \
+surroundings change once again!^";
+                 PlayerTo(FUBLIO_Cave);  
+                 StartTimer(mad_hermit,3);
+                 rtrue;
+              }
+           default: "The gray sphere is unresponsive.";
+        ], 
+   has animate; 
+
+Object white_elemental "white sphere" ENDGAME_ROOM
+   with name  "white" "sphere" "air",  ! TODO new name
+        description "A white sphere of energy.",
+        life [;
+           ThrowAt:
+              if (noun==silver_sphere) {
+                 remove self; remove silver_sphere;
+                 ENDGAME_ROOM.number = ENDGAME_ROOM.number + 1;
+                 if (ENDGAME_ROOM.number == 4) {
+                    GameWinner(); rtrue; }
+                 "The white sphere howls in rage and is no more!";
+              }
+           Give:
+              if (noun==TRUEROD) {
+                 remove TRUEROD;
+                 print "You feel a strange foreboding feeling as \
+the white sphere seems to engulf the rod, then you! Your \
+surroundings change once again!^";
+                 PlayerTo(TROPHY_SECRET);  
+                 rtrue;
+              }
+           default: "The white sphere is unresponsive.";
+        ], 
+   has animate; 
+
+
+! ******************
+! scrolls/spells 
+! ******************
+
+Object fancy_scroll "fancy scroll" 
+  class scroll_class,
+  with name "fancy",
+;
+
+Object wigro_spell "turn undead" fancy_scroll
+   class spell_class,
+   with name "wigro",
+   magic [;
+      "You speak the chant. Nothing seems to happen.";
+   ],
+;
+
+Object briefcase "briefcase" Subway_Tunnel
+   with name "briefcase" "case",
+        description "A somewhat battered brown-leather briefcase.",
+        capacity 5,
+        ! weight 20, 
+        size 15,
+   has container openable;
+
+Object red_scroll "red scroll" briefcase
+  class scroll_class,
+  with name "red",
+;
+
+Object luncho_spell "send object to lower plane" red_scroll
+  class spell_class,
+  with name "luncho",
+       magic [;
+          if (second == 0)
+"You see a brief flash of smoke, but nothing happens.";
+          if (second has animate)
+             "You feel a slight rumbling beneath your feet, but nothing else \
+happens.";
+          else {
+             if ((second hasnt static) && (second hasnt scenery)) {
+                if (second has clothing) give second ~worn;
+                if (in_atrii == 1) {
+                   move second to MON_Chapel2;
+                }
+                else
+                move second to Hades_5;
+                print "There is a sudden puff of smoke, and "; DefArt(second); 
+                " suddenly vanishes!";
+             }
+             "Your chant goes unanswered.";
+          }
+      ],
+;
+
+! ******************
+! special obs
+! ******************
+
+Object Atrii_gate "strange contraption" GUE_Labs_SECRET
+   with name "contraption" "plate" "disc" "strange",
+        description "It looks like a large, slightly convex round disc \
+        made of some silvery material.",
+        before [;
+           Enter:
+              print "As you step onto the silvery disc, you feel a \
+              strange jolt run through your body. A bright white \
+              flash blinds you momentarily!^^You blink, trying to \
+              register your surroundings.^";
+              in_atrii = 1;
+              PlayerTo(ATRII_1);
+              return 2;
+           Receive:
+              move noun to ATRII_1;
+              CDefArt(noun); " suddenly disappears in a bright \
+              flash of light as you place it on the silver disc!";              
+           Push, Pull, Touch, Take:
+              "As you reach for the strange contraption, you notice \
+              white sparks of something arc from the silver surface \
+              to your fingers! You hastily draw back.";              
+        ],
+   has static supporter enterable;
+
+! *** the true rod pieces, and the golden rod (after joined)
+Object silver_rod_piece "silver rod piece" Mystical_Cave
+   class rod_class,
+   with name "silver",
+        description "A strange short section of rod colored \
+silver.",
+        before [;
+           Join:
+              if (location ~= Mystical_Cave) {
+              if (second == TRUEROD) 
+                 <<Join TRUEROD self>>;
+              if ((second == brown_rod_piece) ||
+                 (second == red_rod_piece) ||
+                 (second == green_rod_piece)) {
+                 if (TRUEROD.number == 0) {
+                    TRUEROD.number = 1;
+                    move TRUEROD to parent(self);
+                    remove self;  remove second;
+                    "There is a dazzling golden light as \
+you join the two rod pieces! What remains is a new, strange \
+rod piece!"; 
+                 }
+                 else "There is a dazzling burst of \
+golden light. However, the pieces will not join, and seem \
+to be seeking out something else...";
+              }
+              }
+              else "Some strange purple flash of force \
+blocks your efforts.";
+        ],
+;
+Object red_rod_piece "red rod piece" Mystical_Cave
+   class rod_class,
+   with name "red",
+        description "A strange short section of rod colored \
+red.",
+        before [;
+           Join:
+              if (location ~= Mystical_Cave) {
+              if (second == TRUEROD) 
+                 <<Join TRUEROD self>>;
+              if ((second == silver_rod_piece) ||
+                 (second == brown_rod_piece) ||
+                 (second == green_rod_piece)) {
+                 if (TRUEROD.number == 0) {
+                    TRUEROD.number = 1;
+                    move TRUEROD to parent(self);
+                    remove self;  remove second;
+                    "There is a dazzling golden light as \
+you join the two rod pieces! What remains is a new, strange \
+rod piece!"; 
+                 }
+                 else "There is a dazzling burst of \
+golden light. However, the pieces will not join, and seem \
+to be seeking out something else...";
+              }
+              }
+              else "Some strange purple flash of force \
+blocks your efforts.";
+        ],
+;
+Object green_rod_piece "green rod piece" Mystical_Cave
+   class rod_class,
+   with name "green",
+        description "A strange short section of rod colored \
+green.",
+        before [;
+           Join:
+              if (location ~= Mystical_Cave) {
+              if (second == TRUEROD) 
+                 <<Join TRUEROD self>>;
+              if ((second == silver_rod_piece) ||
+                 (second == red_rod_piece) ||
+                 (second == brown_rod_piece)) {
+                 if (TRUEROD.number == 0) {
+                    TRUEROD.number = 1;
+                    move TRUEROD to parent(self);
+                    remove self;  remove second;
+                    "There is a dazzling golden light as \
+you join the two rod pieces! What remains is a new, strange \
+rod piece!"; 
+                 }
+                 else "There is a dazzling burst of \
+golden light. However, the pieces will not join, and seem \
+to be seeking out something else...";
+              }
+              }
+              else "Some strange purple flash of force \
+blocks your efforts.";
+        ],
+;
+Object brown_rod_piece "brown rod piece" Mystical_Cave
+   class rod_class,
+   with name "brown",
+        description "A strange short section of rod colored \
+brown.",
+        before [;
+           Join:
+              if (location ~= Mystical_Cave) {
+              if (second == TRUEROD) 
+                 <<Join TRUEROD self>>;
+              if ((second == silver_rod_piece) ||
+                 (second == red_rod_piece) ||
+                 (second == green_rod_piece)) {
+                 if (TRUEROD.number == 0) {
+                    TRUEROD.number = 1;
+                    move TRUEROD to parent(self);
+                    remove self;  remove second;
+                    "There is a dazzling golden light as \
+you join the two rod pieces! What remains is a new, strange \
+rod piece!"; 
+                 }
+                 else "There is a dazzling burst of \
+golden light. However, the pieces will not join, and seem \
+to be seeking out something else...";
+              }
+              }
+              else "Some strange purple flash of force \
+blocks your efforts.";
+        ],
+;
+Object TRUEROD "golden rod" 
+   class rod_class,
+   with name "golden",
+        number 0,
+        description [;
+           print "A wondrous, shimmering golden rod";
+           if (TRUEROD.number < 3) 
+              " that seems slightly short.";
+           else "."; 
+        ],
+        before [;
+           Wave:
+             if (TRUEROD.number == 3) {
+                deadflag = 1;
+! TODO -- this is essentially another 'win', but not a good one
+                "You wave the rod, and feel a sudden blast of force! \
+The spheres howl in terror and \
+suddenly explode! The jolt of power from the rod sends you \
+hurtling through space, and you are lost in an endless \
+tumble through the void..."; 
+             }
+           Join:
+             if ((second == silver_rod_piece) ||
+                 (second == red_rod_piece) ||
+                 (second == green_rod_piece) ||
+                 (second == brown_rod_piece)) {
+                remove second;
+                TRUEROD.number = TRUEROD.number + 1;
+                print "You feel a strange surge of \
+mystic energy as you join the rod pieces. ", (The) second,  " \
+joins with the golden rod";
+                if (TRUEROD.number == 3) {
+                   Achieved(19);
+                   print "!^^Time and space seem to grind to \
+a halt.^^\
+Your surroundings and the very ground you stand on shatter like \
+planes of glass, revealing a strange, new dimension...^";
+                   spell_block = 1;
+                   PlayerTo(ENDGAME_ROOM);
+                   StartTimer(ENDGAME_timer,12);
+                   rtrue;
+                }
+                else "!";
+             } 
+        ],
+;
+
+! *** The results of winning the game ***
+[ GameWinner ;
+   Achieved(26);
+   print "The last sphere howls in rage and disappears!";
+   deadflag = 2;
+   " You scream in agony as the void that surrounds you \
+seems to implode! You feel yourself dissipating into the \
+surrounding nothingness. ~Is this my reward?~ you scream, \
+~Is this, then, the end?~^^\
+A white light makes you open your eyes.^^\
+You are lying on a beach. The Great Sea laps at your \
+tattered garments. Slowly, you rise to your knees.^^\
+The sun, like a bloated, radiant bird, is sinking below the \
+wave on the horizon. Another day is coming to an end.^^\
+A voice startles you. ~Tis a fine spot for watching \
+sunsets.~ You turn to see Morgan the Ranger, Frobar and \
+the Thief nearby. The Thief helps you to your feet, and Frobar \
+glances your way. ~I sensed a great upheaval in the \
+fabric of time and space not long ago. I gather you \
+have quite a story to tell,~ he says. ~We \
+probably can relate to much of what you have seen, \
+although your unwavering faith is something we \
+desire to understand.~ Morgan explains, ~Belief in the \
+face of the unbelievable is an enviable strength.~ \
+The Thief chuckles quietly. \
+~Perhaps you will join us at Delbins, where we will \
+partake in a belief of fine cuisine while you tell all?~ he says. \
+He notices your weary expression and \
+adds with surprising seriousness, ~Not that I \
+prepose to offer advice from one as myself, \
+but humbly, I admit, that many a time, a belief in myself \
+was often sufficient.~ He pauses. \
+~Gods or no, now, you make your own destiny.~";
+];

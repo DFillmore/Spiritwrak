@@ -1,0 +1,1725 @@
+
+! *************************************************************
+! BORPHEE.INF -- add-on for SPIRITWRAK
+! *************************************************************
+
+! (Single global variable to store progress of 'Trophy room puzzle'
+global trophy_stage = 0;  ! equals 'stage' completed, up to 4(th)
+
+Object BORPHEE_GUSStop "Downtown New Borphee"
+   with description "You're right in the middle of downtown \
+New Borphee -- perhaps the busiest, most crowded \
+city you've ever seen. Huge brand-new buildings \
+and throngs of fast-moving people make the whole \
+scene somewhat surreal. The streets head north to \
+a business district, while a set of stairs here leads \ 
+down.",
+        name "buildings" "throngs" "crowd" "people" "streets" "district"
+"stairs",
+        n_to BORPHEE_BD,
+        d_to BORPHEE_GUSStation,
+        cant_go "You walk around downtown a bit, are appalled by the \
+             sights, and hastily return here.",
+     !   w_to "You walk around downtown a bit, are disturbed by the \
+     !        sights, and hastily return here.",
+   has light;
+
+Object BORPHEE_BD "Business District"
+   with description "You're in a crowded business district filled \
+with busy people. The city thins out a bit to the north, \
+while city streets head west and south. Directly to the east is a \
+building so tall it makes you dizzy just looking at it.",
+        name "building" "crowd" "streets" "people",
+        s_to BORPHEE_GUSStop,
+        n_to BORPHEE_burbs,
+        w_to BORPHEE_CS,
+        e_to Skyscraper,
+        each_turn [;
+           if (self hasnt general) {
+              give self general;
+              move flour_scroll to BORPHEE_BD;
+              "^A number of people rudely brush past you and \
+accidentally knock you down. A kindly old lady helps you \
+to your feet. ~I think you dropped that,~ she says, pointing \
+to a paper object nearby that doesn't seem familiar. She \
+walks off, and is soon lost in the crowd.";
+           }
+        ],
+   has light;
+
+Object BORPHEE_CS "City Streets"
+   with description "You're on some busy side street in New Borphee. \
+There's a crowded walk back east. To the north is the \
+entrance to some sort of open area, with a large open arch.",
+        name "street" "walk" "area",
+        e_to BORPHEE_BD,
+        n_to GUE_Gate,
+   has light;
+
+Nearby fake_arch "arch"
+   with name "open" "arch",
+        description "A large metal and stone arch. You'll have \
+to get closer to see anything more.",
+   has scenery;
+
+Object Skyscraper "Inside Skyscraper"
+   with description "You're inside a gigantic \
+skyscraper. The marble and brass fixtures and trim \
+exude professionalism. There's a small open chamber \
+to the north. City streets are to the west.",
+        name "marble" "brass" "fixtures" "trim" "skyscraper"
+"streets" "chamber",
+        w_to BORPHEE_BD,
+        e_to "You can't go that way.",   ! but later...
+        n_to Elevator,
+        before [;
+            Go:
+                if (noun == n_obj)
+                  print "As you enter the small chamber, metal \
+                       doors suddenly spring forward and close \
+                       behind you!^";
+        ],
+   has light;
+
+Object ss_sign "sign" Skyscraper
+   with initial "There is a large sign posted near the small chamber.",
+        name "sign",
+        description [;
+           print "The sign reads:^^\
+~ELEVATOR UNDER CONSTRUCTION^PLEASE USE STAIRS.";
+           if ((self hasnt general) && (magic_door notin Skyscraper)) {
+              give self general;
+           "~^^Oddly, there don't seem to be any stairs."; 
+           }
+           else "~"; 
+        ],
+   has static;
+
+Object Elevator "Inside Elevator"
+   with description "You are inside a cramped metal room, with \
+featureless walls. There are no obvious exits.",
+        s_to "The doors seem to be closed tight.",
+        each_turn [;
+           if (random(20) == 1) {
+              print "^Suddenly, the doors spring open! You \
+dive out.";
+              PlayerTo(SkyScraper);
+              rtrue;
+           }
+        ],
+;   
+
+Object elevator_sign "sign" Elevator
+   with name "sign",
+        initial "There's a small paper sign attached to a wall.",
+        description "~Shep:^^Put the elevator buttons _here_.^^-T~",
+   has static;
+
+! (Not real doors, of course)
+!Object elevator_doors "doors" Elevator
+!   with name "doors" "door",
+!        description "Solid-looking metal sliding doors.",
+!        before [;
+!            Push, Pull, Open: 
+!              "Try as you might, the doors are shut fast.";
+!            Close:
+!              "They appear to already be closed.";
+!        ],
+!   has scenery;
+ 
+Object BORPHEE_burbs "Suburbs"
+   with description "A suburb starts here, in contrast to the start \
+of a big downtown to the south. For a residential area, \
+it's surprisingly crowded. A main street runs \
+north-south here.",
+        name "suburb" "downtown" "street",
+        n_to BORPHEE_Outskirts,
+        s_to BORPHEE_BD,
+   has light;
+
+Object BORPHEE_Outskirts "Outskirts"
+   with description "New Borphee stops here, although it probably \
+won't for long. A rough trail leads off into some \
+woods to the northwest, or you can enter the city to \
+the south.",
+        name "trail" "woods" "city",
+        s_to BORPHEE_burbs,
+        nw_to BORPHEE_forest,
+        ne_to "Accardi-By-The-Sea is closed to visitors these days.",
+   has light;
+
+Object BORPHEE_forest "Forest"
+   with description "Deep forest surrounds you. A rough trail runs \
+north and southeast.",
+        name "forest" "trail",
+        se_to BORPHEE_Outskirts,
+        n_to Over_river,
+   has light;
+
+Object Over_river "Over River"
+   with description "You're on a nice new bridge crossing some \
+large river below. Trails lead north and south into \
+woods.",
+        name "bridge" "trails" "woods",
+        n_to Forest_trail,
+        s_to BORPHEE_forest,
+        before [;
+          Jump:  "Bridge-jumping carries a stiff fine around here.";
+        ],
+   has light;
+
+Object c5 "coin" Over_river class coin_class;
+
+Object Phee_river "river" Over_river
+   with name "river" "Phee",
+        description "Just a large east-west river.",
+        before [;
+           Receive:
+             remove noun;
+             print "You drop "; DefArt(noun); " into the river and \
+                    watch it disappear.";
+           Search, LetGo, Rub, Take, Push, Pull, Touch, Squeeze, Turn, Shake:
+"The river is far below the bridge.";
+        ],
+   has scenery container;
+
+Object Forest_trail "Forest Trail"
+   with description "A beaten trail cuts through some very dense \
+forest running north and south.",
+   name "trail" "forest",
+      s_to Over_river,
+      n_to Ravine_pass,
+  has light;
+  
+Object Ravine_pass "Ravine Pass"
+   with description "A forest ravine opens into some sort of clearing \
+to the north here, or a trail heads south.",
+   name "ravine" "forest" "clearing" "trail",
+      s_to Forest_trail,
+      n_to [;
+        if (army in self)
+           "The group of soldiers won't let you pass.";
+        else return Forest_clearing;
+      ],
+   has light;
+   
+Nearby army "group of soldiers"
+   with name "group" "soldiers" "army",
+        description "A group of well-armed soldiers, who look a little \
+        haggard.",
+        life [;
+           Attack: "Forget it.";
+           default: "The soldiers are a little too weary to pay you any \
+direct attention at the moment.";
+        ],
+   has animate;
+
+! (A rather mangled version of the Byzantine Generals Problem)
+! (actually, completely different -- i.e., the BGP is unsolvable
+!  with three armies...)
+
+Object wicker_cage "wicker cage" Ravine_pass
+   with name "cage" "wicker",
+        description "A wicker cage, with two compartments, and a lever \
+attached to the front.",
+        capacity 3,
+        size 20,
+        before [;
+          Open: 
+            "You can't seem to pry open the cage door by hand.";
+        ],
+        add_to_scope cage_lever,
+   has static container transparent;
+
+Object cage_lever "lever"
+   with name "lever",
+        description "A wooden lever attached to the cage.",
+        before [;
+           Pull:
+             if (Morgan in Delbins)
+                "A soldier slaps your hand away. ~That windcat \
+                messenger box belongs to our Captain, \
+                Morgan Grueslayer, so don't mess with it!~";
+             if (Morgan notin Ravine_pass)
+                "You pull the lever and watch the cage door \
+                momentarily open, then shut.";  
+             if ((children(E_windcat) == 0) || (children(W_windcat) == 0))
+                "Morgan stops you and points at the windcats. ~An \
+instruction must be sent with both of the cats, using the signal flags!~";
+             print "Morgan stops your hand, just as you are about to \
+pull the lever. She looks at the cats. \
+~Are you quite sure, Priest?~^^\
+Now, that seems like a reasonable question. So, are you?  ";
+                 if (YesOrNo() == 0) "You pause, to reconsider.";
+                 else {
+                    remove E_windcat;
+                    remove W_windcat;
+                    remove army;
+                    remove Morgan;  
+                    print "You nod and yank the lever. The cage door \
+ latch is loosened enough for both windcats to break free! The \
+ spotted windcat tears off to the west, and the speckled cat \
+ zips off to the east!^^There is a somewhat stressful pause.^^";
+                  ! simply put, the flags must both be red
+                  if (((rf1 in E_windcat) && (rf2 in W_windcat)) ||
+                      ((rf2 in E_windcat) && (rf1 in W_windcat))) {
+                      Achieved(13);
+ "Simultaneously, from the east and west, a three horn signal sounds! \
+ Morgan smiles triumphantly. ~A truce has been declared! The \
+ war has ended!~ The army soldiers yell a round of ~Three cheers!~ \
+ before heading off. Morgan shakes your hand \
+ with almost enough force to break it. ~Well done indeed, Priest. \
+ Your wisdom only compliments your tranquil nature.~ She walks off, \
+ seeking the next challenge."; 
+                 }   
+                 else {
+                    move battle to Forest_clearing;
+ "Suddenly, from somewhere, a single horn note sounds! The sounds \
+ of a fight to the north are soon heard. Morgan \
+ gives you a sad, tired look. ~Perhaps it was meant to be,~ she \
+ says, as she and the army quickly march north to join their \
+ comrades.";
+                 }
+              }
+        ],
+   has static;
+
+
+Object rf1 "red flag" Ravine_pass
+   class flag_class,
+   with name "red",
+        plural "red flags",
+        description "A red square of cloth.";
+Object rf2 "red flag" Ravine_pass
+   class flag_class,
+   with name "red",
+        plural "red flags",
+        description "A red square of cloth.";
+Object bf1 "blue flag" Ravine_pass
+   class flag_class,
+   with name "blue",
+        plural "blue flags",
+        description "A blue square of cloth.";
+Object bf2 "blue flag" Ravine_pass
+   class flag_class,
+   with name "blue",
+        plural "blue flags",
+        description "A blue square of cloth.";
+
+Object E_windcat "speckled windcat" wicker_cage
+   with name "windcat" "cat" "speckled",
+        description "A sleek, speckled salt-and-pepper windcat, with \
+large paws.",
+        capacity 1,
+		  before [;
+		     Take:
+		        "The windcat hisses and struggles until you desist.";
+		     Receive:
+		       if (noun hasnt is_flag)
+		          "I don't think the windcat would appreciate that.";
+        Push, Pull, Attack, Squeeze, Turn:
+		          "I don't think the windcat would appreciate that.";
+        Rub, Touch:  "The windcat purrs.";
+		  ],
+   has supporter;                
+        
+Object W_windcat "spotted windcat" wicker_cage
+   with name "windcat" "cat" "spotted",
+        description "A sleek, spotted black-and-white windcat, with \
+large paws.",
+        capacity 1,
+		  before [;
+		     Take:
+		        "The windcat hisses and struggles until you desist.";
+		     Receive:
+		       if (noun hasnt is_flag)
+		          "I don't think the windcat would appreciate that.";
+        Push, Pull, Attack, Squeeze, Turn:
+		          "I don't think the windcat would appreciate that.";
+        Rub, Touch:  "The windcat purrs.";
+		  ],
+   has supporter;                
+   
+Object Forest_clearing "Forest Clearing"
+   with description "A open clearing is surrounded by forest trees here. \
+A ravine pass is to the south, and a short trail heads northwest. \
+You can just see a small cave opening to the northeast.",
+   name "clearing" "forest" "trees" "ravine" "pass" "trail" "cave",
+   s_to Ravine_pass,
+   nw_to [;
+      if (battle in self)
+         "You're not getting past that bloody battle (intact).";
+      else return Forest_brambles;
+   ],
+   ne_to [;
+     if (battle in self)
+        "You're not getting past that bloody battle (intact).";
+     else return Forest_cave;
+   ],
+   has light;
+   
+Object battle "bloody battle"
+   with name "battle" "war" "warriors",
+        initial "There's a violent battle taking place in the middle \
+of the field.",
+        description "It's a fierce battle. Kobolds and soldiers are locked \
+in mortal combat. Getting too close would be certain death.",
+        life [;
+           Attack:  
+              deadflag = 1;
+           "You give a yell and plunge into the battle, and get \
+skewered by a kobold arrow moments later.";
+default: "At the moment, everyone seems rather occupied.";
+        ],
+   has animate;
+   
+Object Forest_brambles "Forest Brambles"
+   with description "There's a small area of forest surrounded by \
+brambles and shrubs here. A trail leads southeast.",
+   name "forest" "brambles" "shrubs" "trail",
+   se_to Forest_clearing,
+   has light;
+   
+Object Forest_cave "In front of cave"
+   with description "A small cave mouth enters into darkness to the \
+north here. A clearing lies to the southwest.",
+   name "cave" "mouth" "darkness" "clearing",
+   sw_to Forest_clearing,
+   n_to CAVE_NSTUNNEL,
+   has light;
+   
+Object CAVE_NSTUNNEL "North-South Tunnel"
+   with description "You're in a natural cave tunnel running north and \
+south. To the south you can see a glimmer of daylight.",
+   name "glimmer" "daylight" "tunnel",
+   s_to Forest_cave,
+   n_to CAVE_INTER,
+   ;
+   
+Object CAVE_INTER "Tunnel Intersection"
+   with description "Several natural cave tunnels intersect here, \
+running north, south, and east.",
+   name "tunnel" "tunnels",
+   s_to CAVE_NSTUNNEL,
+   n_to CAVE_CURVE,
+   e_to CAVE_NCREVASSE,
+   ;
+   
+!Object CAVE_BARE "Bare Cavern",
+!   with description "A bare cavern.  The exit is east.",
+!   e_to CAVE_INTER,
+!   ;
+   
+Object CAVE_CURVE "Twisting Tunnel",
+   with description "A natural cave tunnel makes short twists and \
+turns here, running south and east.",
+   name "tunnel" "twists" "turns",
+   s_to CAVE_INTER,
+   e_to CAVE_DAMP,
+   ;
+   
+Object CAVE_DAMP "Damp Cave"
+   with description "You're in a small cave with noticeably damp walls. \
+Exits lie to the west and south.",
+   name "cave" "damp",
+   w_to CAVE_CURVE,
+   s_to CAVE_NCREVASSE,
+   ;
+   
+Object CAVE_NCREVASSE "Sloping Tunnel"
+   with description "You're in a windy tunnel that gradually slopes up to the \
+east, or down to the west. A cold breeze blows from a tunnel to the north.",
+   name "tunnel" "breeze",
+   w_to CAVE_INTER,
+   n_to CAVE_DAMP,
+   e_to CAVE_WINDY,
+   d_to CAVE_INTER,
+   u_to CAVE_WINDY,
+   ;
+            
+Object CAVE_WINDY "Windy Tunnel"
+   with description "A strange wind seems to howl through this \
+winding tunnel heading east and west. A crack in the tunnel \
+wall exposes an exit north.",
+   name "wind" "tunnel" "crack",
+   w_to CAVE_NCREVASSE,
+   e_to CAVE_BARE2,
+   n_to Ancient_Tunnel,
+   before [;
+      Listen: "A light wind howls through this tunnel.";
+   ],
+   ;
+
+Object CAVE_BARE2 "Bare Cavern",
+   with description "A bare cavern. The exit is west.",
+   w_to CAVE_WINDY,
+   ;
+   
+! (torn -- planes are reachable)
+Object p4 "torn parchment" CAVE_BARE2
+   class parchment_class,
+   with name "torn",
+description "~...places no mortal man should go, \
+There are planes of existence far beyond our own, that \
+connect and interlace, so that even mortal man may \
+tread upon the featureless gray of <smudge>. But, \
+I believe that there may be other planes, perhaps \
+where the Implementors are said to live. Are these \
+places just parts of existing planes or planes unto \
+themselves? I do not...~";
+
+Object Ancient_Tunnel "Ancient Hallway"
+   with description "You're in a stone hallway, clearly man-made. \
+The dust and musty smell indicate the place hasn't \
+been used in quite some time. The corridor runs north, while the \
+south wall has a large crack, creating a dark opening.",
+   name "dust" "hallway" "crack" "opening",
+   s_to CAVE_WINDY,
+   n_to End_of_hall,
+   before [;
+      Smell: "The air smells a bit musty and stale.";
+   ],
+   ;
+   
+Object End_of_hall "End of Hallway"
+   with description "You're at the north end of a long stone hallway. \
+You can follow the hallway back south, or you can take a set of \
+cracked stone stairs up.",
+   name "hallway" "stairs",
+   s_to Ancient_Tunnel,
+   u_to Domed_chamber,
+   ;
+   
+Object Domed_chamber "Domed Chamber"
+   with description [;
+   print "You are in a large man-made underground chamber, with a \
+perfectly domed high ceiling. Smooth stone archways lead to rooms to the \
+north, south, east and west. Stone cut steps lead down. In the very \
+center of the ceiling you notice a strange circular depression in \
+the stone";
+   if ((self hasnt general) && (amulet has worn)) {
+      give self general;
+      ".^^Your amulet suddenly gives off a flash of purple light, then fades!";
+   }
+   else ".";
+   ],
+   name "dome" "archways" "steps" "ceiling",
+   d_to End_of_hall,
+   n_to TROPHY_N,
+   e_to TROPHY_E,
+   s_to TROPHY_S,
+   w_to TROPHY_W,
+   u_to "The ceiling is too far above you.";
+   
+Nearby fake_depression "depression"
+   with name "depression" "circle" "hole",
+        description "It looks like a slightly recessed circular depression \
+in the ceiling. It's hard to tell from here if it was something cut out of \
+the stone, or perhaps it's a separate piece.",
+   has scenery;
+
+! (Player can only get here in end game, and probably doesn't want to be here either)
+Object TROPHY_SECRET "Secret Trophy Room"
+   with description "You're in a small domed stone room. The only exit, \
+unfortunately, is a hole in the stone floor to a floor of another chamber \
+far below. Engraved in the wall is: ~LORD DUNCANTHRAX'S PRIVATE TROPHY \
+ROOM~.",
+   number 0,
+   name "hole",
+   each_turn [;
+      if (TROPHY_SECRET.number == 0) {
+         TROPHY_SECRET.number = 1;
+         TROPHY_SECRET.description = "You're in a small domed stone room. \
+There appear to be no exits -- the hole in the floor appears to have been \
+sealed with stone. Engraved in \
+the wall is: ~LORD DUNCANTHRAX'S PRIVATE TROPHY ROOM~.";
+         give self ~light ~visited;
+         "^Lord Duncanthrax and some of his soldiers are here.^^\
+Duncanthrax looks up and sees you. ~Who is that?~ he asks. ~Looks like a \
+priest,~ a soldier says. ~Wonderful. First, the black paint, and now, \
+a priest breaks into my trophy room.~ He sighs. ~Will no one rid me of \
+this meddlesome priest?~ One of the soldiers takes the hint and knocks \
+you out cold.^^You awake a short time later.";
+      }      
+      else {   
+      deadflag = 1;
+      "^You soon run out of air in the sealed stone room.";
+      }
+   ],
+has light;
+   
+Object TROPHY_N "North Trophy Room"
+   with description "This is a bare cubical stone chamber. Some worn black \
+lettering on the wall reads: ~THE EAST CHAMBER IS NOT THE FIRST TROPHY \
+ROOM~. An archway exits south.",
+   name "archway" "stone",
+   s_to Domed_chamber,
+;
+
+Object TROPHY_E "East Trophy Room"
+   with description "This is a bare cubical stone chamber. Some worn black \
+lettering on the wall reads: ~THE NORTH CHAMBER HAS SILVER LETTERING~. \
+An archway exits west.",
+   name "archway" "stone",
+   w_to Domed_chamber,
+;
+! sigh: logic bug in rel 1.  Try the following stmt below instead.  Note
+! that two solutions are possible in this case...
+! on the wall reads: ~THE NORTH CHAMBER HAS GOLD LETTERING AND THE SOUTH \
+! CHAMBER IS THE SECOND TROPHY ROOM~.  \
+
+Object TROPHY_S "South Trophy Room"
+   with description "This is a bare cubical stone chamber. Some worn black \
+lettering on the wall reads: ~THE EAST CHAMBER HAS SILVER LETTERING AND \
+I HAVE GOLD LETTERING~. An archway exits north.",
+   name "archway" "stone",
+   n_to Domed_chamber,
+;
+
+Object TROPHY_W "West Trophy Room"
+   with description "This is a bare cubical stone chamber. Some worn black \
+lettering on the wall reads: ~EITHER I AM THE SECOND TROPHY ROOM AND THE \
+NORTH CHAMBER IS THE LAST TROPHY ROOM, OR I HAVE GOLD LETTERING~. \
+An archway exits east.",
+   name "archway" "stone",
+   e_to Domed_chamber,
+;
+
+Object lettering "lettering"
+   with name "lettering" "black" "writing",
+        description [; <Look>; ],
+        found_in TROPHY_N TROPHY_E TROPHY_S TROPHY_W,
+   has scenery;
+
+! (Now, the special key depressions
+! AUTHOR NOTE: Originally, I represented all 4 by one object.  I
+! switched to four identical but separate objects to simplify the 
+! ease of have the trophy still sitting in the given depression
+! (potentially increasing the likelihood that the player might 
+! drop the trophy in more than once, thereby fouling the puzzle)
+Object Nkey_depression "circular depression" TROPHY_N
+   class trophy_dep_class,
+   with before [;
+         Receive:
+            if (noun ~= trophy)
+               "That doesn't quite fit.";
+            else {
+               if (trophy_stage == 3) {
+                 ! got it --- drop rod if in chamber
+                 trophy_stage = 0;  ! could get 'reset'
+                 print "You hear a click";
+                 move trophy to self;
+                 if (white_rod_piece in TROPHY_SECRET) {
+                    Achieved(14);
+                    move white_rod_piece to Domed_chamber;
+                    move air_spirit to Domed_chamber;
+                    Domed_chamber.description = "You are in a large man-made underground chamber, with a \
+perfectly domed high ceiling. Smooth stone archways lead to rooms to the \
+north, south, east and west. Stone cut steps lead down. In the very \
+center of the ceiling you notice a circular hole.";
+                    fake_depression.description = "It's a small circular hole shrouded in darkness.";
+                    ", followed by a dull thump \
+                    from the south.";
+                 }
+                 else ".";                 
+               }
+               else {
+                  trophy_stage = 0;  ! reset
+                  move trophy to self;
+                  "You hear a click.";
+               }
+            }
+         ],
+;
+        
+Object Ekey_depression "circular depression" TROPHY_E
+   class trophy_dep_class,
+   with before [;
+         Receive:
+            if (noun ~= trophy)
+               "That doesn't quite fit.";
+            else {
+               move trophy to self;
+               if (trophy_stage == 0)  trophy_stage = 1;  
+               else  trophy_stage = 0;  ! reset
+                  "You hear a click.";
+            }
+         ],
+;
+               
+Object Skey_depression "circular depression" TROPHY_S
+   class trophy_dep_class,
+   with before [;
+         Receive:
+            if (noun ~= trophy)
+               "That doesn't quite fit.";
+            else {
+               move trophy to self;
+               if (trophy_stage == 2)  trophy_stage = 3;  
+               else  trophy_stage = 0;  ! reset
+                  "You hear a click.";
+            }
+         ],
+;
+
+Object Wkey_depression "circular depression" TROPHY_W
+   class trophy_dep_class,
+   with before [;
+         Receive:
+            if (noun ~= trophy)
+               "That doesn't quite fit.";
+            else {
+               move trophy to self;
+               if (trophy_stage == 1)  trophy_stage = 2;  
+               else  trophy_stage = 0;  ! reset
+                  "You hear a click.";
+            }
+         ],
+;
+           
+! (GUE Tech -- with new curriculum...)
+Object GUE_Gate "GUE Entrance"
+   with description "You're standing under an open archway that has \
+the letters ~GUE TECH~ prominently displayed in \
+twisted brass and copper. A busy street lies to the \
+south, and the campus quad opens up to the north.",
+        name "letters" "street" "quad",
+        s_to BORPHEE_CS,
+        n_to GUE_QuadS,
+   has light;
+
+Nearby GUE_arch "archway"
+   with name "arch" "archway",
+        description "It's an elaborate metal and stone affair that \
+probably cost a fortune. On one side, an inscription reads \
+~Forburn Gate~.",
+   has scenery;
+
+Object GUE_QuadS "South Quad"
+   with description "You're walking across a grassy field. More \
+lawn lies to the north, while an archway exits the area to the \
+south. To the west is a low stone building with the word \
+~GYMNASIUM~ etched in stone across the entrance. To the east \
+is a old brick building covered in ivy.",
+        name "grass" "field" "lawn" "archway" "building" 
+"ivy",
+        s_to GUE_Gate,
+        n_to GUE_Quad,
+        w_to GUE_Gym,
+        e_to GUE_Hum,
+   has light;
+
+Object GUE_Quad "Center of Quad"
+   with description "The center of the campus is a nicely tended \
+green lawn with a bronze statue in the center. \
+Paths lead north and south across grassy fields. \
+To the west is a small brick building. To the east \
+is a large stone building with a lintel roof and the \
+words ~WOOMAX LIBRARY~ enscribed across the entrance.",
+        name "lawn" "grass" "fields" "building" "lintel",
+        s_to GUE_QuadS,
+        n_to GUE_QuadN,
+        w_to GUE_Cafe,
+        e_to GUE_Library,
+        each_turn [ i ;
+            i = random(20);
+            if (i==8 or 17)
+               "^Some students walk by. They must be upperclassmen, \
+as they don't even look in your direction.";
+            if (i==9 or 14)
+               "^Some students walk by. They must be underclassmen, \
+as some of them look at you with puzzled expressions.";
+        ],
+   has light;
+
+Nearby belboz_statue "statue"
+   with name "statue" "bronze",
+        description "An old bronze statue of a wise-looking \
+man in wizard's clothes with a stern, disapproving look. An inscription \
+at the base reads ~BELBOZ AT MITHICUS~.",
+   has scenery;
+
+Object GUE_QuadN "North Quad"
+   with description "You're walking across a grassy field. More \
+lawn lies to the south, while a large building that resembles a \
+auditorium of some sort is north. An inscription near the entrance \
+reads ~ENCHANTER HALL~. To the west you see a small house-like \
+building. To the east you see a low stone building, clearly new \
+and rather modern looking in contrast to its surroundings.",
+   name "grass" "field" "lawn" "building" "auditorium",
+        s_to GUE_Quad,
+        n_to GUE_Enchanter_hall,
+        w_to GUE_Dorms,
+        e_to GUE_Labs,
+   has light;
+
+Object GUE_Gym "Gymnasium"
+   with description "There's a large field house here, filled with \
+gym equipment and helpful rubber mats. The exit is east.",
+        e_to GUE_QuadS,
+        before [;
+           Jump:  "You do a bit of exercise.";
+        ],
+   has light;
+
+Nearby gym_stuff "equipment"
+   with description "Various things useful to those who exercise.",
+        name "equipment" "mats",
+        before [;
+            Pull, Push: "You do a bit of exercise.";
+        ],
+   has scenery;
+
+Object dorm_key "flat key" GUE_Gym
+   with name "key" "flat" "dorm",
+        initial "Someone left a key here.",
+        description "A flat metal key with ~102~ marked on one side.",
+        !weight 5,
+        size 5,
+;
+
+Object GUE_Hum "Humanities Building"
+   with description "You're in the humanities building, which is \
+vacant and closed for the summer. The exit is west.",
+       w_to GUE_QuadS,
+   has light;
+
+Object History_book "history book" GUE_Hum
+   with name "book" "history",
+      initial "Someone left a history book here.",
+      description "It's a biography on the life and times of \
+      Duncanthrax the Bellicose. Most of it chronicles fairly \
+      dry stuff about his much publicized conquests of the \
+      Eastlands and his famous battles. There is an interesting  \
+      bit about some secret trophy chamber that Duncanthrax \
+      had constructed near the end of his reign, but for more \
+      details, I'd suggest ~look up (word) in book~ specifically.",
+      before 
+      [ w1; Consult:
+            if (consult_words > 1)
+               "The index is rather terse, try limiting your lookup \
+               to one word.";
+            wn = consult_from; w1 = NextWord();
+            switch (w1) {
+               'trophy', 'secret':
+               "Apparently, in 680 GUE, Duncanthrax grew increasingly \
+               withdrawn. At this time, of foremost importance to him was his collection of \
+               various battle trophys and awards he had bestowed to \
+               himself (for unusual valor on the field of battle) \
+               over the years. He decided to construct a hidden \
+               underground chamber south of Egreth to sequester this \
+               collection, which would be locked in a most clever means. \
+               He decided to order the construction of \
+               a ~four-room key~ which, when a miniature trophy \
+               was inserted and removed (once) in a special keyhole in each \
+               of the four rooms (in a specific order), would unlock a holding chamber \
+               in a center room containing his prized trophies. \ 
+               Priding himself on his logic skills, he requested that \
+               two captured foreigners produce a logic puzzle plainly \
+               inscribed in the four key rooms themselves that would \
+               detail the exact order that the key rooms were to be \
+               ~applied~. A Prevaricon, \
+               who could not help but write untruths, was given a can of \
+               gold paint, while a Veritassi, who could only write the \
+               truth, was given a can of silver paint. Imagine \
+               Duncanthrax's rage when he discovered that the two \
+               prisoners had secretly painted over their gold and \
+               silver key phrases with _black_ paint! \
+               The prisoners were \
+               summarily executed, of course, but Duncanthrax sealed \
+               off the chamber and researchers can only guess at \
+               the final fate of the trophy collection of Duncanthrax.";
+               'Zilbo':
+               "Zilbo the third was overthrown in the great revolt lead \
+               by Duncanthrax in 659 GUE. The biographers suggest \
+               reading their companion text ~How Zilbo Came to Mithicus~.";
+               'Griffspotter', 'Antharia':
+               "In 665 GUE, Duncanthrax humiliated the Antharian naval \
+               Armada in the famous battle at Fort Griffspotter. \
+               (Well, okay, there's quite a bit more in the book about \
+               this battle, but remember, you're a priest, not a \
+               navy sailor.)";
+               'Diablo', 'Massacre':
+               "In 666 GUE, Duncanthrax invaded Zorbel Pass in the \
+               Eastlands and severely trounced a local militia of \
+               trolls armed with clubs and garlic. The key \
+               significance of this victory on Duncanthrax's \
+               conquest of the Eastlands, as well as the immediate \
+               recall of all vampiric soldiers in Duncanthrax's \
+               military force, cannot be understated.";
+               'Ogre', 'battle', 'duel':
+               "In late 666 GUE, Duncanthrax was engaged in a fierce \
+               battle with forces near Globby Hills. In a brilliant \
+               tactical move, Duncanthrax goaded the opposing force \
+               into decided the fate of the battle on a single duel -- \
+               himself versus their champion. Unfortunately for \
+               Duncanthrax, the Globby Hill champion turned out to \
+               be an Ogre of immense size. In an attempted diversion, \
+               Duncanthrax was quoted as saying to the Ogre, \
+               ~It's all right, we're with Silvermane.~ The Ogre \
+               was quoted as responding with ~Huh?~. Duncanthrax then, \
+               perhaps in a moment of sheer bravado, was heard to \
+               say ~Your shoes are untied.~ As the Ogre bent down \
+               to examine his unshod feet, Duncanthrax gave the \
+               signal, and the Ogre was buried under a massive \
+               pile of granola.";               
+               'Silvermane':
+               "Silvermane, the book notes, was the name of \
+               Duncanthrax's pet Dire Wolf.";
+               'Index', 'index':
+               "There appear to be notable entries on ~trophy~, \ 
+               ~Zilbo~, ~Griffspotter~, ~Diablo~, ~Ogre~, and \
+               ~Silvermane~.";
+               default:
+                 "You can't find anything interesting about that.";               
+             }               
+          ],
+       !weight 20,
+       size 15,
+;
+ 
+Object GUE_Cafe "Cafeteria"
+   with description "A small cramped area with lots of tables and \
+chairs and food stains. The exit is east.",
+        name "table" "tables" "chair" "chairs" "food" "stains",
+        e_to GUE_Quad,
+   has light;
+
+Nearby cafe_mess "mess"
+   with name "mess" "cups" "napkins" "junk",
+        initial "Someone must've had a late night recently, as \
+there is quite a mess of coffee cups, napkins, and other junk \
+on one table.",
+        before [;
+            Search:
+               if (self hasnt general) {
+                  give self general;
+              move sugar_cube to GUE_Cafe;
+              move decaf_coffee_can to GUE_Cafe;
+              "You dig through the mess and find an \
+unopened can of coffee and a sugar-cube.";
+            }
+            Take:
+              "There's too much to carry.";
+            Rub, Push, Pull, Turn, Touch, Shake:
+"You mess with the mess. Nothing happens.";
+        ],
+   has static;
+
+Object sugar_cube "sugar cube"
+   with name "sugar" "cube",
+        short_name "sugar cube",
+        description "A perfect featureless white cube (of sugar).",
+        !weight 5,
+        size 5,
+   has edible;
+
+Object GUE_Library "Library"
+   with description "A student library is here, filled with \
+various texts. The exit is west.",
+        w_to [ x y z ;
+             objectloop (x in player) {
+             if ((x == marked_scroll) && (librarian hasnt general))
+"Some strange invisible force stops you as you try \
+to leave. The librarian doesn't look up, but merely says, \ 
+~If you want to check something out, I'll \
+need to see some ID first.~";
+! (now, instead of doing recursive tree traverse, I do two levels
+! of checking, to save code space, since there aren't that many
+! workable containers in this game)
+             if (children(x) > 0) {
+                objectloop (y in x) {
+                   if ((y == marked_scroll) && (librarian hasnt general))
+"Some strange invisible force stops you as you try \
+to leave. The librarian doesn't look up, but merely says, \ 
+~If you want to check something out, I'll \
+need to see some ID first.~";
+                   if (children(y) > 0) {
+                      objectloop (z in y) {
+                         if ((z == marked_scroll) && (librarian hasnt general))
+"Some strange invisible force stops you as you try \
+to leave. The librarian doesn't look up, but merely says, \ 
+~If you want to check something out, I'll \
+need to see some ID first.~";
+                      }
+                   }
+                }
+             }
+             }
+             return GUE_Quad;
+! if ((marked_scroll notin GUE_Library) && (librarian hasnt general)) 
+        ],
+   has light;
+
+
+Object magazine_lib "wrinkled magazine" GUE_Library
+   with name "magazine" "wrinkled" "report",
+        initial "There's a wrinkled magazine (~US News and Dungeon Report~) here.",
+        description "SPIRITWRAK Author notes:^\
+3/96 -- Initial (beta) release. Functionally complete, some \
+nagging bugs and typos may still be present.^\
+4/96 -- Second release. Reported bugs fixed. A few puzzles \
+added, some removed.^\
+6/96 -- Third release. Bug fix release.",
+        size 15;
+        
+        
+
+Object GUE_Dorms "Dorms"
+   with description "You're in a short hallway inside some student \
+dormitories. The exit is east.",
+        e_to GUE_QuadN,
+        n_to dorm_doorN,
+        s_to dorm_doorS,
+        w_to "You wander the halls a bit and return here.",
+   has light;
+
+Object dorm_doorN "northern door" GUE_Dorms
+   with name "door" "northern",
+        when_closed "There's a closed door to the north.",
+        when_open "There's an open door to the north.",
+        description "A wooden door with a keylock. A note \
+attached to it says ~DOING WORK ABROAD~.",
+        with_key dorm_key,
+        door_dir n_to,
+        door_to GUE_dormroom,
+        after [;
+           Open:
+              give dorm_doorN2 open;
+           Close:
+              give dorm_doorN2 ~open;
+        ],
+    has static door openable lockable locked;
+
+
+Object dorm_doorS "southern door" GUE_Dorms
+   with name "door" "southern",
+        when_closed "There's a closed door to the south.",
+        description "A wooden door with a keylock. A note \
+attached to it says ~BEWARE OF DOG~.",
+        door_dir n_to,
+        door_to GUE_Dorms,  ! doesn't really go anywhere  
+        before [;
+           Open:
+              deadflag = 1;
+              "As you open the door, an enormous hellhound jumps \
+out! The unusual watchdog creeps back into the room and closes the \
+door -- after having mauled you to pieces, of course.";
+        ],
+    has static door openable lockable;
+
+Object GUE_ID1 "dirty ID card" GUE_Dorms
+  with name "ID" "card" "dirty",
+       description "A slightly dirty ID card. There's a picture \
+of some woman with short dark hair and glasses, and the name \
+~Stephanie~ on the front.",
+       size 5,
+;
+ 
+Object GUE_ID2 "clean ID card" 
+  with name "ID" "card" "clean",
+       description "An ID card with a picture \
+of some young student and the name \
+~Harold~ written on the front.",
+       size 5,
+;
+
+Object GUE_dormroom "Dorm room"
+   with description "A cramped room, mostly empty, with some \
+bare furnishings.",
+   name "furnishings" "desk" "chair" "bed",
+        s_to dorm_doorN2,
+   has light;
+
+! (due to short name confusion ("northern door"), 2nd half
+! of this door done separately)
+Object dorm_doorN2 "door" GUE_dormroom
+   with name "door",
+        when_closed "There's a closed door to the south.",
+        when_open "There's an open door to the south.",
+        description "An unremarkable wooden door.",  
+!        with_key dorm_key,
+        door_dir s_to,
+        door_to GUE_Dorms,
+        after [;
+           Open:
+             give dorm_doorN open ~locked;
+           Close:
+             give dorm_doorN ~open;
+        ],
+        before [;
+           Lock:
+              "You can't lock the door from this side.";
+           Unlock:
+              "You can't unlock the door from this side.";
+        ],
+    has static door openable lockable;
+
+!Nearby dormroom_furnishings "furnishings"
+!   with name "furnishings" "desk" "chair" "bed",
+!        description "Minimal furnishings -- a desk and chair, \
+!a small bed.  Almost reminds you of the Monastery.",
+!   has scenery;
+
+Object textbook "textbook" GUE_dormroom
+   with name "book" "textbook" "text",
+        initial "A forgotten textbook is lying in one corner of \
+the room.",
+        description [;
+           if (self hasnt open)
+            "The cover reads ~Ancient Mythology~.";
+           else
+              "~A colorful myth among ancient races has been \
+called 'The myth of the Four Brothers' by Elder Kroonwatz \
+(the famous Royal Chronicler). The story states that at the dawn of time, four \
+evil gods, who were brothers, sought dominance over that \
+which would become our world. Great battles were fought \
+between forces of light and darkness, and these \
+brothers were often victorious. \
+Fortunately for us, they \
+could not cooperate with each other, and \
+fought amongst themselves in petty power \
+struggles, driven individually by power and greed. 
+Indeed, legends state that on occassions, the brothers \
+would seek ways to actually destroy their own siblings, \
+along with the forces of good. \
+One brother constructed a strange artifact that would \
+have given him great power, but was discovered by agents of good. \
+He was imprisoned within the very object he built. The remaining \
+three, facing certain defeat without the combined strength of their \
+trapped brother, fled into planes unknown, but made a pact \
+that if the brother were ever freed, and the artifact of \
+power returned to him, the four would \
+agree to make their final attack against the forces of good. \
+Kroonwatz points out the obvious parallels with various other \
+mythologies that foretell the end of the known world.~";
+        ],
+        !weight 20,
+        size 15,
+        before [;
+           Open:
+             if (self hasnt general) {
+                give self general;
+                give self open;
+                move GUE_ID2 to parent(player);
+                "As you open the book, a small card flies out and lands \
+at your feet.";
+             }
+        ],
+   has openable;
+
+Object GUE_Enchanter_hall "Enchanter Hall (top)"
+   with description "You're at the top of a large auditorium which \
+is empty. You can walk down a long aisle to the \
+front of the hall, or out to the south.",
+        name "aisle" "seats",
+        s_to GUE_QuadN,
+        d_to GUE_Enchanter_hall_front,
+        n_to GUE_Enchanter_hall_front,
+   has light;
+
+Object GUE_Enchanter_hall_front "Enchanter Hall (bottom)"
+   with description [;
+   print "You're at the very front of a large \
+auditorium. From here you can look south and sees rows upon \
+rows of empty seats focused on the stage-like area where you now \
+stand. You can walk back into the seats to the south";
+   if (hall_switch has on)
+      ". A soft dim glow highlights your current area.";
+   else ".";
+   ],
+   name "rows" "seats" "glow",
+        s_to GUE_Enchanter_hall,
+        u_to GUE_Enchanter_hall,
+   has light;
+
+Nearby hall_switch "switch"
+   with name "switch",
+        initial "There's a curious switch in the wall here.",
+        description "A small switch in the far wall.",
+        before [;
+           SwitchOn:
+              if (self hasnt on) {
+              give self on;
+              print "You hear a click. A dim light now makes the \
+nearby area less gloomy.^";
+              }
+              else "It seems to be on already.";
+              if (self hasnt general) {
+                 give self general;
+                 move notebook to hall_desk;
+                 "^A student creeps out of the shadows. He looks \
+at you sheepishly. ~Sorry I haven't been to class all semester, \
+Professor,~ he begins. ~Anyway, here's my final paper.~ He puts \
+a notebook on the desk. ~All this stuff about the new 'science' \
+-- I don't know what all the fuss \
+is about. Magic was okay too, wasn't it? There's a part in my \
+conclusion where --~ He stops and looks at the notebook. ~Well, \
+anyhow.~ he says, and disappears back into the shadows."; 
+              }
+              else rtrue;
+           SwitchOff:
+              if (self has on) {
+              give self ~on;
+              "The dim light fades.";
+              }
+              else "It seems to be off already.";
+        ], 
+   has static switchable;
+
+Object hall_desk "large desk" GUE_Enchanter_hall_front
+   with name "desk",
+        description "A long desk sits in the middle of this area.",
+        capacity 30,
+   has static supporter;
+
+Object notebook "notebook"
+   with name "notebook",
+        capacity 3,
+        description "A plain white notebook with some loose pages.",
+        !weight 10,
+        size 10,
+        before [;
+           Receive:
+                if ((noun ~= term_paper) && (noun hasnt is_scroll)) 
+                   "You can't put that into the notebook.";
+        ],
+   has container openable;
+
+Object term_paper "term paper" notebook
+   with name "paper" "term",
+        !weight 5,
+        size 10,
+        description "~Magic, so what's it good for?~ by \
+Wilbur Lunchbox. It's a long-winded haphazard writing about \
+the virtues of magic in a time of science. Some of the topic \
+sentences are particularly clumsy. However, there's an insightful \
+bit at the end about how under certain circumstances, magic and \
+science become indistinguishable.",
+;
+
+Object GUE_Labs "Science Center"
+   with description "You are in a short hallway of some new \
+building. The words ~SCIENCE CENTER~ are painted on one wall. \
+The hallway opens to rooms to the east, or you can escape to the west.",
+        name "words",
+        w_to GUE_QuadN,
+        e_to GUE_Labs_Eng,
+   has light;
+
+Object GUE_Labs_Eng "Engineering Labs"
+   with description "\
+You shudder as you look around this area. \
+Clearly a place of science, piles of heavy machinery and strange \
+delicate-looking tools and artifacts are everywhere here. Hallways \
+run west and east.",
+        name "machinery" "tools" "artifacts",
+        w_to GUE_Labs,
+        e_to GUE_Labs_Office,
+        s_to GUE_Lab_door,
+   has light; 
+
+Object wood_book "research paper" GUE_Labs_Eng
+   with name "paper" "research",
+        description "~On the Structural Strength of Woods~, \
+a short, fairly dry research paper. Apparently, the researcher was testing \
+the breaking point of various woods. The conclusions reached \
+are summed up in the final paragraph:^^\
+~In summary, our findings indicate that out of the materials \
+tested, Ebony wood is clearly the best choice, and Balsa wood \
+clearly the worst. Balsa wood structures broke immediately when \
+even the slightest weight was tested on them. Pine wood structures \
+fared slightly better, holding light weights, but tended to break \
+on repeated stress. Ebony wood structures were approximately twice \
+as strong as Pine structures, holding up to at least one repeated \
+stress test before breaking.~",
+        !weight 5, 
+        size 15;
+
+Object GUE_Labs_Office "Office"
+  with description "You're in a small office of some sort. The \
+only exit is west.",
+       w_to GUE_Labs_Eng,
+  has light;
+
+Nearby Lab_desk "desk" 
+   with name "desk",
+        initial "A small desk sits in one corner here.",
+        description "It's quite tiny really.",
+   has static supporter;
+
+Object Lab_journal "lab journal" Lab_desk 
+   with name "journal" "lab",
+        description "Some loose handwritten pages read:^\
+^~...DAY 14)  We've put the artifact in the south lab. Still \
+^             no idea what it does, but I'm sure I can find \
+^             some lab student who can figure it out. \
+^    DAY 20)  My lab assistant Peabody believes that it's \
+^             some sort of 'mystical gate'. \
+^             Clearly this is hogwash. However \
+^             my grant has been awarded, so I have allowed \
+^             Peabody to continue work. \
+^    DAY 25)  Peabody demonstrated something fantastic today. \
+^             He took my briefcase and put it on \
+^             the artifact and in a white flash, it was gone! \
+^    DAY 27)  This is my last entry. I am leaving the University \
+^             tomorrow. Peabody, in my request to retrieve my briefcase \
+^             stepped onto the artifact, and was gone! I've read \
+^             his recent research notes, and if he's right, he's \
+^             now lost in a place unimaginable! I've locked the  \
+^             artifact away and destroyed the combination -- I pray no \
+^             one ever sees it again!...~\
+^ (The journal breaks off here)",
+       !weight 15,
+       size 15,
+;
+
+Object GUE_Lab_door "lab door"
+   with name "door" "lab",
+        when_closed [;
+             print "There's a closed heavy metal door to the";
+             if (self in GUE_Labs_Eng)
+             " south.";
+             else " north.";
+        ],
+        when_open [;
+             print "There's an open metal door to the";
+             if (self in GUE_Labs_Eng)
+             " south.";
+             else " north.";
+        ],
+        description "A large door made of some shiny hard metal. \
+                    There are no obvious handles or hinges.",
+        door_dir [;
+             if (self in GUE_Labs_Eng) return s_to;
+             else return n_to;
+        ], 
+        door_to [;
+             if (self in GUE_Labs_Eng) return GUE_Labs_SECRET;
+             else return GUE_Labs_Eng;
+        ],
+        before [;
+             Close:
+               if (self has open) {
+                  left_dial.number = random(9);
+                  right_dial.number = random(9);
+                  center_dial.number = random(9);
+                  give self ~open locked;
+                  "You close the door and hear some mechanisms spin.";
+               } 
+        ],
+        found_in GUE_Labs_Eng GUE_Labs_SECRET,
+    has static door openable lockable locked;
+
+! (and now a combination lock, which is probably going to be more 
+!  of an effort to code than for the player to figure out)
+Object special_lock "set of dials" GUE_Labs_Eng
+    with name "dials",
+         initial "There's an odd set of dials in the wall near the \
+metal door.",
+         description [;
+           print "Three dials are in a left-to-right row. Above \
+each dial is a tiny square window with some number visible behind it. \
+The windows currently read: ~",left_dial.number,center_dial.number, right_dial.number;
+"~. Right next to the set of dials is a small green button. \
+Letters right above the dials read: ~FrobozzCo~."; 
+    ],
+    has static transparent;
+
+Class dial_class
+   with name "dial",
+        number 0,
+        description [; 
+            print "A small dial. The window above reads ~", self.number;
+            "~.";
+        ],
+   has static;
+        
+
+Object left_dial "left dial" special_lock
+   class dial_class
+   with name "left",
+        before [;
+            Turn:
+              left_dial.number = left_dial.number + 1;
+              if (left_dial.number > 9) left_dial.number = 0;
+              print "The left window now reads: ~", left_dial.number; 
+               "~.";
+            SetTo:
+              if ((second < 0) || (second > 9))
+                 "The left dial apparently only goes from 0 to 9.";
+              else left_dial.number = second;
+              print "The left window now reads: ~", left_dial.number; 
+               "~.";
+        ],
+;
+Object center_dial "center dial" special_lock
+   class dial_class
+   with name "center" "middle",
+        before [;
+            Turn:
+              center_dial.number = center_dial.number + 1;
+              if (center_dial.number > 9) center_dial.number = 0;
+              print "The center window now reads: ~", center_dial.number; 
+               "~.";
+            SetTo:
+              if ((second < 0) || (second > 9))
+                 "The center dial apparently only goes from 0 to 9.";
+              else center_dial.number = second;
+              print "The center window now reads: ~", center_dial.number; 
+               "~.";
+        ],
+;
+Object right_dial "right dial" special_lock
+   class dial_class
+   with name "right",
+        before [;
+            Turn:
+              right_dial.number = right_dial.number + 1;
+              if (right_dial.number > 9) right_dial.number = 0;
+              print "The right window now reads: ~", right_dial.number; 
+               "~.";
+            SetTo:
+              if ((second < 0) || (second > 9))
+                 "The right dial apparently only goes from 0 to 9.";
+              else right_dial.number = second;
+              print "The right window now reads: ~", right_dial.number; 
+               "~.";
+        ],
+;
+
+Object green_button "green button" special_lock
+   with name "button" "green",
+        number 0,
+        weight 0,
+        description "A small green button next to the dials.",
+        before [;
+           Push:
+              ! a simple game of mastermind.  NOTE: I hate mastermind...
+              if (GUE_Lab_door has open)
+                 "You hear a short buzzing noise.";
+              if ((left_dial.number == 7) &&
+                  (center_dial.number == 3) &&
+                  (right_dial.number == 4)) {
+                 give GUE_Lab_door ~locked open;
+                 Achieved(15);
+                 "You hear three clicks, and the door swings open!";
+              }
+              ! observe the bizarre numerical method of tracking guesses...
+              ! ('0' implies wrong)
+              ! (As with regular mastermind, we first check for all
+              ! 'right # and right spot' and build a bitstring that
+              ! indicates this (i.e. 700 combo would give 100 bitstring).
+              ! Then, we scan over the slots that were not marked as 
+              ! 'right # and right spot' to check for 'right #, wrong 
+              ! spot'.  If, notably, we already found that number in
+              ! the 1st scan, we do _not_ treat it as 'right #, wrong
+              ! spot' (i.e. 777 should give us 1 click, not 1 click,
+              ! 2 thunks).
+              ! -- Author's note:  There is no doubt a simpler method
+              ! to do this, and you Inform junkies should feel free
+              ! to let me know this, however I found this method to
+              ! be easy to code, easy to understand, and pretty
+              ! robust.
+              green_button.number = 0;  ! RESET
+              green_button.weight = 0;  ! (# of 'thunks')
+              ! FIRST SCAN
+              if (left_dial.number == 7) green_button.number = 100; 
+              if (center_dial.number == 3) 
+                 green_button.number = green_button.number + 10;
+              if (right_dial.number == 4)
+                 green_button.number = green_button.number + 1;
+              ! SECOND SCAN
+              if (green_button.number ~= 100 or 101 or 110) {
+                 if (green_button.number ~= 11) {
+                 if ((left_dial.number == 3) && 
+                     (green_button.number ~= 10))
+                     green_button.weight = green_button.weight + 1; ! 'add a thunk' 
+                 if ((left_dial.number == 4) && 
+                     (green_button.number ~= 1))
+                     green_button.weight = green_button.weight + 1; ! 'add a thunk' 
+                 }
+              }
+              if (green_button.number ~= 10 or 11 or 110) {
+                 if (green_button.number ~= 101) {
+                 if ((center_dial.number == 7) && 
+                     (green_button.number ~= 100))
+                     green_button.weight = green_button.weight + 1; ! 'add a thunk' 
+                 if ((center_dial.number == 4) && 
+                     (green_button.number ~= 1))
+                     green_button.weight = green_button.weight + 1; ! 'add a thunk' 
+                 }
+              }
+              if (green_button.number ~= 1 or 11 or 101) {
+                 if (green_button.number ~= 110) {
+                 if ((right_dial.number == 7) && 
+                     (green_button.number ~= 100))
+                     green_button.weight = green_button.weight + 1; ! 'add a thunk' 
+                 if ((right_dial.number == 3) && 
+                     (green_button.number ~= 10))
+                     green_button.weight = green_button.weight + 1; ! 'add a thunk' 
+                 }
+              }
+              ! Print number of clicks and thunks
+              if (green_button.number == 0 && green_button.weight == 0)
+                 "Nothing happens.";
+              if (green_button.number == 1 or 10 or 100) {
+                 print "You hear a single click";
+                 if (green_button.weight == 0) ".";
+                 else print " followed by ";
+              }
+              else {
+                 if (green_button.number == 11 or 101 or 110) {
+                    print "You hear two clicks";
+                    if (green_button.weight == 0) ".";
+                    else print " followed by ";
+                 }
+                 else {
+                    print "You hear ";
+                 }
+              }
+              EnglishNumber(green_button.weight);
+              if (green_button.weight == 1) 
+              " thunk.";
+              else " thunks.";
+
+         ],
+   has static;
+
+
+
+Object GUE_Labs_SECRET "Strange Lab"
+   with description "This is an odd room, cramped even by lab \
+standards. The place seems to have been cleared out recently.",
+   n_to GUE_Lab_door,
+has light;
+
+
+! *************
+! critters/people
+! *************
+
+Object librarian "librarian" GUE_Library
+   with name "librarian" "student" "Stephanie",
+        description "A young woman with short dark hair and \
+gold-framed glasses.",
+        life [;
+           Attack, ThrowAt:
+              "Attacking librarians is not very becoming of \
+              a priest.";
+           Show, Give:
+              if (noun == glasses)
+                 "~Thanks no, I already have a pair.~";
+              if (noun == GUE_ID1) {
+                 remove GUE_ID1;
+                 "The librarian snatches the ID out of your hand. \
+~Where'd you get my ID?~ she says. ~I've been looking for it \
+everywhere.~";
+              }
+              if (noun == GUE_ID2) {
+                 print "The librarian peers at the ID. ~Hi ";
+                 if (self has general)
+                 "again, Harold,~ she says.";
+                 else {
+                 give self general;
+                 "Harold,~ \
+she says. ~I heard you were going to be away for a least two \
+more years. Got tired of Mithicus, eh? Well, anyway, remember to \
+return anything you borrow after summer session is over.~ She \
+scribbles something down in a notebook.";
+                 }
+              } 
+           default: "The librarian is currently too busy \
+cataloging books.";
+        ],
+        react_before [;
+             Cast:
+                "The librarian frowns as you start to chant. \
+~Quiet! This is a library, you know.~ she says.";
+             Blow:
+              if (noun==whistle)
+                 "You make an unusually high-pitched noise. \
+The librarian frowns. ~Please! This is a library, you know.~";
+             Yell:
+                 "The librarian frowns. ~Please! This is a library, you know.~";
+             Sneeze:
+                 "~You should see the school nurse about that cold.~";
+        ],
+   has animate female;
+
+
+Object kobold "large kobold" Forest_brambles
+   with name "kobold" "large",
+        initial "There appears to be a wounded kobold here, resting \
+        against a shrub.",
+        description "He's a pretty tough looking kobold. The large wound \
+        in his shoulder clearly has him in a foul mood.",
+        each_turn [;
+           if (random(20) == 1)
+              "^The kobold swipes at you with a club in his good arm, \
+              but due to his condition, doesn't come close.";
+        ],
+        life [;
+           Attack,ThrowAt: "Attacking a defenseless wounded would be somewhat \
+unsporting.";
+           default: "The kobold hisses at you and spits out some words that \
+           you can't understand at all.";
+        ],
+        before [;
+           Cast:
+              if (the_spell_was == espnis_spell or foblub_spell)
+                 "The kobold cannot understand your language.  The \
+                 chant fails.";
+              if (the_spell_was == taclor_spell) {
+                 move green_sphere to Forest_brambles;
+                 remove self;
+                 "You begin your chant, and the kobold seems stricken with \
+                fear. Soon, however, the kobold stands up and looks at \
+                his healed shoulder with wonder. He starts to say something, \
+                realizes you don't speak kobold, and stops. Puzzled by \
+                your actions, he stares at you for a moment, then searchs \
+                his jerkin, finding a small object which he tosses at your \
+                feet. He walks off into the deep forest, and vanishes."; 
+              }
+        ], 
+   has animate;
+
+Object air_spirit "air spirit" 
+  with name "spirit",
+       description "It looks like a small, animated tornado capable \
+       of taking you for quite a spin.",
+       each_turn [ i ;
+       ! spirit attack
+       ! (in general, the 4 spirits are _very_ dangerous.
+       ! There's a 1/5 chance of killing outright, and 2
+       ! chances of doing 10 and 5 points of damage respectively.
+       ! In short, the player needs to realize it's time to swanko,
+       ! and do so, quickly)
+       if (self hasnt general) {
+          give self general ~concealed;    
+          "^You hear a strange intake of air from the hole above \
+          your head. Without warning, a small tornado seems to \
+          flow in from above. It seems to be sentient!";
+       }
+       i = random(5);
+       if (i == 1) {
+          deadflag = 1;
+          "^The air creature moves with amazing speed! \
+          It surrounds you in a mass of whirling winds, and you \
+          find yourself spinning helplessly. The speed increases, \
+          and you are soon torn apart!";
+       }
+       if (i == 2) 
+          Player_HP_CUR = Player_HP_CUR - 10;
+       if (i==3) 
+          Player_HP_CUR = Player_HP_CUR - 5;
+       if (Player_HP_CUR <= 0) {
+          deadflag = 1;
+          "^The last blow from the air spirit was too much for \
+          you, I'm afraid to say. You are picked up and \
+          tossed against the wall in a lifeless heap by a \
+          massive gust of wind.";
+       } 
+       print "^The air spirit ";
+       if (i==2)
+          "picks you up in a powerful gust \
+          of wind and sends you flying across the chamber! Ouch.";
+       if (i==3)
+          "surrounds you with flying dust and \
+          debris, momentarily choking you! You break free \
+          just in time.";
+       "charges, but you evade the moving tornado.";
+       ],
+       before [;
+          Cast:
+            if (the_spell_was == swanko_spell) {
+               remove self;
+               "As you speak the chant, the air spirit falls back \
+               in fear! You finish the chant, and the air spirit \
+               slowly dissipates and grows smaller, until the \
+               creature vanishes completely.";
+            }
+            print "A sharp gust of wind practically \
+            tears your chant out of your lungs.^"; 
+       ],
+       life [ ;
+          Attack:   
+            print "You ";
+            if (random(20) >= 8)
+            "strike the air creature, but your attack passes \
+            harmlessly through it! Strange laughter seems to \
+            echo from everywhere.";
+            "attack the air spirit, but miss!";
+          default: "It's too busy trying to kill you.";
+       ],
+   has animate concealed;
+
+
+! *************
+! scrolls/spells
+! *************
+
+Object flour_scroll "flour-coated scroll" 
+   class scroll_class,
+   with name "flour-coated",
+;
+
+Object gloth_spell "fold dough 83 times" flour_scroll
+   class spell_class,
+   with name "gloth",
+        magic [;
+           if (second has animate)
+              "Well, when you see a living creature made out of \
+              dough around here, let me know.";
+           "The chant fails. I suppose you probably need actual dough \
+           for it to work.";
+        ],
+;
+
+Object marked_scroll "pen-marked scroll" GUE_Library
+   class scroll_class,
+   with name "pen-marked",
+        initial "There's a pen-marked scroll sitting amongst some books here.",
+;
+
+Object taclor_spell "heal wounds" marked_scroll
+   class spell_class,
+   with name "taclor",
+        magic [;
+          if (second == 0)
+             "The chant searches for a body to heal, and fails.";
+          if (second == player) {
+             Player_HP_CUR = Player_HP_MAX;
+             "You speak the chant, and feel a warm glow surround you. \
+             In moments, you feel physically renewed!";
+          }
+          if (second hasnt animate) {
+             print "It's apparently beyond your powers to \
+             heal "; DefArt(second); ".";
+          }
+          else {
+             CDefArt(second);
+             " is no doubt grateful for the gift of better health.";
+          }                                     
+        ],
+;       
+
+
+! *************
+! interesting objects
+! *************
+Object white_rod_piece "white rod piece" TROPHY_SECRET
+  class rod_class,
+  with name "white",
+       initial "In the center of the room is a short white rod.",
+       description "It's a short section of a rod made of some \
+undeterminable hard substance, \
+colored cloud-white. A piece of the Rod of the Ancients, no doubt!",
+;
+
+Object green_sphere "green sphere"
+   class sphere_class,
+   with name "green",
+        description "A tiny perfect green sphere, made of some strange \
+           unknown metal.",
+;

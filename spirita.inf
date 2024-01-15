@@ -1,0 +1,75 @@
+! ******************
+! Abbreviations, as produced by using '-u' option for 
+! optimal abbreviations under Inform 5.5
+! ******************
+! LOG
+! -- 2/11/96 -- first created
+! -- 3/16/96 -- hacked by hand
+
+!Abbreviate ".  ";
+Abbreviate ". ";
+Abbreviate ", ";
+Abbreviate " the ";
+Abbreviate "The";
+Abbreviate "You";
+Abbreviate "ing";
+Abbreviate "'s an odd metal gate that only comes up to about your waist";
+Abbreviate "and";
+Abbreviate "On Giant White Cube";
+Abbreviate "s you";
+Abbreviate " st";
+Abbreviate " you";
+! Abbreviate " that";
+Abbreviate " that ";
+Abbreviate " to";
+Abbreviate " through";
+Abbreviate " no";
+Abbreviate " of";
+Abbreviate " do";
+Abbreviate " train";
+Abbreviate " he";
+Abbreviate " in";
+Abbreviate " li";
+Abbreviate " lo";
+Abbreviate " on";
+Abbreviate " some";
+Abbreviate "'s a";
+Abbreviate " le";
+Abbreviate " for";
+Abbreviate " ch";
+Abbreviate " mo";
+Abbreviate " ou";
+Abbreviate " thi";
+Abbreviate " see";
+Abbreviate " gr";
+Abbreviate " ma";
+Abbreviate " clo";
+Abbreviate " ro";
+! Abbreviate " en";
+Abbreviate " an";
+Abbreviate " with";
+Abbreviate " nich";
+Abbreviate " sa";
+Abbreviate "south";
+Abbreviate " flo";
+Abbreviate " la";
+Abbreviate " sh";
+Abbreviate " ne";
+Abbreviate " br";
+Abbreviate " ca";
+Abbreviate " pa";
+Abbreviate " su";
+Abbreviate " fi";
+Abbreviate " ba";
+Abbreviate " be";
+Abbreviate " from";
+Abbreviate " wal";
+Abbreviate " sp";
+Abbreviate "Brother Joseph";
+Abbreviate "the";
+Abbreviate "round";
+Abbreviate "all";
+Abbreviate " se";
+Abbreviate "you";
+Abbreviate "rang";
+Abbreviate " are";

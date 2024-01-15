@@ -1,0 +1,3075 @@
+! *****************************************************************
+! SPIRITWRAK -- An exercise in copyright infringement :)
+! 
+!    Release 1, 12/95 -- 3/96 
+!    Release 2, 3/96 --  
+!    Release 3, 4/96 --  
+!    Copyright (C) 1996, D. S. Yu
+!
+!    This program is free software; you can redistribute it and/or modify
+!    it under the terms of the GNU General Public License as published by
+!    the Free Software Foundation; either version 2 of the License, or
+!    (at your option) any later version.
+!
+!    This program is distributed in the hope that it will be useful,
+!    but WITHOUT ANY WARRANTY; without even the implied warranty of
+!    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+!    GNU General Public License for more details.
+!
+!    You should have received a copy of the GNU General Public License
+!    along with this program; if not, write to the Free Software
+!    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+!
+!    To contact the author (Dan Yu), send email to dsyu@holonet.net.
+!
+! *****************************************************************
+
+! SPECIAL THANKS:
+!   Mr. Blank, Lebling, Meretzky, Moriarty for the Zork universe.
+!   Graham Nelson for Inform, and for various code I've shamelessly cribbed.
+
+! NUTRITION NOTE:  No Microsoft(tm) products were used in the 
+! construction of this game
+
+! ** inform compile switches here **
+Switches exv5b;
+
+! ** abbreviations
+Include "spirita.inf"; 
+
+! ** Story Constants **
+Constant Story "SPIRITWRAK";
+Constant Headline "^An Interactive Fantasy Adventure^\
+		   Copyright (C) 1996, by D.S. Yu.^\
+Portions copyright Graham Nelson.^^\
+'SPIRITWRAK' comes with ABSOLUTELY NO WARRANTY ^\
+This is free software, and you are welcome to redistribute it \
+under conditions as described in the GNU General Public License as published by \
+the Free Software Foundation; either version 2 of the License, or \
+(at your option) any later version.^^";
+
+Release 3;
+
+! ** Scoring System
+Constant MAX_SCORE 250;
+Constant NUMBER_TASKS 27;
+Constant TASKS_PROVIDED;
+Constant OBJECT_SCORE 2;
+! Constant ROOM_SCORE 1;
+! Global task_scores initial t1 t2 t3.....
+Array task_scores -> 2 5 5 5 10 15 5 5 5 5 5 5 10 10 10 5 5 5 10 10 5 5 10 5 5 5 10; 
+
+! ** Player inventory and weight system
+Constant MAX_CARRIED 15;  ! Max of 15 items carried at start
+         ! This can be changed on the fly by adjusting player.capacity
+Property weight; 
+! Entire weight system removed 3/16/96, however certain puzzles
+! inadvertently depend on this, so...
+Property size;
+
+global Player_HP_MAX = 20; ! number of hp MAX (should be 20 + score)
+global Player_HP_CUR = 20; ! number of hp left (< MAX)
+global Player_Lives_Left = 3;  ! number of resurrects left 
+global in_hades = 0;           ! Is the player in Hades? (we certainly hope not)
+global in_atrii = 0;           ! Is the player in Atrii? 
+! global all_my_spells data 32;   array for spells in spell book
+Array all_my_spells -> 64;  ! array for spells in spell book
+global has_resist_gravity = 0; ! is player resisting gravity?(see feeyuk spell)
+global spell_block = 0;        ! block spell-related stuff (end-game)
+
+! Any actions that are replaced get mentioned here
+Replace PraySub;
+Replace StrongSub;
+Replace InsertSub;  ! for relative sizes
+
+! *** Include Parser and VerbLib
+Include "Parser";
+Include "VerbLib";
+
+! -- two global location ptrs for Barsap's Gambit
+global WN_TO;
+global ES_TO;
+
+! ******************* CLASS DEFS *****************
+
+! ** rod (part) class and attribute
+Attribute is_rod;
+
+Class rod_class
+   with name "rod",
+        description "A thin rod made from some undeterminable material.",
+        !weight 10,
+        size 10,
+        before [;
+           Cast:
+              "You complete the chant, but the rod lies unaffected! \
+              Perhaps it is protected from magic somehow?";
+           Join:
+              if (second has is_rod)
+                 "You try to bring the rods together, but a \
+sudden blast of energy prevents you, and stings your hands!";
+! (note that true rod pieces have their own Join befores, which
+! should, in theory, get called instead of this one).
+        ],
+   has is_rod scored;
+
+Class parchment_class
+   with name "parchment",
+        description "A piece of blank parchment.",
+        !weight 10,
+        size 15,
+;
+
+Attribute is_sphere;
+
+Class sphere_class
+   with name "sphere",
+        description "A small hard sphere made from some undeterminable material.",
+        !weight 5,
+        size 3,
+        before [;
+           Cast:
+              "You complete the chant, but the sphere lies unaffected! \
+              Perhaps it is protected from magic somehow?";
+        ],
+   has is_sphere scored;
+
+Attribute is_flag;
+
+Class flag_class
+   with name "flag" "cloth",
+        plural "flags",
+        description "A short square piece of colored cloth.",
+        !weight 10,        
+        size 15,
+   has is_flag;
+
+Class trophy_dep_class
+   with name "depression" "niche" "hole" "keyhole",
+      initial [;
+print "There is a circular depression in the center of the floor";
+if (trophy in self)
+   ". Sitting in the depression is a trophy.";
+else ".";
+      ],
+      description [;
+print "A small circular depression in the center \
+      of the stone floor";
+if (trophy in self)
+     ". At the moment, the depression holds a trophy.";
+else ". There seem to be three small concave \
+      marks in the otherwise flat stone of the depression.";
+      ],
+      size 8,
+      capacity 1,
+has static container open;
+   
+Attribute is_niche;
+Property counter_niche;  
+Property niche_dir;  ! assoc with the dir a niche is facing.
+
+Class niche_class 
+   with name "niche",
+        capacity 1,
+        niche_dir 1,  ! default north
+        description "It looks like a chiseled-out niche in the floor.",
+        initial [;
+           switch (self.niche_dir) {
+           1: print "There's a square niche in the northern edge of the floor here";
+           2: print "There's a square niche in the western edge of the floor here";
+           3: print "There's a square niche in the southern edge of the floor here";
+           4: print "There's a square niche in the eastern edge of the floor here";
+           }
+           if (children(self) ~= 0) {
+              print ". Resting in the niche is ";
+              InDefArt(child(self));
+              print " that extends into the darkness";
+! weird -- There is no "CInDefArt(), equiv to (A) obj, which
+! is probably pretty simple...
+           }
+           ".";
+        ],
+        before 
+        [ j ;
+          Receive:
+            if (noun hasnt is_wood_beam)
+                 "That's not going to stay in the niche.";
+            else {
+               ! (odd capacity check, seems like I'm stepping in front...)
+               if (children(self) ~= 0)
+                  "The niche space is currently full.";
+               ! place both pieces in niches
+               j = child(noun);  ! child piece (whichever)
+               move j to self.counter_niche;
+               move noun to self;
+               "You carefully place one end of the beam in the niche and \
+               extend the other end into the darkness. You feel something \
+               solid support the far end!";
+            }
+          LetGo:
+            ! (reconstruct wood beam) Assumption is that noun must have 
+            ! wood_beam attrib.
+            move child(self.counter_niche) to child(self);
+            move child(self) to player;
+            "Taken.";
+        ],  
+        has static container open is_niche; 
+
+! ** multiple coins, cribbed from "Balances"
+Attribute is_coin;
+ 
+Class  coin_class
+  with name "coin",
+       description "A round metal disc, with ~1zm~ stamped on both sides.",
+       !weight 1,
+       size 1,
+       parse_name
+       [ i j w;
+         if (parser_action==##TheSame)
+         {   if ((parser_one.&name)-->0 == (parser_two.&name)-->0) return -1;
+             return -2;
+         }
+         w=(self.&name)-->0;
+         for (::i++)
+         {   j=NextWord();
+             if (j=='coins') parser_action=##PluralFound;
+             else if (j~='coin' or w) return i;
+         }
+       ], 
+       plural "coins",
+  has  is_coin;
+
+! ** Spell-casting system, again cribbed from Graham's "Balances",
+!    except stuffy priests call them 'chants'...
+! ----------------------------------------------------------------------------
+!   Now the whole spell-casting system
+! ----------------------------------------------------------------------------
+
+Attribute is_spell;
+Attribute known_about;
+Attribute is_scroll;    
+Attribute is_spell_book;
+Property magic;
+Fake_Action SayName;
+
+[ SpellName obj; print (address) (obj.&name)-->0; ];
+
+Class  spell_class
+  with name "spell" "spells" "chant" "chants", article "the", number 0,
+       short_name
+       [; SpellName(self); print " chant"; give self known_about; rtrue;
+       ],
+       before
+       [; 
+  !        SayName: SpellName(self); print " chant:  ", object self;
+          SayName: SpellName(self); print " chant:  ", self;
+                   give self known_about; rtrue;
+          Examine: <SayName self>; ".";
+       ],
+       size 0,
+  has  is_spell;
+
+Object memory "memory"
+  with capacity 5,   ! will change periodically, given God-granted powers...
+       number 1,
+       size 0,
+       before
+       [ i j k;
+         Examine:
+           if (spell_block == 1)
+               "Currently, your mystic powers don't seem to be working.";
+           objectloop (i in self) if (i.number==100) j++;
+           if (j>0)
+           {   print "The ";
+               objectloop (i in self)
+                   if (i.number==100)
+                   {   k++; SpellName(i);
+                       if (k==j-1) print " and ";
+                       if (k<j-1) print ", ";
+                   }
+               if (j==1) print " chant is"; else print " chants are";
+               print " yours forever. Other than that, y";
+           }
+           else print "Y";
+           print "ou have ";
+           j=0; k=0;
+           objectloop (i in self) if (i.number<100) j++;
+           if (j>0)
+           {   print "the ";
+               objectloop (i in self)
+                   if (i.number<100)
+                   {   k++;
+                       PrintShortName(i);
+                       if (i.number==2) print " (twice)";
+                       if (i.number==3) print " (thrice)";
+                       if (i.number==4) print " (four times)";
+                       if (i.number>=5) print " (many times)";
+                       if (k==j-1) print " and ";
+                       if (k<j-1) print ", ";
+                   }
+           }
+           else print "no chants";
+           " prepared.";
+         Insert:
+           if (spell_block==1)
+               "Currently, your mystic powers don't seem to be working.";
+           if (second.number==100) "You always know that chant.";
+           self.number=self.number+1;
+           print "Making a quick prayer to the Gods, you prepare the ";
+           SpellName(second);
+           print " chant";
+           if (second notin self) second.number=0;
+           move second to self;
+           second.number=second.number+1;
+           if (second.number==1) print ".";
+           if (second.number==2) print " once again.";
+           if (second.number==3) print " a third time.";
+           if (second.number>3) print " yet another time.";
+           if (self.number <= self.capacity) { new_line; rtrue; }
+           i=youngest(self); <Remove self i>;
+           "^A voice booms out ~Do not try to exceed your powers, mortal!~";
+         Remove:
+           if (second notin self || second.number==100) rtrue;
+           if (self.number>0) self.number=self.number-1;
+           second.number=second.number-1;
+           if (second.number==0) remove second;
+           rtrue;
+       ];
+
+Object gnusto_spell "copy a chant into your prayer book" memory
+ class spell_class
+  with name "gnusto",
+       number 100,
+       magic
+       [ i a_book;
+            if (spell_block==1)
+               "Currently, your mystic powers don't seem to be working.";
+            if (amulet hasnt worn)
+               "You speak the chant, and absolutely nothing happens!";
+            if (second has is_spell_book)
+               "Unlike scrolls, prayer books are magically guarded against \
+                the 'theft' of their lore.";
+            if (second==0 || second hasnt is_scroll)
+               "Your chant goes unanswered.";
+            if (second notin player)
+                "A gnusto chant would require close scrutiny of the scroll \
+                 it is to copy, which you do not seem to be holding.";
+            objectloop (i in player)
+                if (i has is_spell_book) a_book=i;
+            if (a_book==0)
+                "Your chant fails, as you have no prayer book.";
+            i=child(second);
+            if (i==0 || i hasnt is_spell)
+            {   print "Your chant fails, as "; DefArt(second);
+                " is illegible.";
+            }
+            <Learn a_book i>; remove second;
+            print "Your prayer book begins to shake! Slowly, ornately, \
+                   the words of "; DefArt(i); " are inscribed, \
+                   into the book with a violet glow. \
+                   The book's brightness fades, but the chant remains! \
+                   However, the scroll on which it was written vanishes as \
+                   the last word is copied.";
+       ];
+
+Class  spell_book_class
+  with magic 0,
+       capacity 20,
+       size 15, 
+       before
+       [ p i; Open, Close:
+              CDefArt(self); " will always open to the desired page thanks \
+              to the powers of the Gods, may they never forget us.";
+          Attack:
+              print "When you are done, "; DefArt(self); " remains unmarred.";
+          Learn:
+              if (self.magic==0) "(This prayer book has no pages.)";
+              p = self.magic;
+              for (i=0:i<self.capacity && (p-->i)~=0:i++) ;
+              if (i==self.capacity) rtrue;
+              p-->i = second;
+              rtrue;
+       ],
+       after
+       [ p i j; Examine:
+              if (self.magic==0) "(This prayer book has no pages.)";
+              p = self.magic;
+              for (i=0:i<self.capacity && (p-->i)~=0:i++)
+              {   j=p-->i; <Examine j>;
+              }
+              rtrue;
+       ],
+  has  is_spell_book;
+
+Class  scroll_class
+  with parse_name
+       [ i j k; j=-1;
+              if (self has general)
+              {   if (child(self)~=0 && child(self) has is_spell)
+                      j=(child(self).&name)-->0; else j='illegible';
+              }
+              for (::) {
+                 k = NextWord();
+                 if (k=='scrolls') parser_action = ##PluralFound;
+                 if ((k=='scrolls' or 'scroll' or j) || (k==(self.&name)-->0))
+                    i++;
+                 else return i;
+              }
+              ! while (NextWord()==j or 'scroll' or (self.&name)-->0) i++;
+              ! return i;
+       ],
+       before
+       [ i; Examine:
+            i=child(self);
+            give self general;
+            if (i==0 || i hasnt is_spell)
+                "The scroll has faded, and you cannot read it.";
+            print "The scroll reads ~"; <SayName i>; "~.";
+       ],
+       invent
+       [;   if (inventory_stage==2 && self has general)
+            {   if (child(self)==0 || child(self) hasnt is_spell)
+                    print " (which is illegible)";
+                else
+                {   print " (of "; DefArt(child(self)); print ")"; }
+            }
+       ],
+       size 10,
+  has scored is_scroll;
+
+! NOTE: This routine has a slight bug (as cribbed from GN's
+! Balances, rel2) in that Examine, if the routine reaches
+! scope_stage 3, prints a rather confusing msg.  However,
+! the appropriate msg is printed for, say, Learn, if the
+! spell is unknown/out-of-scope.  Oddly, action can't
+! be checked at stage 3, so I copied a second version of
+! the routine for Examine only.  -DY
+! 3/19 update: Checking Graham's release 3 of Balances, 
+! I stumble across the "action_to_be" var.  Most useful.
+[ ReadableSpell i j k;
+  if (scope_stage==1) return 1;
+  if (scope_stage==2)
+  {   objectloop (i in player)
+          if (i has is_spell_book)
+          {   for (k=0:k<i.capacity && (i.magic)-->k~=0:k++)
+              {   j=(i.magic)-->k; PlaceInScope(j);
+              }
+          }
+      rtrue;
+  }
+  if (action_to_be == ##Examine) 
+     "You can't see any such thing.";
+  !"You have never seen or heard of such a chant.";
+  "You can't see such a chant, if that is indeed a chant.";
+];
+
+[ SpellsSub; <Examine memory>; ];  ! for our case, 'chants' will work also
+
+[ LearnSub; if (location==thedark)
+                print "(The magic purple glow of the chants casts enough light \
+                        that you can read them.)^";
+            <Insert memory noun>;
+];
+
+global the_spell_was = gnusto_spell;
+
+[ CastOneSub; <Cast the_spell_was noun>; ];
+
+! Property long unmagic;
+
+
+! (wood beams and niches -- for Barsap's Gambit)
+! (put after 'the_spell_was' global defined)
+
+Attribute is_wood_beam;
+
+Class wood_beam_class
+  with name "wood" "beam",
+       plural "beams",
+       description "A long thin wooden beam.",
+       !weight 10,
+       size 50,
+       number 0,   ! number is the 'strength left' qualifier
+       before [;
+          Cast:
+          if (the_spell_was == egdelp_spell)
+             "The wood beam is covered in a waxy film! Thinking \
+better of this, you hastily wipe off the offending build-up.";
+          if ((the_spell_was == luncho_spell or huncho_spell) &&
+              (parent(self) has is_niche)) {
+          ! reconstruct beam before teleporting
+          ! due to problem below, I'm denying this...
+"Your chant goes unanswered.";
+           !  move child(parent(self).counter_niche) to self;
+           !  <<Cast the_spell_was self>>; 
+           ! NOTE NOTE This may recursively explode...
+          }
+       ],
+  has is_wood_beam;
+
+Class balsa_beam_class
+   class wood_beam_class,
+   with name "balsa",
+        plural "balsa wood beams",
+        description "A long thin balsa wood beam.",
+        number 0;  ! always breaks
+
+Class pine_beam_class
+   class wood_beam_class,
+   with name "pine",
+        plural "pine wood beams",
+        description "A long thin pine wood beam.",
+        number 1;
+        
+Class ebony_beam_class
+   class wood_beam_class,
+   with name "ebony",
+        article "an",
+        plural "ebony wood beams",
+        description "A long thin ebony wood beam.",
+        number 2;
+                
+[ CastSub k;
+  the_spell_was = noun; <Remove memory noun>;
+
+!  if (noun has general)
+!  {   give noun ~general;
+!      if (RunRoutines(noun,unmagic)~=0) rfalse;
+!      "Nothing happens.";
+!  }
+
+  if (amulet hasnt worn)
+     "You speak the chant, and absolutely nothing happens!";     
+  if (spell_block==1)
+     "Currently, your mystic powers don't seem to be working.";
+  if (in_hades == 1)
+     "Your Gods can't save you now...";
+  if (second~=0)
+  {   ResetVagueWords(second);                     ! Set "it", "him", "her"
+      if (RunRoutines(second,before)~=0) rfalse;   ! Run before routine(s)
+  }
+  k = random(10);
+  if (k<=3) {
+     if (k==1)
+        "You speak the chant, but the Gods are not kind this time, as nothing happens!";
+     if (k==2 or 3)
+        "You speak the chant, but something sounds wrong. Nothing happens \
+this time."; 
+  }
+  if (RunRoutines(noun,magic)~=0) rfalse;
+  "Nothing happens.";
+];
+
+[ InScope i;
+  if (verb_word=='c,cast' or 'cast')
+      objectloop (i in memory) PlaceInScope(i);
+  rfalse;
+];
+
+[ ParserError x i flag vb;
+  if (etype==VERB_PE or ASKSCOPE_PE)
+  {   if (etype==ASKSCOPE_PE)
+      {   if (verb_word=='cast') vb=1;
+          if (verb_word=='learn' or 'memorise' or 'memorize') vb=2;
+          if (verb_word=='copy') vb=3;
+          if (vb==0) { etype=CANTSEE_PE; rfalse; }
+      }
+      wn=verb_wordnum; if (vb~=0) wn++;
+      x=NextWordStopped();
+      for (i=player+1:i<=top_object:i++)
+          if (i has is_spell && Refers(i,x)==1
+              && i has known_about) flag=1;
+      if (flag==1)
+      {   if (vb==0 or 1)
+             "You haven't got that chant prepared. [Type ~spells~ \
+              or ~chants~ to see what you do have prepared.]";
+          if (vb==2)
+             "Your training is such that you can only prepare such a chant \
+              with the aid of a prayer book containing it.";
+          if (vb==3)
+             "You have no text of that chant to copy.";
+      }
+      if (vb==1)
+         "You haven't prepared that chant, if indeed it is a chant.";
+      if (vb==2 or 3)
+         "You haven't access to that chant, if indeed it is a chant.";
+  }
+  rfalse;
+];
+
+! Random attempt to code a ChooseObjects for the
+! coin choosing problem often seen in the Bank of Zork
+[ ChooseObjects obj code;
+  if (code < 2) rfalse;
+  if ((action_to_be == ##Remove or ##Insert) &&
+      (obj has is_coin) && (obj in player)) return 9;
+  return 0;
+];
+
+[ UnknownVerb word i;
+  objectloop (i in memory)
+      if (word==(i.&name)-->0) { the_spell_was = i; return 'c,cast'; }
+  rfalse;
+];
+
+[ PrintVerb v;
+  if (v=='c,cast') { print "cast a chant at"; rtrue; }
+  rfalse;
+];
+
+! ----------------------------------------------------------------------------
+!   The player's spell book, and initial spells (to go with gnusto):
+! ----------------------------------------------------------------------------
+
+Object prayer_book "prayer book"
+ class spell_book_class,
+  with name "prayer" "book" "my" "spellbook",
+       description "Mystical Chants^";
+
+Object frotz_spell "cause an object to give off light"
+ class spell_class,
+  with name "frotz",
+       magic
+       [;  if (second==0) "There is a brief, blinding flash of light.";
+           if (second has animate)
+               "The chant, not designed for living creatures, is denied.";
+           if (parent(second)==compass)
+               "The chant fails.";
+           give second light;
+      print "There is an almost blinding flash of light as "; DefArt(second);
+      print " begins to glow! It slowly fades to a less painful level, but ";
+      DefArt(second); " is now quite usable as a light source.";
+       ],
+;
+
+! ** Start of locations (and other objs) **
+
+! ***********************************************************************
+! **
+! ** LOCATIONS INSIDE MONESTARY (Mostly)
+! **
+! ***********************************************************************
+
+Object MON_Chapel1 "Monastery Chapel"
+      with description "You are standing in a monastery chapel. \
+All around you, fellow Brothers of the Order are standing, chanting. \
+The eerie droning voices seem to reverberate into the air. At the \
+front of the chapel, Brother Joseph stands in deep concentration, \
+holding the Rod of the Ancients.",
+      name "brothers",
+      number 0,
+      each_turn [ ;
+          MON_Chapel1.number = MON_Chapel1.number + 1;
+          Startup1(MON_Chapel1.number);
+      ],
+      before [ ;
+          if (action==##Listen) "You hear heavy chanting";
+          if (action==##look) rfalse;
+          if (action==##Wait) rfalse;
+          "You are caught up in the collective chanting, and cannot break \
+           your concentration to do much of anything else.";
+      ],
+      has light;
+    
+! A fake obj to handle 'look at Joseph'
+Object MON_FAKE "the Order" MON_Chapel1
+   with name "Joseph" "rod" "brothers",
+   description [; <<Look>>;],
+has scenery;
+
+! A somewhat bulky routine to set our stage.  
+[ Startup1 currturn;
+   if (currturn <= 1) {
+      print "^Brother Joseph now speaks directly to the entire Order.^^\ 
+      ~Fellow Brothers, the year, as you know, is 976 GUE. \
+      A difficult time indeed. Ten years have passed since the Cataclysm \
+      brought forth by the Circle of Enchanters changed our world forever. \
+      The outside world as we know it is in turmoil. A period of great \
+      change is upon all of us.~^";
+      rtrue;
+   }
+   if (currturn == 2) {
+      print "^Brother Joseph continues speaking.^^\
+      ~Our order has always maintained the strictest secrecy. Few \
+      outside of our order know of our existence. \
+      We are the keepers of the mystic balance \
+      that which embodies pure magic that can keep our world \
+      safe. It has always been thus -- we watch over all \
+      of Quendor, never interfering in the affairs of others, yet \
+      striving to maintain harmony.~^";
+      rtrue;
+   }
+   if (currturn == 3) {
+      print "^Brother Joseph continues speaking.^^\
+      ~But we can no longer depend on enchantments to keep \ 
+      outsiders at bay. Magic as we know it is dying. The dreaded \
+      Age of Science is already upon us, and in short time, our \
+      order will be discovered, and the balance will be no more. Many of \
+      our order have gone out into the world in secret, in attempts \
+      to repair what has been broken, but alas, this appears to be \
+      impossible.~^"; 
+      rtrue;  
+   }
+   if (currturn == 4) {
+      print "^Brother Joseph continues.^^\
+      ~I have brought you all forth today to say that although we \
+      cannot protect the future of Quendor, we can protect ourselves!~ \
+      He holds the Rod of the Ancients high. ~This holy Rod, which \
+      the Ancient Ones used to defeat the demon Anabais, \
+      has the power to protect our order. I have discovered a lost mystic \
+      cube!~ He holds a white, featureless cube high in his other hand. \
+      ~This cube, when joined with the Rod of the Ancients, will \
+      preserve our order forever, sequestering all of us in another time, \
+      another place!~^";
+      rtrue;
+   }
+   if (currturn >= 5) {
+      print "^There is a momentous pause. ^^\
+      Brother Joseph looks at the entire Order. \
+      ~May the Gods smile down upon us on this day! We go now, \
+      into the unknown!~ He triumphantly joins the white cube to \
+      the end of the Rod of the Ancients.^^\
+      There is a sudden, blinding white flash! The chanting is instantly \
+      broken by a tremendous thunderclap! Brother Joseph is suddenly \
+      thrown back by a great force, and to your horror, the Rod of the \
+      Ancients breaks apart! Four pieces now float serenely above the \
+      altar, above a strange black globe that seems to crackle with energy.^^\
+      ~AT LAST!~^^\
+      The voice comes from nowhere and everywhere. The black sphere \
+      pulsates with lightning.^^\
+      ~ANABAIS IS FREE AGAIN!~ The voice pauses. \
+      ~I see you found my fake mystic cube \
+      Joseph. I knew that someday, someone would find it, and free \
+      me from my prison!~ The voice pauses again. ~To show my gratitude, I'm \
+      scattering this broken symbol to the corners of the world!~ \
+      The pieces of the rod suddenly disappear!^^\
+      ~Watch out!~ someone cries. \
+      The black sphere suddenly expands with alarming speed. \  
+      Seconds later, a violent explosion seems to jar the very \
+      ground you stand on, and a black void covers all.^^\
+      You awaken in your room in a cold sweat. Was it all a terrible \
+      dream? The day beckons...^";
+      PlayerTo(MON_your_quarters);
+      ! remove MON_Chapel1;  clean up memory (NOTE: This is futile)
+      rfalse;
+   }
+];
+
+
+Object MON_your_quarters "Your Quarters"
+   with name "furnishing" "furnishings",
+   description "You are in your room in the Monastery. It is \
+sparsely furnished, but certainly feels like home. The exit \
+is north.",
+   n_to MON_f1hall1,
+   has light;
+
+Object note "note" MON_your_quarters
+with name "note",
+        description "The note, in a hastily written scrawl, reads:^\
+            ~Please stop by the chapel as soon as you can.^\
+            -- Joseph~",
+        !weight 1,
+        size 5, 
+;
+
+!Object staff "staff" MON_your_quarters
+!   with name "staff" "walking" "trusty" "stick",
+!        initial "Your trusty walking staff is right where you left it.",
+!        description "A stout piece of pine you found while on a nature \
+!                     walk, this staff has served you well on many journeys.",
+        !weight 20,
+!        size 20,
+!;
+
+Object sleeppallet "sleeping pallet" MON_your_quarters
+   with name "pallet" "sleeping" "roll",
+   description "This is your sleeping pallet, a short portable sleeping roll \
+               made of straw. It's softer than it looks.",
+   size 25,
+   react_before [;
+      Go: if (player in self) "You'll have to get off the sleeping \
+pallet first.";
+   ],
+   has supporter enterable;
+
+Object MON_f1hall1 "Hallway (near your quarters)"
+   with description "You are in a hallway running west and east. The \
+vaulted ceilings are a nice touch. Your \
+quarters are to the south.",
+   name "vaulted" "ceiling",
+   s_to MON_your_quarters,
+   w_to MON_f1hall2,
+   e_to MON_f1hall3,
+   has light;
+
+Object MON_f1hall3 "Hallway (near quarters of Palemon and TuffBerry)"
+   with description "You are in a hallway running west and east. \
+Brother TuffBerry's quarters lie to the south. Brother Palemon's \
+quarters are to the north.",
+   w_to MON_f1hall1,
+   e_to MON_f1hall4,
+   n_to MON_Palemon_quarters,
+   s_to MON_Tuffberry_quarters,
+   has light;
+   
+Object MON_f1hall4 "Hallway (east end)"
+   with description "You are at the east end of an east-west hallway. \
+Brother Joseph's quarters lie to the north, and Brother Toolbox's \
+quarters lie to the south.",
+! The acolyte chambers lie to the east.",
+   w_to MON_f1hall3,
+   ! n_to MON_Joseph_quarters,
+   n_to "It doesn't look like Joseph is in. Perhaps you can find \
+him elsewhere.",
+   s_to MON_Toolbox_quarters,
+!   e_to MON_acolyte_chambers,
+   has light;
+      
+! Object MON_acolyte_chambers "Acolyte Chambers"
+!    with description "You are in a long chamber that serves as the home \
+! for the many devoted acolytes of the Order.  The room is currently \
+! empty.",
+!    w_to MON_f1hall4,
+!    has light;
+   
+Object MON_f1hall2 "Hallway (west end)"
+   with description "You are at the west end of an east-west hallway. \
+There are stairs up and down here, and an exit to the west.",
+   name "stairs",
+   e_to MON_f1hall1,
+   u_to MON_f2hall1,
+   d_to MON_f0hall1,
+   w_to MON_garden,
+   has light;     
+
+Object MON_garden "Monastery Gardens"
+   with description "You are in the Monastery gardens, where various \ 
+shrubs and conifers are covered in a light blanket of snow. \
+An open cloister lies to the west, while \
+a doorway heads east.",
+   name "cloister" "doorway" "shrubs" "conifers",
+   w_to MON_cloister,
+   e_to MON_f1hall2,
+   has light;
+ 
+!Nearby shrubs "snow-covered shrubs"
+!   with name "shrubs" "shrub" "snow-covered" "conifers" "conifer" "plants",
+!        description "Good thing they're evergreen.",
+!   has scenery;
+   
+Object sand "sand" MON_garden
+   with name "sand",
+        initial "A small area in the snow has been cleared for late winter \
+planting, and some sand has been sprinkled here and there.",
+        description "A handful of sand, nothing more, nothing less.",
+        !weight 5,
+        size 5,
+        article "some",
+;
+
+Object MON_cloister "Cloister Walkway"
+   with description "You are in an open cloister, that runs along the \
+Monastery gardens to the east. To the north is the main wing of the \
+Monastery. To the south is the entrance hall.",
+   name "cloister",
+   e_to MON_garden,
+   n_to MON_Main_hall,
+   s_to MON_Entrance_hall,
+   has light;
+   
+Object MON_Entrance_hall "Entrance Hall"
+   with description "This is the large entrance hall to the Monastery. \
+Many a devoted visitor has passed through this place. \
+There is an exit to the outside world to the \
+south, and the rest of the Monastery lies to the north.",
+   s_to Cliff_face, out_to Cliff_face,
+   n_to MON_cloister,
+   before [;
+      Go:
+         if ((noun==s_obj) || (noun==out_obj))
+            print "You are surprised by a cold blast of wind as you leave the Monastery!^";
+   ],
+   after [;
+      Go:
+         if ((noun==in_obj) || (noun==n_obj))
+            print "You are greeted by relatively warm and cozy air.^";
+   ],
+   has light;
+
+Object MON_Main_hall "Main Hall"
+   with description "This is the main hall of worship in the Monastery. \
+A large domed ceiling hides some sort of lighting that create a warm yet \
+serene atmosphere. A covered walk to the rest of the Monastery lies to \
+the south. To the north is the Monastery chapel. A brazier sits in \
+the center of the room.",
+        name "dome" "ceiling" "lighting" "atmosphere",
+        s_to MON_cloister,
+        n_to MON_Chapel2,
+   has light;
+   
+Nearby brazier "brazier"
+   with name "brazier",
+        description "This is a silver incense brazier, somewhat similar to \
+an ornamental bowl on a tripod. Brother Palemon supposedly \
+found it on one of his many journeys.",
+        before [;
+           Take:
+              "That's been in the Monastery for years. People would \
+              be upset if you took it.";
+           Receive:
+      !        if (noun~=incense)
+               if (noun has is_sphere) {
+                  print "As you place the sphere in the brazier, \
+you feel a strange sensation. Suddenly, the brazier is filled \
+with ";
+                  if (noun == brown_sphere)
+                     print "earthworms!";
+                  if (noun == green_sphere)
+                     print "seawater!";
+                  if (noun == red_sphere)
+                     print "burning embers!";
+                  if (noun == silver_sphere)
+                     print "white vapors!";
+                  " No, wait, it's empty again. You hastily \
+withdraw the sphere, and try to clear your mind.";
+               }
+               else "That doesn't seem quite appropriate.";                 
+        ],
+        size 9,
+   has scenery container open;
+
+Object MON_Chapel2 "Monastery Chapel"
+   with description "You are in the Monastery Chapel, the site of the \
+recent appearance of the legendary Anabais. Signs of the \
+recent visit include the slightly scorched walls, and the \
+reek of brimstone. Wood pews are arranged in a circle \
+around the central altar. The exit is south.",
+   name "pews" "scorched",
+   s_to MON_Main_hall,
+   before [;
+      Smell:
+         "You detect the faint odor of brimstone.";
+!      Yell: 
+!         if ((parent(Joseph)==MON_Chapel2) && (Joseph hasnt general))
+!            "Shhh.  You don't want to abruptly disturb Joseph like that.";
+!      Go: 
+!         if (noun==s_obj) {
+!            if ((parent(Joseph)==MON_Chapel2) && (Joseph has general) &&
+!                (WeightOf(Joseph) > 140)) {
+!               if (WeightOf(Joseph) == 149) {
+!                  Joseph.weight = 139;
+!                  print "^As you leave, Brother Joseph calls out \
+!                   ~Oh, and take something for that cold!~^";
+!                   rfalse;
+!               }
+!               if (WeightOf(Joseph) == 148) {
+!                  Joseph.weight = 139;
+!                  print "^As you leave, Brother Joseph calls out \
+!                  ~Oh, and remember -- reading the scriptures \
+!                  is one sure way of maintaining an active mind!~^";
+!                  rfalse;
+!               }
+!               if (WeightOf(Joseph) == 147) {
+!                  Joseph.weight = 139;
+!                  print "^As you leave, Brother Joseph calls out \
+!                  ~Oh, and remember -- mirth is wonderful for the soul, \
+!                  in moderation, of course.~^";
+!                  rfalse;
+!               }
+               ! add in any others here...
+!            }
+!         }
+!      Sneeze:
+!              if (Joseph hasnt general) {
+!                 give Joseph general;
+!                 Joseph.weight = 149;
+!                 JosephWakeAction();
+!                 rtrue;
+!              }
+!      Yawn:
+!              if (Joseph hasnt general) {
+!                 give Joseph general;
+!                 Joseph.weight = 148;
+!                 JosephWakeAction();
+!                 rtrue;
+!              }
+!      Laugh:
+!              if (Joseph hasnt general) {
+!                 give Joseph general;
+!                 Joseph.weight = 147;
+!                 JosephWakeAction();
+!                 rtrue;
+!              }                                          
+!      Drop:
+!              if (Joseph hasnt general) {
+!                 give Joseph general;
+!                 Joseph.weight = 146;
+!                 JosephWakeAction();
+!                 move (inp1) to MON_Chapel2;
+!                 rtrue;
+!              }                                          
+    ],
+   has light;
+   
+! And now, the incredible shrinking Brother Joseph...
+! Modified 3/16 -- this puzzle seems to be unpopular...
+Object Joseph "Joseph" MON_Chapel2
+   with name "Brother" "Joseph",
+        description "Brother Joseph is a pale man, with gray eyes, a fine \
+            beard, and a finer disposition.",
+!        weight 150,
+        number 0,  ! used to hold count of (fake) rod pieces received
+        describe [;
+!           if (self hasnt general)
+!            "Brother Joseph is kneeling in front of the remains of the altar, \
+!            his eyes closed, deep in meditation.";
+!           else
+              "Brother Joseph is here, standing by the altar.";
+        ],
+        life [;
+!           if ((WeightOf(Joseph) == 150) && ((action ~= ##Attack) || 
+!                                             (action ~= ##WakeOther)))
+!              "Perhaps it's best not to bother him, he seems very \
+!              deep in meditation.";
+!           WakeOther:
+!              if (WeightOf(Joseph) == 150)
+!                 "Joseph isn't asleep, just meditating.  You may need to \
+!do something subtle to rouse him.";
+           Attack, ThrowAt:
+              deadflag = 1;
+              Player_Lives_Left = 0;
+"Your blow sends Brother Joseph staggering back.^^\
+Brother Joseph gets up and brushes himself off, and glares \
+at you. Ro-roo, I think you made him mad. \
+You remember, of course, that Brother Joseph is a renowned \
+full-contact martial artist?^^\
+~Impudent wretch! I'll show you how we deal with non-believers here!~\
+^^Suddenly, Brother Joseph produces a gigantic mallet from \
+beneath his robes and clobbers you into a pulp.";
+           Ask:
+              if (second=='amulet')
+                 "~Don't leave the Monastery without it!~";
+              if (second=='joseph')
+                 "Joseph smiles. ~I believe we've been introduced.~";
+              if (second=='rod')
+                 "~We must recover the Rod before it is too late!~";
+              if (second=='anabais')
+                 "~Beware the demon!  He is most cunning and dangerous!~";
+              if (second=='scriptures')
+                 "~Study the holy scriptures, and you will be rewarded.~";
+              if (second=='palemon' or 'tuffberry' or 'toolbox')
+                 "~I fear I know not where his feet now tread.~";
+              "~I don't know anything about that. Perhaps you should \
+              consult our library upstairs?~";
+
+           Tell:
+              "~Do tell.~";
+ 
+           Show:
+              if (noun has is_rod)
+                 "~Have you succeeded in retrieving the Rod? If so, \
+do what you feel is right.~";
+                 
+           Give:
+              if (noun has is_rod) {
+                 if ((noun==black_rod_piece) || (noun==white_rod_piece) ||
+                     (noun==smoke_rod_piece) || (noun==gray_rod_piece)) {
+                    Joseph.number = Joseph.number + 1;
+                    remove noun;
+                    print "Joseph takes the rod piece. ";
+                    if (Joseph.number==4) {
+                       ! trouble -- got the whole fake rod to Joseph...
+                       deadflag = 1;
+                       Player_Lives_Left = 0; 
+                       "~The Order will \
+remember your acts of bravery forever,~ Joseph says, as he brings out \
+all four rod pieces and tries to join them together. A sudden burst \
+of light blinds you!^^\
+When you can see again, a large black sphere of malevolent energy \
+floats nearby! Joseph, either dead or stunned, lies in one corner \
+of the room. The four rod pieces are floating above the sphere.^^\
+~Foolish little priest,~ a evil voice says in you mind. ~You \
+have only brought upon yourself your own undoing. With my rod returned \
+by an innocent, the pact is complete. Come forth, my brothers, \
+for our time of power is at hand!~^^\
+The last thing you hear is mocking laughter, before the world \
+as you know it comes to a close.";
+                    } 
+                    else 
+                    "~Well done, brave Priest!~ he says.";
+                 }
+                 else
+"Joseph looks at the rod piece and seems puzzled. ~This isn't any part \
+of the Rod of the Ancients that I've ever seen. And yet, it seems similar.~ \
+He hands it back to you. ~In this, my teachings can help you no \
+further.~";
+              }
+              else "Joseph waves off your offering. ~You may \
+need that in your quest.~";
+           Answer, Order:
+              if (special_word=='hello' or 'hi') 
+                 "Joseph smiles. ~Hello.~";
+           default:
+              "At the moment, Joseph seems to be \
+preoccupied with spiritual matters.";
+        ],                     
+        before [;
+           Cast:
+             "Brother Joseph stops you in mid-chant. ~That won't be necessary~";             
+        ],
+        each_turn [;
+           if (self hasnt general) {
+              give self general;
+           move Amulet to player;
+           "^Joseph smiles as you enter. \
+~I'm glad you found me. As you know, thanks to the old \
+fool standing before you, the demon Anabais is loose upon \
+the world once more. He has broken the Rod of the Ancients \
+which was keeping our house and Order protected from outsiders. \
+It is a sorry day for us all.~ Joseph pauses for a moment. \
+~You are our final hope in a time of chaos. Brothers \
+Palemon, TuffBerry and Toolbox have left the Order, and only \
+you remain. I must now ask you to serve the Order which you \
+have so faithfully served in the past. No short order this, for \
+our continued existence depends on it, but you must go out into \
+a world gone mad alone, and retrieve the four broken pieces of \
+the Rod of the Ancients, and return them here to me, so that we \
+can rid the world of the evil we have loosed!~^^Brother Joseph \
+pauses and searches his robes.^^~Here, you will need this,~ he \
+says, giving you a strange amulet. ~Without this amulet, the \
+Ancient Ones cannot give you the mystic aid that you will most \
+certainly need. But I waste much time. Go now, and may the \
+Gods smile upon us all.~";
+           }
+        ],
+   has animate proper;
+    
+Object Amulet "holy amulet" 
+   with name "amulet" "holy",
+        description "This small golden amulet and chain seem to \
+shimmer with a strange mystic saffron energy. The \
+pendant portion of the amulet is in the shape of a small \
+golden cube.",
+ !       weight 10,
+        size 7,
+        before [;
+           Wear:
+              if (self hasnt worn) { give self worn;
+              "As you place the amulet around your neck, \
+              you feel a strange sense of mystic power.";
+              } 
+              else "You're already wearing that.";
+        ],              
+   has clothing scored;
+           
+! [ JosephWakeAction;
+!      print "^You make a subtle noise^^\
+!           Brother Joseph opens his eyes, breathes deeply, and smiles.^^\
+!            ~I'm glad you found me.  As you know, thanks to the old \
+!            fool standing before you, the demon Anabais is loose upon \
+!            the world once more.  He has broken the Rod of the Ancients \
+!            which was keeping our house and Order protected from outsiders. \
+!          It is a sorry day for us all.~  Joseph pauses for a moment. \
+!          ~You are our final hope in a time of chaos.  Brothers \
+!          Palemon, TuffBerry and Toolbox have left the Order, and only \
+!          you remain.  I must now ask you to serve the Order which you \
+!          have so faithfully served in the past.  No short order this, for \
+!          our continued existence depends on it, but you must go out into \
+!          a world gone mad alone, and retrieve the four broken pieces of \
+!          the Rod of the Ancients, and return them here to me, so that we \
+!          can rid the world of the evil we have loosed!~^^Brother Joseph \
+!          pauses and searches his robes.^^~Here, you will need this,~ he \
+!          says, giving you a strange amulet.  ~Without this amulet, the \
+!          Ancient Ones cannot give you the mystic aid that you will most \
+!          certainly need.  But I waste much time.  Go now, and may the \
+!          Gods smile upon us all.~";
+!     move Amulet to player;
+!     rtrue;
+!];
+
+Object altar "altar" 
+   with name "altar" "damaged" "cube",
+      description "The altar is roughly the shape of a five foot \
+         white cube. The top edges appear to be singed black and there \
+         are cracks and chips all over.",
+   found_in MON_Chapel1 MON_Chapel2,
+   before [;
+      Search:
+         if (self hasnt general) {
+            give self general;
+            move holywater to player;
+            "You uncover a vial of holy water.";
+         }
+   ],
+   has scenery supporter;
+
+Object holywater "vial of holy water"
+   with name "holy" "water" "vial",
+        description "A small glass vial of holy water.",
+        before [;
+           Eat: "You might want to try drinking it instead.";
+           Drink: remove self;
+              Player_HP_CUR = Player_HP_MAX;
+              "You quaff the holy water with a simple ceremony. \
+You feel physically and spiritually refreshed."; 
+        ],
+        size 5,
+;
+   
+Object MON_Palemon_quarters "Brother Palemon's Quarters"
+   with description [;
+        print "You are in Brother Palemon's quarters, which \
+           have been left unattended ever since Brother Palemon's \
+           unexplained disappearance many years ago";
+        if (self has general)
+           print ". To the west, a small secret door in the wall leads \
+            into darkness";
+        ". The exit is south.";
+        ],        
+   s_to MON_f1hall3,
+   w_to [;
+      if (self hasnt general)
+         "You can't go that way.";      
+      else return MON_Hidden_sanctum;
+   ],
+   before [;
+      Push:
+        if (noun == w_obj) {
+           if (self hasnt general) {
+              give self general;
+              "Pushing the west wall reveals a hidden secret door! \
+You've been in these quarters before, but certainly never noticed \
+anything like this!";
+              }
+              else "Nothing happens."; 
+           }
+       Touch, Rub:
+          if ((noun == w_obj) && (self hasnt general))
+             "Oddly, a section of the west wall feels slightly thin.";
+   ],
+   has light;
+   
+Object journal "thin journal" MON_Palemon_quarters
+   with name "journal" "thin",
+        description "This journal is very strange indeed. Brother \
+        Palemon seems to have been very preoccupied up to the point \
+        of his disappearance with strange accursed places that he \
+        claims are located all over Quendor. He also makes several \
+        references to evil 'spirits' found in these places. You also \
+        notice that several pages of parchment near the back of \
+        the journal have been torn out.",
+        !weight 20,
+        size 15,
+;
+
+Object MON_Hidden_sanctum "Hidden Sanctum"
+   with description "You are standing in a small chamber that obviously hasn't \
+been used in quite some time -- the cobwebs and dust are several \
+layers thick. There is a short crawl east.",
+   name "cobwebs" "dust",
+   e_to MON_Palemon_quarters,
+;   
+ 
+
+Object dusty_scroll "dusty scroll" MON_Hidden_sanctum
+   class scroll_class,
+   with name "dusty",
+;
+
+Object foblub_spell "deliver magnificent sermon (glue audience to seats)" dusty_scroll
+   class spell_class,
+   with name "foblub",
+        magic [;
+           if (second hasnt animate)
+              "Your sermon goes unheard.";
+           if (second == player)
+              "Well, I know you like listening to yourself, but \
+isn't this a bit much?";
+           "You give a wonderful sermon about how one's future \
+           affects one's past, but no one seems to be listening."; 
+        ],
+;
+
+      
+Object MON_TuffBerry_quarters "Brother TuffBerry's Quarters"
+   with description "You are in Brother TuffBerry's quarters, vacant \
+since he undertook his quest for Joseph not long ago. The \
+exit is north.",
+   n_to MON_f1hall3,
+   has light;
+   
+Object page "torn page" MON_TuffBerry_quarters
+   with name "torn" "page",
+        !weight 5,
+        size 5,
+           description "This page was apparently \
+torn from a larger document of some sort. All that is left \
+now reads:^^\
+           ~...fear. Just today I heard again something below \
+           me when I was meditating upstairs. \
+           It sounded like a person, or something alive at least \
+           was just below, trying to quietly move around unnoticed. \   
+           Clearly this is \
+           impossible, and yet I cannot doubt what I heard. \
+           Palemon tells me I'm hearing spirits, but little does \
+           he know that I once heard the same noises in his \
+           very chambers! He was not around at the time, but \
+           to the west, behind the wall, I...~",
+;           
+        
+
+!Object MON_Joseph_quarters "Brother Joseph's Quarters"
+!   with description "You are in Brother Joseph's quarters.  The hallway lies \
+!           to the south.",
+!   s_to MON_f1hall4,
+!   has light;
+   
+Object MON_Toolbox_quarters "Brother Toolbox's Quarters"
+   with description "You are in Brother Toolbox's quarters, vacant \
+ever since he left the order due to differences many years \
+ago. The exit is north.",
+   n_to MON_f1hall4,
+   has light;
+
+Object tb_diary "diary" MON_Toolbox_quarters
+   with name "diary" "toolbox",
+        description "\
+        ~-- <944 GUE> Today Brother Joseph tried to explain the \
+        essence of how we channel magic energy through our \
+        amulets. To me, this seems to pale in comparison with \
+        the seemingly innate abilities of those who call \
+        themselves Enchanters. Joseph did show me a nice \
+        trick, however. He brought the Rod of the Ancients near \
+        my amulet, and the amulet gave off a sudden purple flash of light! \
+        I'll have to try that one on the Acolytes tomorrow.~^^\
+        (there isn't much else of interest until the \
+        very last entry, which is not dated)^^\        
+        ~-- So long diary. I'm now off to seek greater spiritual \
+        guidance in Thriff. I hear the summers there are very nice \
+        too.~",
+        !weight 12,
+        size 12,
+;
+   
+Object folded_scroll "folded scroll" MON_Toolbox_quarters
+   class scroll_class,
+   with name "folded",
+;
+
+Object espnis_spell "deliver dull sermon (cause sleep)" folded_scroll
+   class spell_class,
+   with name "espnis",
+        magic [;
+           if (second hasnt animate)
+              "Your sermon goes unheard.";
+           if (second == player)
+              "A preacher boring himself to sleep with his \
+own sermon? This doesn't seem prudent.";
+           CDefArt(second); 
+           " listens as you begin your sermon about the general \
+              religious practices of the royal families of the past, but \
+              only stifles a yawn when you finish.";  
+        ],
+;
+   
+   
+Object MON_f2hall1 "Hallway (second floor, west)"
+   with description "You are in a hallway on the second floor \
+           of the Monastery. The hallway continues east, while \
+           stairs lead downwards.",
+        name "stairs",
+        d_to MON_f1hall2,
+        e_to MON_f2hall2,
+   has light;
+   
+Object MON_f2hall2 "Hallway (second floor, east)"
+   with description "You are in a hallway on the second floor \
+           of the Monastery that runs east-to-west. To the \
+           north is the private meditation room. To the east \
+           is the Monastery library. To the northeast is an \
+           entrance to the steeple room.",
+        w_to MON_f2hall1,
+        n_to MON_priv_med_room,
+        e_to MON_Library,
+        ne_to MON_Steeple_room,
+   has light;
+   
+Object MON_priv_med_room "Private Meditation Room"
+   with description "You are in a small bare chamber that is \
+           used for private meditation and worship. The only \
+           exit lies to the south.",
+        s_to MON_f2hall2,
+   has light;
+   
+Object MON_Library "Monastery Library"
+   with description "You are in the Monastery library, a cozy, \
+           almost cramped room with shelves of various books. \
+           The exit is to the west.",
+        w_to MON_f2hall2,
+   has light;
+
+Object lib_shelves "shelves" MON_Library
+   with name "shelves" "bookshelves",
+        description "Just some bookshelves.",
+   has scenery supporter;
+   
+! *** LIBRARY BOOKS
+
+! Scriptures:
+! -- Of course, this is a ruse created from the deviations of 
+! Anabais.  Grounded in some fact though.  Each section has a
+! lie, which may not initially be obvious.  Truthful sections 
+! are scattered over Quendor.
+Object HolyScriptures1 "a copy of the Holy Scriptures" lib_shelves
+   with name "holy" "scriptures" "copy",
+        description "This sacred tome details the teachings and \
+beliefs of the Order, of which it's certainly always good \
+practice to re-familiarize yourself with. The scriptures are \
+divided into several sections. Sections that \
+can be consulted in greater detail include:^^\
+~Doctrines~^\
+~Demons~^\
+~Spirits~^\
+~(Book of the) Mystical~^\
+~(Book of the) Planes~^\
+~(Book of the) Ancients~^\
+~Legend of the Rod~",
+        before [ w1; Consult:
+        if (consult_words > 1)
+               "You'll have to consult the sacred book by \
+individual section.";               
+            wn = consult_from; w1 = NextWord();
+            switch (w1) {
+               'doctrines', 'doctrine', 'canon':
+"~THE SACRED DOCTRINES OF THE ORDER OF BALANCE:^^\
+Thou shalt strive to achieve balance in a world filled with unbalance.^\
+Thou shalt pray to the Deities in moments of inner reflection.^\
+Thou shalt not harm innocents nor aid them -- this is the way of balance.~"; 
+! TODO add add
+               'demons', 'demon', 'anabais':
+"~Fear not, mortal men^\
+though your world be filled with demons^\
+and the wicked.^^\
+Thou alone can prevail^\
+as The Ancient Ones^\
+against Anabais, the trickster^\
+were victorious.~";               
+! LIE - The ancient ones lost to Anabais and the other demons
+               'spirits', 'spirit':
+"~Before the dawn of time, know that our world was \
+filled with evil spirits of the elements, \
+until mankind came upon the land and vanquished them \
+forever.~";
+! LIE - spirits still exist.
+               'mystic', 'mystical', 'magic', 'chant':
+"~If one is true of doubts, then a believer in the \
+great Harmony can draw upon the powers of the Ancients \
+and perform feats of mystic power anywhere. Remember that in \
+so doing, thou must act only as the channel of mystical \
+power for the Ancient Ones.~";               
+! LIE - powers don't work everywhere, and not always.
+               'planes', 'plane', 'atrii', 'hades':
+"~Let not the ways of the mortal life \
+dissuade the knowledge of higher and lower planes \
+of existence.^^\
+For, beyond mortal reach are places where those who \
+have truly served the Order and those who have truly \
+forsaken the Harmony of Balance will find themselves \
+in death. These are the Ethereal Plane of Atrii and \
+the plane of the damned -- Hades.~";               
+! LIE - don't have to die to reach Atrii.
+               'ancients', 'ancient':
+"~Trust in The Ancient Ones, those Three who showed mankind the \
+way of Balance and Harmony.~";
+! LIE - Four ancient ones existed.
+               'rod', 'legend':
+"~Anabais foresaw his own demise when he dared to \
+challenge the Ancient Ones. From powers of light and \
+darkness, the Ancient Ones constructed that holy Rod that \
+we know only as the Rod of the Ancients, and did smite \
+the demon Anabais so grievously, that they did imprison \
+him in that very Rod, where he could do no harm. This \
+very Rod was made of pieces of ancient elemental energy, \
+once separated. Only the powers of the Ancients could \
+bring them together.~";               
+! LIE - Anabais never imprisoned, etc.
+               default: "There doesn't seem to be a section \
+about that.";               
+            }
+          Cast:
+             if (the_spell_was == ledak_spell) {
+                remove self;
+                "The scriptures are surrounded by a \
+yellow glow. To your horror, the tome evaporates into nothing!";
+             }
+        ],
+        !weight 20, 
+        size 15,
+has proper;
+     
+! *** parchments
+! (Several scraps of
+! Palemon's journal are scattered around Quendor, 
+! contradicting the ancient scriptures) 
+
+! (faded -- spirits exist)
+Object p2 "faded parchment" MON_Hidden_sanctum
+   class parchment_class,
+   with name "faded",
+description "~...are real! I have seen much evidence in the \
+jungles of Miznia, marshes of Fublio Valley, the ruins \
+of old Egreth and in Aragain itself! I believe that \
+they are associated with certain basic elements in the \
+surrounding area. But they dare not show themselves now, \
+not while magic is strong! Woe unto us, should the powers \
+of magic cease, as there would be nothing to stop their \
+terror...~",
+;
+
+Object MON_Steeple_room "Steeple Room"
+   with description "You are in a round room with colored-glass \
+           windows. Wood beams line the walls and rise to form \
+           a short point in the peaked ceiling above. A small \
+           walkway returns to the southwest. A long wood table \
+           sits in the center of the room.",
+        name "windows" "glass" "beams" "walkway" "handle" "latch",
+        sw_to MON_f2hall2,
+        !out_to MON_Steeple_roof,        
+        out_to steeple_window,        
+        before [;
+           Go: 
+              if ((noun == out_obj) && (steeple_window has open)) {
+                 if (random(10) < 3) {
+                    print "^You climb out the open window and somehow manage \
+                          not to fall.^";
+                 }
+                 else {
+                    deadflag = 1;
+print "^You climb out the open window, but slip on the icy sill";
+if (has_resist_gravity == 0) ", and plummet to the ground!";
+else 
+"! As you float slowly downwards, you can't help but notice the \
+hungry-looking winter dire wolf below, waiting for you to land...";
+                 }
+              }              
+        ],
+   has light;
+   
+Object MON_Steeple_roof "Steeple Roof"
+   with description "You are on a very narrow ledge outside \
+           the Monastery steeple. The snow and wind are doing \
+           their best to send you to a ungracious death below. The \
+           steeple roof is quite sharply slanted.",
+        in_to steeple_window,
+        name "roof" "ledge" "wind",
+        cant_go "It's hard enough staying on the ledge.",
+        before [;
+           Jump:
+             deadflag = 1;
+             if (has_resist_gravity==0)
+             "Well, if you insist. The ground breaks most of the \
+             bones in your body, including the important ones.";
+             else
+             "You float downwards gracefully, into the waiting \
+jaws of a winter dire wolf."; ! <shrug>
+        ],
+   has light;        
+   
+Object steeple_window "steeple window" 
+   with name "window" "rose" "steeple",
+        found_in MON_Steeple_room MON_Steeple_roof,
+        description [;
+           print "A large rose-colored glass window";
+           if (location==MON_Steeple_room) 
+              ", with a handle and latch";
+           ".";
+        ],
+        describe [;
+           if (location==MON_Steeple_room) {
+              if (self has open)
+                 "Someone has left a rose-colored window open and some \
+snow drifts in.";
+              "A large rose-colored window lets some light in.";
+           }
+           if (location==MON_Steeple_roof) {
+              if (self has open)                
+                 "A window opens into the steeple proper.";
+              "A large rose-colored window is partially covered with snow here.";
+           }
+        ],
+        door_dir [;
+           if (location==MON_Steeple_room) return out_to;
+           return in_to;
+        ],
+        door_to [;
+           if (location==MON_Steeple_room) return MON_Steeple_roof;
+           return MON_Steeple_room;
+        ],
+        before [;
+           Enter:
+              if (location==MON_Steeple_room) <<Go out_obj>>;
+              else <<Go in_obj>>;
+           Open:
+              if ((self hasnt open) && (location==MON_Steeple_roof))
+                 "Unfortunately, the window opens inward, and the latch \
+                 and handle are on the inside.";
+              if ((self hasnt open) && (location==MON_Steeple_room)) {
+                 give self open;
+                 "You turn and yank the window handle and pull. \
+                  A rush of wind and snow greets you as you open \
+                  the window.";
+              }
+           Close:
+              if ((self has open) && (location==MON_Steeple_roof))
+                 "It doesn't seem to want to stay shut. You can't \
+quite reach the window latch from out here.";                 
+           Attack:
+              "The window glass remains unmarred. It's probably made of \
+              that especially thick lead-glass that the Monastery got \
+              because Brother Toolbox kept complaining about drafts.";
+           Push:
+              if (self hasnt open)
+                 "It doesn't budge.";
+           Search:
+              "The window looks out into a winter wonderland.";
+        ],        
+   has static door openable;
+
+Object steeple_table "long table" MON_Steeple_room
+   with name "table" "long" "steeple",
+        description "This long wood table has been used for various \
+           private meetings and impromptu get-togethers between \
+           members of the Order in the past.",
+   has scenery supporter;   
+   
+Object MON_f0hall1 "Hallway (basement)"
+   with description "You are in a hallway in the Monastery basement. \
+           The hallway continues to the east, and stairs lead upwards.",
+        name "stairs",
+   u_to MON_f1hall2,
+   e_to MON_Refectory,
+   has light;
+
+Object MON_Refectory "Refectory"
+   with description "You are in the Refectory, the general dining \
+area for members of the Order. You grimace at the lingering scent of \
+Brother Pufpistery's favorite dish -- Borphbelly stew. \
+Several large oak tables and benches adorn this otherwise \
+bare room. An exit lies to the west, the kitchen is to \
+the north, and another exit lies to the east.",
+        name "oak" "tables" "benches", 
+   w_to MON_f0hall1,
+   n_to MON_Kitchen,
+   e_to MON_Storeroom,
+   before [;
+      Smell: "Even the faintest lingering scent of Borphbelly stew \
+is enough to make you feel like fasting.";
+   ],
+   has light;
+   
+Object MON_Kitchen "Monastery Kitchen"
+   with description "You are in Brother Pufpistery's domain -- the \
+dreaded acolyte kitchen. A huge soup \
+cauldron sits unused nearby. The refectory is \
+south.",
+   s_to MON_Refectory,
+   before [;
+      Smell: "The lingering scent of Borphbelly stew \
+is stronger here, unfortunately.";
+   ],
+   has light;
+
+Object cauldrons "cauldron" MON_Kitchen
+   with name "cauldron" "vat",
+        description "This large iron soup cauldron has the \
+           unmistakable odor of Borphbelly stew. Ugg.",
+        size 25,
+        capacity 10,
+        before [;
+           Cast:
+             if (the_spell_was == bekdab_spell)
+                "The soup cauldron rusts a bit.";
+        ],
+   has scenery container open;
+
+Object preparing_table "preparing table" MON_Kitchen
+   with name "table" "preparing",
+        description "A heavy wood table with a well-used look.",
+        before [;
+           Cast:
+              if (the_spell_was == egdelp_spell)
+                 "The table is now covered in a waxy film. \
+All things considered, it actually looks cleaner now.";
+        ],
+   has static supporter;
+   
+Object recipe_paper "scrap of paper" preparing_table
+   with name "scrap" "recipe" "paper",
+        description "It's a recipe torn from an issue of \
+             ~Better Homes and Caverns~:^^\
+             GUILDMASTER SNEFFLE'S PRIZE WINNING BIRTHDAY CAKE \
+             ^^\
+             Ingredients:^^\
+             -- 1 small sack of flour^\
+             -- 1 large sugar cube^\
+             -- 1 packet of baking powder^\
+             -- 1 stick butter^\
+             -- 1 large corbie egg^\
+             -- Dornberries, to taste^^\
+             Mix the ingredients together. Fold the resulting \
+             mixture the correct number of times (a single gloth \
+             spell should do the trick). Bake in a GUE \
+             Automatic oven on the ~cake~ setting.^^\
+             Guildmaster Sneffle claims that ~the dornberries are \
+             the secret to making a cake even the King would be \
+             impressed with.~ He also notes that ~improper folding \
+             of the dough will produce very poor results.~",
+   !weight 1,
+   size 5,
+;
+      
+Object MON_Storeroom "Storeroom"
+   with description "You are in a small cramped storeroom, stocked \
+with various crates and barrels of foodstuffs. \
+The refectory is west.",
+        name "crate" "crates" "foodstuffs",
+        w_to MON_Refectory,
+        d_to secret_trapdoor,
+        each_turn [;
+           if ((random(20) == 1) && (secret_trapdoor notin MON_Storeroom))
+              print "^A tiny mouse scurries into view, then disappears \
+                    under a barrel.^";
+        ],
+        before [;
+           Go:
+              if (noun==d_obj)
+                 if (secret_trapdoor hasnt general)
+                    "You can't go that way.";
+        ],
+   has light;
+   
+Object crate1 "large barrel" MON_Storeroom
+   with name "barrel",
+        description "A large wooden barrel labeled ~DRIED PRUNES~.",
+        before [;
+           Cast:
+              if (the_spell_was==egdelp_spell)
+                 "The barrel is covered with a light \
+waxy film.";
+           Take, Remove:
+              "The barrel is far too bulky to take.";
+           Open:
+              "You'd probably need a hacksaw to do that. Besides, \
+              look what it says it contains.";
+           Push, Pull:
+              if (secret_trapdoor hasnt general) {
+                 give secret_trapdoor general;
+                 move secret_trapdoor to MON_Storeroom;
+                 "Well whaddya know, a trapdoor...";                           
+              }
+        ],
+   has supporter;   
+   
+Object flour "sack of flour" crate1
+   with name "flour" "sack",
+        short_name "sack of flour",
+        description "A small sack of flour, all-purpose.",
+        !weight 15,
+        size 14,
+   has edible;
+           
+Object MON_Caverns "Caverns"
+   with description "You are in an low underground cavern, made of roughly \
+worked stone. An even lower tunnel travels east.",
+        name "stone" "worked" "tunnel",
+        u_to secret_trapdoor2,
+        e_to cave_intersection,
+;       
+
+! A two-way initially hidden trapdoor, which affects rooms.
+! To my great chagrin, I couldn't code this in one obj (sigh).
+! I admit it, this is my first Inform project.
+Object secret_trapdoor "trapdoor"
+   with name "trapdoor" "trap" "door",
+        description "A wooden trapdoor in the floor.",
+        door_to MON_Caverns,
+        door_dir d_to,
+        describe [;
+           if (self has open)
+              "A trapdoor opens into darkness below.";
+           "There is a closed trapdoor in the floor here.";
+        ],
+        before [;
+           Enter: <<Go d_obj>>;
+           Open:
+               give MON_Caverns light;
+               give secret_trapdoor2 open;
+               rfalse;
+           Close:
+               give MON_Caverns ~light;
+               give secret_trapdoor2 ~open;
+               rfalse;
+        ],
+     has static door openable;
+     
+Object secret_trapdoor2 "trapdoor" MON_Caverns
+   with name "trapdoor" "trap" "door",
+        description "A wooden trapdoor in the ceiling.",
+        door_to MON_Storeroom,
+        door_dir u_to,
+        describe [;
+           if (self has open)
+              "Light gleams in from an open trapdoor above.";
+           "You notice a closed trapdoor in the ceiling.";
+        ],
+        before [;
+           Enter: <<Go u_obj>>;
+           Open:
+               give MON_Caverns light; 
+               give secret_trapdoor open;
+               rfalse;
+           Close:
+               give MON_Caverns ~light; 
+               give secret_trapdoor ~open;
+               rfalse;
+        ],
+     has static door openable;
+     
+Object cave_intersection "Cave Intersection"
+   with description [; 
+           print "You are in a large open cavern. The rough \
+           limestone here was probably eroded by underground springs \
+           to form the somewhat circular chamber you now stand in. \
+           Oddly, there seems to have been a recent cave-in, as \
+           piles of rubble line the walls. A tunnel \
+           snakes off to the west";
+           if (self has general)
+           ". To the southeast, there is a wide square hole!";
+           else ".";
+           ],
+           name "limestone" "rubble" "tunnel",
+  ! cant_go "There's too much rubble",           
+   w_to MON_Caverns,
+   se_to [;
+           if (self hasnt general) rfalse;
+           if (self has general) return Mystical_Cave;
+   ],
+   before [;
+      Go:
+         if ((noun == se_obj) && (self has general)) {
+            if ((white_rod_piece in player) && 
+            (black_rod_piece in player) &&
+            (gray_rod_piece in player) &&
+            (smoke_rod_piece in player)) {
+            remove white_rod_piece;
+            remove black_rod_piece;
+            remove gray_rod_piece;
+            remove smoke_rod_piece;
+            Player_Lives_Left = 0;   ! hope you saved...
+            spell_block = 1;  ! going into the endgame...
+            print "^As you enter the tunnel, a strange \
+light surrounds you! The four rod pieces you were \
+carrying crumble into dust!^";                       
+            }
+            else
+            "Well, the hole to the southeast seems obvious \
+enough. But, some mysterious force blocks the way! \
+Try as you might, you can't seem to enter it!";
+         }
+     ],            
+;
+           
+Object steel_wall "steel wall" cave_intersection
+   with name "steel" "wall",
+      description "A ten-by-ten slab of solid steel, this wall \
+         must be at least a foot thick, and is accented by \
+         large steel rivets that bolt it to the surrounding \
+         rock.",
+      initial "To the southeast, a huge steel wall demonstrates \
+               a marked contrast to the otherwise drab surroundings.",
+      before [;
+         Open:  "I presume you have a blow-torch handy?";
+         Push, Pull, Turn: "Not surprisingly, it doesn't move an inch.";
+         LookUnder: "It's flush with the rock floor.";
+         Cast: "The wall seems to absorb and nullify all magic!";
+      ],         
+   has static;
+        
+         
+! ***********************************************************************
+! ** 
+! ** GRAY MOUNTAINS AREA NEARBY MONESTARY   
+! **
+! ***********************************************************************
+   
+Object Cliff_face "Cliff Face"
+   with description "You are standing near the top of a snowy mountain peak. \
+The wind is quite cold and is making your teeth chatter. \
+The general vicinity is mostly snow and rock; however, the \
+entrance into the Monastery is to the north, all but hidden from view \
+by the enormous slabs of snow-covered rock that make up the \
+cliff face. There is a rough but obvious trail leading down \
+the mountain to the south. There is also another trail that \
+winds even further up the mountain peak almost hidden in the \
+snow to the east.",
+   name "peak" "wind" "rock" "structure" "slabs" "trail",
+   n_to MON_Entrance_hall, in_to MON_Entrance_hall,
+   s_to rocky_trail, d_to rocky_trail,
+   e_to Covered_trail, u_to Covered_trail,
+   has light;
+   
+Object Covered_trail "Covered Trail"
+   with description "You are climbing up a small trail that gets periodically \
+lost in great bluffs of snow. The swirling snow makes seeing \
+an unusual effort. The trail leads downwards to a cliff face \
+to the west, and rises towards the mountain top to the north.",
+        name "bluffs" "trail",
+   w_to Cliff_face, d_to Cliff_face,
+   n_to Mountain_peak, u_to Mountain_peak,
+   has light;
+
+Object Mountain_peak "Mountain Peak"
+   with description [;
+        print "You are standing on the top of a peak of the Gray \
+Mountains. A cold wind blows snow everywhere, obscuring what \
+would otherwise surely be a wonderful view of the surrounding \
+countryside. You can just make out some buildings to the far \
+south in Frostham. A snowy bluff marks the way back down";   
+        if (self hasnt general)
+", or to the west, there appears to be a snowy outcropping. It seems to \
+hang precariously over the edge of the mountain, however.";
+        else ".";
+   ],
+   name "wind" "peak" "mountains" "countryside" "buildings" "bluff",
+   d_to Covered_trail,
+   w_to [;
+      if (self has general)
+         "Looks like the outcropping completely collapsed!";
+      return Snowy_outcropping;
+   ],
+   before [;
+      Go:
+      	if ((noun==w_obj) && (self hasnt general) && (player notin sleeppallet)) {
+!      	   if (WeightOf(player) > 25) {
+           if (children(player) > 0) {
+      	      print "As you start to tread out to the outcropping, you feel \
+      	         the snow beneath your feet shifting under your sudden \
+                 weight! You ";
+      	      if (random(10) > 6) {
+      	         deadflag = 1;
+      	         "start to turn back, but the entire \
+      	         outcropping suddenly tilts under your weight, sending \
+                 you hurtling off the edge into oblivion!";
+      	      }
+      	      else {
+      	         "beat a hasty retreat back to the peak.";
+      	      }
+      	   }      	         
+      	   print "You carefully make your way onto the outcropping.^";
+      	}
+      Jump: 
+         "Not advisable, it's probably a long way down...";
+   ],   
+   has light;
+                  
+Object Snowy_outcropping "Snowy Outcropping"
+   with description        
+           "You are standing on a snow-covered outcropping. \
+           You are almost waist-deep in snow, and the blisteringly cold \
+           winds aren't helping. The outcropping juts out alarmingly \
+           over the western edge of the mountain. In fact, you can see the \
+           Monastery steeple below this ledge. \
+           The main portion of the mountain peak lies to the east.",
+   name "winds" "steeple" "peak",
+   e_to Mountain_peak,
+   each_turn [;
+        if (random(5)<=3)
+           "^There is an ominous creaking noise somewhere underfoot.";
+        "^Some snow falls off the outermost edge of the outcropping.";
+   ],
+   before [;
+        Go:
+           if (noun==e_obj)
+              print "You cautiously make your way back to the mountain top^";
+           if (noun==d_obj)
+              "That's not a very sound idea.";
+        Jump:
+           "Let's not be suicidal.";
+        Yell: 
+           Outcrop_break(1); rtrue;
+        Sneeze: 
+           Outcrop_break(2); rtrue;
+        Drop:
+           deadflag = 1;
+           "You must have disturbed something! The entire outcropping \
+           breaks away in an avalanche, and you plummet to your death!";
+        Take, Touch, Push, Pull:
+           if (noun==dirty_scroll) {
+              if (random(10) > 5) {
+              deadflag = 1;
+              give Mountain_peak general;
+              remove Snowy_Outcropping;
+              move dirty_scroll to MON_Steeple_roof;  ! it's still obtainable...
+              "As you reach for the scroll, the entire outcropping lurches \
+              alarmingly! Without warning, it \
+              breaks away in an avalanche, and you plummet to your death!";
+              }
+              "As you reach for the scroll, you hear a disturbing rumbling \ 
+              from somewhere underfoot, and you step back hastily.";
+           }
+        Answer:
+           if (inp2==player) {
+              Outcrop_break(1); rtrue;
+           }
+           "To who/whom, exactly?";
+   ],
+   has light;               
+ 
+[ Outcrop_break type;
+   if (type == 1) 
+      print "You give the best bellow you can muster, given the current \
+           weather conditions.";  
+   if (type == 2)
+      print "Understandable, given the weather conditions.";
+   print  " Unfortunately, you seem to have disturbed \
+           something, as the entire outcropping gives way in a brief but \
+           powerful avalanche! You tumble through the air, followed by \
+           a large quantity of snow! But suddenly, you see the \
+           Monastery steeple rushing up to meet you!^^THUMP!^^\
+           You lie dazed for a moment. Miraculously, the dirty scroll \
+           lands next to you!^";
+      give Mountain_peak general;
+      move dirty_scroll to MON_Steeple_roof;
+      remove Snowy_Outcropping;
+      PlayerTo(MON_Steeple_roof);  
+      rfalse;    
+];
+
+Object dirty_scroll "dirty scroll" Snowy_outcropping
+ class scroll_class,
+  with name "dirty",             
+       initial [;
+           if (location==Snowy_outcropping)
+              "There is a dirty scroll here, practically buried in the snow!";
+           "There is a dirty scroll here.";
+       ],
+;
+
+Object swanko_spell "banish spirit" dirty_scroll
+ class spell_class,
+  with name "swanko",
+       magic
+       [;  
+       if (second==0)
+"The chant, looking for a locus of spiritual energy, fails.";
+          "The general vicinity seems pretty free of spirits now.";
+       ],
+;
+
+Object rocky_trail "Rocky Mountain Trail"
+   with description "You are on a rocky mountain trail \
+           that winds up and down a mountain. Patches of \
+           snow can be found here and there. The trail \
+           continues down the mountain to the south, or \
+           up to the north.",
+        name "trail",
+        d_to snowy_intersection,
+        s_to snowy_intersection,
+        u_to cliff_face,
+        n_to cliff_face,
+   has light;
+
+Object snowy_intersection "Snowy Intersection"
+   with description "You are at a snow-filled crossroads \
+           in a mountain trail. Paths lead north towards \
+           the top of the mountain, east, west, and south \
+           towards the base of the mountain.",
+        name "trail" "mountain",
+        n_to rocky_trail,
+        s_to North_of_river,
+        e_to "The path east is blocked after a short distance by a huge snow drift.",
+        w_to Top_of_drop,
+   has light;
+
+Object stone_marker "stone marker"
+   with initial "There is a large stone marker here, in \
+           the center of the intersection.",
+        name "stone" "marker" "obelisk",
+        description [;
+           print "This odd stone structure, partially \
+           covered in snow, looks quite old and mysterious. \
+           It's about seven feet tall, and is shaped like \
+           an obelisk";
+           if (self hasnt general)
+           ", with the top partially broken off.";
+           else ".";
+        ],
+        found_in snowy_intersection snowy_intersection2,
+   has static;
+
+! (second snowy intersection -- in the "past")   
+Object snowy_intersection2 "Snowy Intersection"
+   with description "You are at a snow-filled crossroads \
+           in a mountain trail. Paths lead north towards \
+           the top of the mountain, east, west, and south \
+           towards the base of the mountain.^^Something \
+           seems familiar, yet different, about this place.",
+        name "trail" "mountain",
+n_to "The path north ends after a short distance.",
+s_to "The path north ends after a short distance.",
+w_to "The path north ends after a short distance.",
+e_to "The path east is blocked after a short distance by a huge snow drift.",
+   has light;
+        
+
+Object stone_marker_top "broken stone top"
+   with name "top" "stone" "pinnacle" "broken",
+        capacity 1,
+        size 10,
+        description "The top pinnacle from the stone marker. \
+You notice that it's partially hollow inside.",
+        before [;
+           Receive:
+              if ((noun==silver_rod_piece) && 
+                  (snowy_intersection has general)) {
+                 move silver_rod_piece to self;
+                 give snowy_intersection ~general;
+                 remove self;
+                 give snow general;
+                 print "As you place the rod piece in the \
+broken stone piece, you sense a force from above pull you \
+skywards! In moments, you are high above the snow covered \
+mountains, nearing the sky, which you notice is strangely \
+purple!^";
+                 PlayerTo(Mystical_Cave);
+              !   spell_block = 0;
+                 Mystical_Cave.number = Mystical_Cave.number + 1;
+                 rtrue;
+              }
+        ],
+   has container static open;                
+
+Object Top_of_drop "Top of Snowy Slope"
+   with description "You're at the top of a short downwards slope into \
+           a snowy area below. A path leads east. You could also \
+           slide down the slope. A lone tree stands here, overlooking \
+           the slope.",
+        name "slope",
+        e_to snowy_intersection,
+        d_to Bottom_of_drop,
+        w_to Bottom_of_drop,
+        u_to [;
+          if (tree1 has general) <<Climb tree1>>;
+        ],
+   has light;
+   
+Object tree1 "tree" Top_of_drop
+   with name "tree",
+        description "A leafless, bare tree, with what might be a bird's \
+nest in it.",
+        before [;
+           Climb:                         
+              if (self hasnt general) give self general;
+              print "You clamber up the tree.^";
+              PlayerTo(Top_of_tree); rtrue;
+        ],
+   has scenery;
+   
+Object nest1 "nest" Top_of_drop
+   with name "nest",
+        description "Even from down here, it's a pretty big nest. \
+           Thankfully, no big birds seem to be present.",
+        before [;
+           Search: "You can't see into it from down here.";
+           ThrownAt: 
+                 move noun to Top_of_drop;
+                 "You take aim, but miss.";
+           Receive, LetGo, Rub, Turn, Take, Push, Pull, Touch, Attack, Shake: "You can't reach it.";
+           Search, LookUnder: "From down here, it's hard to see anything \
+but the bottom of the nest.";
+        ],
+   has scenery;
+   
+Object Bottom_of_drop "Bottom of Snowy Slope"
+   with description "You've made your way down to a small snow-covered \
+           clearing, ringed by pine trees. The only exit is back up the \
+           slope.",
+        name "clearing" "pine" "trees" "slope",
+        u_to Top_of_drop,
+        e_to Top_of_drop,
+   has light;
+   
+Object boulder "large boulder" Bottom_of_drop
+   with name "boulder" "rock",
+        initial "There's a large boulder here, sitting squat in the \
+           middle of the clearing.",
+        description "A big, snow-covered rock.",
+        before [;
+           Push, Pull, Turn: "It must weight a ton.";
+           Receive: 
+              if (noun==sleeppallet) {
+                 move sleeppallet to boulder;
+                 "You drape the pallet over the boulder.";
+              }
+        ],
+   has static supporter;
+   
+Object egg_shards "egg shards"
+   with name "shards",
+        initial "There's some broken eggshell shards here, scattered all \
+                over. Some gooey egg stuff too.",
+        description "Some large pieces of shell is all.",
+        !weight 5,
+        size 5,
+;    
+              
+Object Top_of_tree "Top of tree"
+   with description "You're on top of the tree, on some lower branches \
+           that seem pretty stable.",
+        d_to Top_of_drop,
+   has light;
+   
+Object tree2 "tree" Top_of_tree
+   with name "tree",
+        description "Overall, there's nothing terribly special about this tree.",
+   has scenery;   
+   
+Object nest2 "nest" Top_of_tree
+   with name "nest",
+        initial [;
+           print "There's a large bird's nest a bit farther out on a \
+           nearby branch";
+           if (corbie_egg in self)
+              print ". There appears to be an egg in it";
+           ".";
+        ],          
+        description "Given the size and Brother Joseph's lessons \
+           in ornithology, you'd guess that it's a corbie's nest. \
+           It looks abandoned.",
+        before [;
+           ThrownAt:
+              move noun to Top_of_drop;
+              print "Your throw goes a little wide, and ";
+              DefArt(noun); print " lands ";
+              ! if (WeightOf(noun) > 10)
+              !    "with a thump below.";
+              ! else "below.";
+              "below.";
+           Take:  "It's way out on a thinner branch that probably \
+                 won't support your weight.";
+           Receive: "You can't quite reach it to put anything in it.";
+           Push, Pull, Rub, Touch, Attack, Shake: "You can't reach it.";
+           LookUnder: "It seems to be sitting on some branches.";
+        ],           
+        size 10,
+   has static container open transparent;
+   
+Object corbie_egg "corbie egg" nest2
+   with name "egg",
+        short_name "corbie egg",
+        description "A large speckled corbie egg.",
+        !weight 8,
+        size 5,
+        before [;
+           Take, Rub, Push, Pull, Touch, Squeeze, Turn, Shake:
+              if (parent(self) == nest2)
+                 "You can't reach it."; 
+           LookUnder:
+              if (parent(self) == nest2)
+                 "It seems to be in a nest.";
+           ThrownAt:
+              if (parent(self) == nest2) {
+                 move egg_shards to Top_of_drop;         
+                 move noun to Top_of_drop;
+                 remove self;
+                 "Good toss! A bit too strong though. With a dull \
+                 crack, your throw breaks the egg, and pieces of \
+                 shell and egg goop fall to the ground below.";
+              }
+           Attack:
+              move egg_shards to parent(player);
+              remove self;
+              "The egg breaks easily, covering you with egg goop. \
+What a mess.";
+        ],
+has edible scored;           
+
+Object branch "branch" Top_of_tree
+   with name "branch" "branches",
+        description "Some leafless thin tree branches.",
+        before [;
+           Push, Pull, Turn, Shake:  
+              if (corbie_egg in nest2) {
+                 print "You give the branches a good shake. The egg pops \
+                 free and tumbles to the ground below! You see the egg \
+                 land in a soft patch of snow, and roll down the slope! \
+                 Moments later, you hear a dull ";
+                 if (sleeppallet in boulder) {
+                    move corbie_egg to Bottom_of_drop;
+                    "thump from below.";
+                 }
+                 else {
+                    remove corbie_egg;
+                    move egg_shards to Bottom_of_drop;
+                    "crack from below.";
+                 }
+              }
+              "You give the branches a good yank. A bit of snow falls.";
+        ],
+  has scenery;
+
+   
+! Some scenery 'fluff'
+Object snow "snow"
+   with name "snow",
+        description "Cold, white and not in short supply.",
+   found_in Mountain_peak Covered_trail Cliff_face Snowy_outcropping MON_garden
+            snowy_intersection rocky_trail Top_of_drop Bottom_of_drop,
+   before [;
+      Take:  "It melts into nothing soon after.";
+      Touch: "It's crisply cold.";
+      Search:
+         if ((self has general) && (location == snowy_intersection)) {
+            give self ~general;
+            Achieved(16);
+            move stone_marker_top to snowy_intersection;
+            "Remembering where the stone marker top fell, you brush \
+aside some snow. Sure enough, there it is!";
+         }            
+   ],            
+   has scenery;
+
+
+
+Object North_of_river "North of Frozen River"
+   with description "You are standing just north of a frozen river \
+(probably a tributary of Lake Dinge). You can just see \
+the south bank from here, where the trail seems to \
+continue. There doesn't seem to be a bridge, however. \
+A trail also continues north.",
+   name "river" "lake" "bank" "trail",
+   s_to Frozen_river,
+   n_to snowy_intersection,
+  has light;
+  
+  
+Object Frozen_river "On Frozen River"
+   with description "You are standing on a wide smooth river of ice. \
+The river 'runs' east to west, and there are banks to the \
+north and south.",
+   name "bank" "banks",
+   n_to North_of_river,
+   s_to South_of_river,
+   e_to "You slide eastwards, and lose your footing, going nowhere.",
+   w_to "You slide westwards, and slip, going nowhere.",
+   before [;
+      Drop:
+         if (noun==sand) {
+            move sand to Frozen_river;
+            Achieved(0);
+            "You scatter the sand onto the ice.";
+         }
+      Go:
+         if (noun==s_obj) {
+            if (player notin sleeppallet) {
+            if (sand notin Frozen_river)
+               "You slide and flounder helplessly on the ice!";
+            else
+               print "You tread lightly on the sand covered portion of \
+                   the ice, and scramble to the south bank.^";
+            }
+         }
+      Jump:
+         deadflag = 1;
+         "You bravely jump, but without warning, the ice cracks in many \
+         places, and you fall into the freezing river, becoming a human \
+         popsicle in a short amount of time.";
+   ],
+   has light;
+
+! (special -- accessible only from Atrii -- put useful item here)
+Object Frozen_river2 "On Frozen River"
+   with description "You are standing on a wide smooth river of ice. \
+The river 'runs' east to west. To the north and south \
+are huge snow bluffs that obscure most of the surrounding \
+countryside.", 
+   e_to "You step eastwards but lose your footing, going nowhere.",
+   w_to Frozen_river,
+   before [;
+      Go:
+         if (noun==w_obj) 
+            print "^As you step west, a slight downwards slope \
+in the ice sends you sliding uncontrollably.^";
+      Jump:
+         deadflag = 1;
+         "You bravely jump, but without warning, the ice cracks in many \
+         places, and you fall into the freezing river, becoming a human \
+         popsicle in a short amount of time.";
+   ],
+   has light;
+   
+! (scrawled -- clue to using spheres)
+Object p7 "scrawled parchment" Frozen_river2
+   class parchment_class,
+   with name "scrawled",
+description "~Red beats smoke,^\
+Silver bests clouds,^\
+Green defeats depths,^\
+Brown stops earth.~";
+
+Object river_ice "river ice"
+   with name "ice" "river",
+        description "The ice is thick and quite smooth.",
+        found_in Frozen_river Frozen_river2,
+        before [;
+! just trap all receives as drops
+           Receive:
+             <<Drop noun>>;
+        ],
+   has scenery supporter;
+   
+Object South_of_river "South of Frozen River"
+   with description "You are standing just south of a frozen river. \
+You can just see the north bank from here, where the trail seems to \
+continue. The only way to get there is across the river. \
+A trail heads south into a valley.",
+        name "river" "bank" "trail",
+   n_to Frozen_river,
+   s_to Valley_trail,
+   has light;
+
+Object Valley_trail "Valley Trail"
+   with description "You are walking along a valley trail, just \
+           below a portion of the Gray Mountain ranges. You can \
+           see the beginnings of a city to the south, while the \
+           trail winds further into the mountain ranges to the \
+           north.",
+        name "trail" "ranges" "mountain" "city",
+   n_to South_of_river,
+   s_to FROSTHAM_Outskirts,
+   has light;
+
+! (An interesting object, with possible uses...)
+!Object bathroom_scale "bathroom scale" 
+!   with name "scale" "bathroom",
+!        description [;
+!           if (player in bathroom_scale)
+!              "This is an odd small flat white device, with a tiny \
+!               glass window at one end that you can see a numbered dial \
+!               through.  The dial currently reads -- wait, that \
+!               can't be right.  The thing must be broken.";
+!           print "This is an odd small flat white device, with a tiny \
+!               glass window at one end that you can see a numbered dial \
+!               through.  The dial currently reads: <", 
+!               (WeightOf(self) - 10), " Ughs>.^"; rtrue;
+!        ],
+!        weight 10,
+!   has supporter enterable;
+
+
+! ***********************************************************************
+! ** (at this point, for clarity and my sanity, I'm going to build 
+! **  the remaining locations & objects in separate files, included
+! **  here.  Hopefully, the files will be somewhat organized based on
+! **  general location/town/situation, etc.
+! ***********************************************************************
+
+Include "frostham.inf";
+Include "aragain.inf";
+Include "anthar.inf";
+Include "fublio.inf";
+Include "borphee.inf";
+Include "miznia.inf";
+Include "gurth.inf";
+Include "subway.inf";
+Include "special.inf";
+
+! ***********************************************************************
+! **
+! ** HADES, in a newer format
+! **
+! ***********************************************************************
+
+Class Hades_Room_Class
+   with description "You are floating in an empty space. Surrounding you \
+           on all sides is a great wall of flame. It would almost seem \
+           like you are trapped inside a ball of fire.",
+        name "fire" "ball" "space" "flame",
+        before [;
+           if ((action~=##Go) && (action~=##Look) && (action~=##Wait))
+              "You currently lack the means to do that.";  ! can't do much in Hades...
+           Go:
+              give self ~visited; ! cheat, easier than routines for each dir...
+              print "^You find yourself floating through the flaming wall! \
+                    As you pass through you feel a gut-wrenching sensation. \
+                    Well, perhaps you would if you currently had a gut, or \
+                    sensations for that matter. Let's just say you feel \
+                    something akin to a gut-wrenching sensation, and leave \
+                    it at that.^";
+        ],
+     has light;
+  
+Object Hades_1 "Hades"
+   class Hades_Room_Class
+   with u_to  Hades_1,
+        d_to  Hades_1,
+        n_to  Hades_1,
+        s_to  Hades_1,
+        e_to  Hades_1,
+        w_to  Hades_1,
+        in_to  Hades_1,
+        out_to  Hades_1,
+        ne_to  Hades_2,
+        nw_to  Hades_1,
+        se_to  Hades_1,
+        sw_to  Hades_1,
+        each_turn [;
+           if (random(10) == 1)
+              "^A wisp of smoke appears to the northeast, then fades.";
+        ],
+;
+                   
+Object Hades_2 "Hades"
+   class Hades_Room_Class
+   with u_to  Hades_1,
+        d_to  Hades_1,
+        n_to  Hades_2,
+        s_to  Hades_3,
+        e_to  Hades_1,
+        w_to  Hades_2,
+        in_to  Hades_1,
+        out_to  Hades_1,
+        ne_to  Hades_2,
+        nw_to  Hades_1,
+        se_to  Hades_2,
+        sw_to  Hades_2,
+        each_turn [;
+           if (random(10) == 1)
+              "^A wisp of smoke appears to the south, then fades.";
+        ],
+;
+     
+Object Hades_3 "Hades"
+   class Hades_Room_Class
+   with u_to  Hades_4,
+        d_to  Hades_3,
+        n_to  Hades_2,
+        s_to  Hades_1,
+        e_to  Hades_1,
+        w_to  Hades_2,
+        in_to  Hades_3,
+        out_to  Hades_1,
+        ne_to  Hades_2,
+        nw_to  Hades_1,
+        se_to  Hades_3,
+        sw_to  Hades_3,
+        each_turn [;
+           if (random(10) == 1)
+              "^A wisp of smoke appears above, then fades.";
+        ],
+;
+     
+Object Hades_4 "Hades"
+   class Hades_Room_Class
+   with u_to  Hades_3,
+        d_to  Hades_3,
+        n_to  Hades_5,
+        s_to  Hades_2,
+        e_to  Hades_1,
+        w_to  Hades_4,
+        in_to  Hades_4,
+        out_to  Hades_1,
+        ne_to  Hades_1,
+        nw_to  Hades_3,
+        se_to  Hades_3,
+        sw_to  Hades_1,
+        each_turn [;
+           if (random(10) == 1)
+              "^A wisp of smoke appears to the north, then fades.";
+        ],
+;
+     
+Object Hades_5 "Hades"
+   with description "You are floating in an empty space. Surrounding you \
+           on all sides is a great wall of flame. It would almost seem \
+           like you are trapped inside a ball of fire.",
+        name "fire" "space",
+        u_to  Hades_1,
+        d_to  Hades_3,
+        n_to  Hades_2,
+        s_to  Hades_4,
+        e_to  Hades_4,
+        w_to  Hades_5,
+!        in_to  Hades_1,
+        out_to  Hades_1,
+        ne_to  Hades_1,
+        nw_to  Hades_3,
+        se_to  Hades_3,
+        sw_to  Hades_2,
+        before [;
+           if ((action~=##Go) && (action~=##Look) && 
+               (action~=##Wait) && (action~=##Enter) &&
+               (action~=##Take) && (action~=##Examine))
+              "You currently lack the means to do that.";
+           Go:
+              if (noun==in_obj) {
+                 Revive_Player1();
+                 rtrue;
+              }
+              give self ~visited;
+              print "^You find yourself floating through the flaming wall! \
+                    As you pass through you feel a gut-wrenching sensation. \
+                    Well, perhaps you would if you currently had a gut, or \
+                    sensations for that matter. Let's just say you feel \
+                    something akin to a gut-wrenching sensation, and leave \
+                    it at that.^";
+        ],
+     has light;           
+     
+Object Hades_flameball "Ball of flame" Hades_5
+   with name "ball" "sphere" "flame",
+        initial [;
+           print "In the center of the room is a ";
+           if (Player_Lives_Left >= 3)
+              "large flaming sphere.";
+           if (Player_Lives_Left == 2)
+              "medium-sized flaming sphere.";
+           "small flaming sphere.";
+        ],
+        description "It's rather hypnotic -- a perfect sphere made entirely of orange-red fire.",
+        before [;
+           Enter: 
+              Revive_Player1();
+              rtrue;
+        ],                
+   has enterable static open;
+   
+[ Revive_Player1 ;
+     print "You find yourself drawn into flaming sphere. The \
+            ball of flame engulfs you completely, and you feel \
+            nothing as inky blackness surrounds you.^^\
+            ~You have revived him!~ you hear a voice say.^^\
+            You open your eyes. You are lying on a long wooden \
+            table in the Monastery Steeple room. Several members \
+            of the Order are gathered around you, and Brother \
+            Joseph helps you to your feet.^^\
+            ~We were able to bring you back to the world of the \
+            living,~ Joseph says, ~but I fear our powers are waning, \
+            and we may not succeed if we try again. Your quest \
+            continues!~^^\
+            The group files out, leaving you alone in the room.^";
+     in_hades = 0;
+     Player_Lives_Left--;
+     Player_HP_CUR = Player_HP_MAX;  ! Healed up
+     give steeple_window ~open;  ! one of the acolytes was too cold...
+     PlayerTo(MON_Steeple_room);
+];
+
+    
+! ***********************************************************************
+! **
+! ** INITIALIZE AND OTHER STARTUP, place player, place objs, etc
+! **
+! ***********************************************************************
+
+[ Initialise;
+  
+  thedark.description =
+     "It is pitch black. You are likely to be eaten by a grue.";
+     
+  prayer_book.magic = all_my_spells;
+  <Learn prayer_book gnusto_spell>;
+  <Learn prayer_book frotz_spell>;
+  move prayer_book to player;
+  location=MON_Chapel1;
+
+!  (FOR TESTING ONLY)
+!move amulet to player;
+!<Learn prayer_book huncho_spell>;
+!<Learn prayer_book feeyuk_spell>;
+!<Learn prayer_book ledak_spell>;
+!<Learn prayer_book egdelp_spell>;
+!<Learn prayer_book tossio_spell>;
+!move TEMPLE_Artifact to player;
+!move umbrella to player;
+!move sack to player;
+!move c1 to player;
+!move magic_door to player;
+!location = ANTHAR_GUSStation;
+!location=Skyscraper;
+!spell_block = 1;
+!<Learn prayer_book bekdab_spell>;
+!<Learn prayer_book egdelp_spell>;
+!<Learn prayer_book tossio_spell>;
+!move decaf_coffee_can to player;
+!location=ATRII_1;
+];
+
+
+! ***********************************************************************
+! **
+! ** Some special routines, which should be after Initialise
+! **
+! ***********************************************************************
+
+! The Afterlife -- or, a fine time in Hades
+[ AfterLife i;
+   if (Player_Lives_Left <= 0) {
+      print "^^A blackness surrounds you, replaced by more blackness...^^";
+      rfalse;
+   }
+   else {
+      deadflag = 0;  ! not dead yet
+      ! move inventory to place of death
+      i=parent(player);
+      while (child(player)~=0) {
+         give child(player) ~worn;
+         move child(player) to i;
+      }
+      spell_block = 0;
+      in_atrii = 0;
+      in_hades = 1;   
+      print "^^A blackness surrounds you, only to be replaced by...^^";
+      i = random(4);
+      if (i==2) { PlayerTo(Hades_2); rtrue; }
+      if (i==3) { PlayerTo(Hades_3); rtrue; }
+      else { PlayerTo(Hades_1); rtrue; }
+   }
+];   
+
+
+[ DarkToDark i;
+     i = random(10);
+     if (i < 4) {
+        print "^Hmm, perhaps the Grues really are migrating with the \
+               Great Change.^";
+        rtrue;
+     }
+     if (i >= 4) {
+        deadflag = 1;
+        "^Well, don't say I didn't warn you. Something horrible \
+with slavering fangs lurks up and devours you!";
+        rtrue;
+     }
+];
+                    
+
+! [ WeightOf obj t i;
+!       t = obj.weight;
+!       objectloop (i in obj)  t=t+WeightOf(i);
+!       return t;
+! ];              
+! Now, rules for capacity still hold (slightly unrealistic), but we
+! can now check WeightOf(player) in those situations that need it.
+
+[ PrintRank;
+   print ", earning you the rank of ";
+   if (score < 0) "Wanna-be Altar-boy";
+!   if (score >= 500) "Truly Enlightened One";
+!   if (score >= 495) "Benevolent One";
+!   if (score >= 490) "Faithful One";
+!   if (score >= 395) "Simple Man";
+! fill fill
+   if (score >= 250) "Enlightened One";
+   if (score >= 225) "Patriarch";
+   if (score >= 200) "Cardinal";
+   if (score >= 150) "Lama";
+   if (score >= 125) "Cleric";
+   if (score >= 100) "High Priest";
+   if (score >= 90) "Priest";
+   if (score >= 75) "Monk";
+   if (score >= 50) "Brother";
+   if (score >= 30) "Acolyte";
+   if (score >= 20) "Aspirant";
+   if (score >= 10) "Devoted";
+   if (score >= 5) "Believer";
+   "Non-believer";
+];
+
+[ PrintTaskName ach;
+    switch (ach) {
+    0: "using sand to get across the river";
+    1: "triplicating the cereal box";
+    2: "setting the alarm clock";
+    3: "getting the waxy scroll from the skier";
+    4: "giving the palace guard a good cake";
+    5: "solving Barsap's Gambit";
+    6: "fixing the sailboat";
+    7: "finding the rod in the shipwreck";
+    8: "triplicating the ale";
+    9: "finding the rod under the statue";
+    10: "pruning the Christmas Tree Monster";
+    11: "getting past the burly sports fan";
+    12: "winning the three Golem bouts";
+    13: "ending the kobold war";
+    14: "unlocking Duncanthrax's Trophy chamber";
+    15: "unlocking the Lab door";
+    16: "finding the rod in the top of the marker";
+    17: "finding the rod in the house foundation";
+    18: "removing the impenetrable steel wall";
+    19: "joining the True Rod";
+    20: "getting past the broken subway gate";
+    21: "finding the hidden path to the temple";
+    22: "getting the rod through the temple";
+!    23: "finding the scroll in Frobar's painting";
+    23: "getting the scroll from the boutique";
+    24: "getting the scroll from Frobar";
+    25: "getting into the subway tunnel";
+    26: "banishing the four evil elementals";
+! add, if desired
+    } 
+];
+
+! *** NEW ACTION ROUTINES
+
+[ PraySub i;
+     if ((in_hades == 1) || (in_atrii == 1) || (spell_block==1))
+        "You make a prayer and feel no spiritual response! \
+        Have the Deities forsaken you? Or have you found a \
+        place where even the Gods cannot provide guidance?";
+     else {
+        i = random(100);
+        if (Player_HP_MAX ~= (20 + score)) 
+           Player_HP_MAX = (20 + score);
+        ! consider increasing memory/spell capacity here
+        if (i==97) {
+           Player_HP_CUR = Player_HP_MAX;  ! Healed
+           "You make a quick but respectful prayer to the \
+           Deities above, asking for Divine Guidance in your \
+           quest. A saffron glow surrounds you and you feel \
+           spiritually and physically renewed!";
+        }
+        "You make a quick but respectful prayer to the \
+        Deities above, asking for Divine Guidance in your \
+        quest. You finish and feel spiritually renewed.";
+     } 
+];
+
+[ DiagnoseSub i;
+     if (Player_HP_CUR > Player_HP_MAX) ! (This should never happen)
+        "You feel superhuman!";
+     if (Player_HP_CUR == Player_HP_MAX)
+        "You are in good health.";
+     if (Player_HP_CUR == 1)
+        "You are near death's door.";    
+     if (Player_HP_CUR < 5)
+        "You feel extremely weak.";
+     if (Player_HP_CUR < 10)
+        "You feel weak.";
+     i = (Player_HP_MAX / Player_HP_CUR);
+     if (i >= 4)
+        "You feel slightly weak";
+     if (i >= 2) 
+        "You've been better, but you'll be okay.";
+     "You feel okay.";   
+];
+
+[ StrongSub i;
+     i = random(20);
+     if (i > 15) {
+        deadflag = 1;
+        "Such language from a priest such as yourself! \
+         The ground rumbles, and a bolt of blue wrath from the \
+         Deities strikes you dead!";
+     }
+     "Such language from a priest such as yourself! \
+         The ground rumbles suddenly!";
+];
+
+! [ LiftSub ;
+!    if (noun has static)
+!       "That's fixed in place.";
+!    if (noun has scenery)
+!       "You're unable to.";
+!    if (noun has animate)
+!       "That would be less than courteous.";
+!    print "You lift "; DefArt(noun); " and put it back in \
+!          it's original position.  Nothing obvious happens.";
+! ];
+
+[ ShakeSub ;
+   if (noun has animate)
+      "Get a hold of yourself. No need to go around shaking living \
+things like that.";
+   "Nothing happens.";
+];
+
+! (new insert routine, which is the same as old, except that
+! we also check relative sizes of objects) 
+[ InsertSub;
+  receive_action = ##Insert;
+  if (second==d_obj ) <<Drop noun>>;
+  if (parent(noun)~=player) return L__M(##Insert,1);
+
+  if (second>1)
+  {   action=##Receive;
+      if (RunRoutines(second,before)~=0) { action=##Insert; rtrue; }
+      action=##Insert;
+  }
+  if (second hasnt container) return L__M(##Insert,2);
+  if (second hasnt open)      return L__M(##Insert,3);
+  if (IndirectlyContains(noun,second)==1) return L__M(##Insert,5);
+  if (noun has worn)
+  {   L__M(##Insert,6);
+      <Disrobe noun>; if (noun has worn) rtrue;
+  }
+
+  if (children(second)>=ValueOrRun(second,capacity))
+      return L__M(##Insert,7,second);
+
+  if (noun.size > second.size) {
+     CDefArt(noun); print " appears to be too large to put in ";
+     DefArt(second); ".";
+  }
+  move noun to second;
+
+  if (AfterRoutines()==1) rtrue;
+
+  if (second>1)
+  {   action=##Receive;
+      if (RunRoutines(second,after)~=0) { action=##Insert; rtrue; }
+      action=##Insert;
+  }
+  if (keep_silent==1) rtrue;
+  if (multiflag==1) return L__M(##Insert,8);
+  L__M(##Insert,9,noun);
+];    
+
+[ FoldSub ;
+   "I fail to see what you're trying to accomplish by doing this.";
+];
+
+[ MixSub;
+   "I fail to see what you're trying to accomplish by doing this.";
+];
+
+![ SpecialDialSub;
+!   if (noun hasnt numberdial)
+!      "You can't seem to do that.";
+!   if ((second > 9) || (second < 0))
+!      print "It appears that the valid range for ",noun; " is 0 to 9";
+!   noun.number = second;
+!   if (noun.number > 9) noun.number = 0;  
+! a special restriction in this case
+!   print "You set ",noun," to ",second; ".";
+!]; 
+   
+[ JoinSub;
+   "This doesn't seem terribly productive.";
+];
+
+[ MeditateSub;
+   "You close your eyes and focus your mind inwards. \
+Mere moments of time seem to pass like eons. You \
+open your eyes.";
+];
+
+[ YellSub;
+	  "ARRGH!";
+];	  
+[ SneezeSub;
+     "You make a rather sickly noise.";
+];
+[ YawnSub;
+     if (Frobar in location)
+        "~Stop that!~ Frobar says, ~It's contagious.~";
+     else "Tired?";
+];
+[ XyzzySub;
+     "A hollow voice says, ~Cool!~";
+];
+[ BegSub;
+     "Please, no begging.";
+];
+[ LaughSub;
+     "Was it that funny?";
+]; 
+
+[ HelpSub;
+   "Hello Player!^^\
+SPIRITWRAK, An Interactive Fantasy Adventure^\
+If you're new to interactive fiction games, I lack the \
+space here to give an adequate description, but in short, \
+you're a character in a story, able to interact with \
+objects, places and other things (using regular english \
+sentences) in order to reach your goal, which is to \
+figure out how to ~solve~ the story. For a real \
+description, you might want to check out documents \
+located at ftp.gmd.de.^^\
+For those more experienced players, if you're looking \
+for on-line clues, etc., sadly, you won't find them \
+(the Z5 code is getting rather obscenely large as I \
+write this). A short verb list is contained in the \
+README file that you should have received with this \
+game (or should be able to find at the same place you \
+found this game). Beyond that, if you're truly \
+desperate, you can post a note on the rec.arts.int-fiction \
+usenet newsgroup, or send me email.^^\
+Thanks for playing! ^^\
+-- D. S. Yu [dsyu@@64holonet.net]";
+];
+
+Include "Grammar"; ! (Include grammar _after_ action defs, if we replace any)
+
+! **** Extensions
+!Extend "turn" first  
+!  * noun "to" number   -> SpecialDial;
+Extend "examine" first
+                * scope=ReadableSpell            -> Examine;
+
+
+
+! **** Action defs
+
+Verb "diagnose" "health" "status"
+   *     ->    Diagnose;
+    
+Verb "spells" "memory" "chants"
+                *                                -> Spells;
+Verb "learn" "memorise" "memorize" "prepare"
+                * scope=ReadableSpell            -> Learn;
+Verb "c,cast"
+                *                                -> CastOne
+                * noun                           -> CastOne;
+Verb "cast" "chant"
+                * is_spell                       -> Cast
+                * is_spell "at" noun             -> Cast
+                * is_spell "on" noun             -> Cast;
+Verb "yell" "scream" "bellow"
+   *            -> Yell;
+Verb "sneeze" "cough"
+	*	-> Sneeze;
+Verb "yawn"
+	*	-> Yawn;
+Verb "laugh" "chuckle"
+   *            -> Laugh;
+Verb "play"
+   * held       -> Blow;
+Verb "clip" "trim"
+   * noun       -> Cut;
+! Verb "lift" "raise"
+!    * noun       -> Lift;   
+Verb "shake" "yank"
+   * noun       -> Shake;
+Verb "fold"
+   * noun       -> Fold;
+Verb "mix" "stir"
+   * noun       -> Mix;
+Verb "join" "connect"
+   * noun "to" noun -> Join
+   * noun "with" noun -> Join;
+Verb meta "help" "hint"
+   *            -> Help;      
+
+! ** (nonsense verbs below, can be removed without affecting game)   
+Verb "xyzzy" "plugh" "treasure" "plover" "yoho"
+	*	-> Xyzzy;
+Verb "beg"
+        *       -> Beg;
+Verb "meditate"
+        *       -> Meditate;
+      
+end;
+! fin.
+

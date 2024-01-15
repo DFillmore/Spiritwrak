@@ -1,0 +1,1043 @@
+
+! ******************************************************************
+! FUBLIO.INF
+! ----------
+! Add-on file for SPIRITWRAK
+! -- Contains South Fublio Valley locations, items and creatures
+! ******************************************************************
+
+Object FUBLIO_GUSStop "Southern Fublio Valley"
+   with description "You are in a southern region of Fublio \
+Valley, where someone apparently decided to start \
+a city. So far, a couple huts and farmhouses are the \
+result. A rather run-down farmhouse lies to the \
+southwest, a trail runs through grasslands to \
+the south and a smaller trail runs along the hills to the \
+southeast. To the north, you see a decrepit old \
+building. There is also a stairway into the ground here.",
+        name "huts" "farmhouses" "farmhouse" "trail" "grasslands"
+"hills" "stairway",
+        d_to FUBLIO_GUSStation,
+        sw_to Farm,
+        s_to Grasslands,
+        se_to Fublio_forest,
+        n_to Fublio_bank,
+        cant_go "You amble around the local area a bit, and return here.",
+   has light;
+   
+Object Fublio_bank "Abandoned Bank"
+   with description "You're inside what must have once been a \
+small branch office of the once indestructible Bank of Zork. \
+However, the place has clearly been abandoned, and age has not \
+been kind. Even the required portrait of J. Pierpont Flathead \
+has been pilfered. An exit lies south.",
+   s_to [;
+! first case, r & (!p & !q & !s)
+      if ((children(r_vault) == 20) &&
+          (children(p_vault) == 0) &&
+          (children(q_vault) == 0) &&
+          (children(s_vault) == 0)) return FUBLIO_GUSStop;
+! second case, (p & s) & (q & !r)
+      if (((children(s_vault) > 0) && 
+           (children(p_vault) == children(s_vault))) &&
+          ((children(q_vault) == (children(p_vault) + 5)) &&
+           (children(r_vault) ~= 20))) 
+         return FUBLIO_GUSStop;
+      "A buzzer sounds, and some mysterious force \
+prevents you from leaving!";
+   ],   
+   has light;
+
+Class vault_class
+   with name "vault",
+   description "Basically a hollow rectangular hole cut \
+into the wall.",
+   before [;
+      Receive:
+if (noun hasnt is_coin)
+   "A strange force pushes your hand away.";
+   ],
+   capacity 100,
+   size 10,
+has static container open transparent;      
+
+Object p_vault "interest vault" Fublio_bank
+   class vault_class,
+   with name "interest",
+        initial [;
+          print "An vault labeled ~INTEREST PAID~ is \
+open in the wall";
+if (children(self) > 0) {
+   print ". Inside";
+   WriteListFrom(child(self), FULLINV_BIT + ENGLISH_BIT + ISARE_BIT);
+}
+".";
+        ],
+;
+Object q_vault "overhead vault" Fublio_bank
+   class vault_class,
+   with name "overhead",
+        initial [;
+print "An vault labeled ~OVERHEAD~ is \
+open in the wall";
+if (children(self) > 0) {
+   print ". Inside";
+   WriteListFrom(child(self), FULLINV_BIT + ENGLISH_BIT + ISARE_BIT);
+}
+".";
+        ],
+;
+Object r_vault "basis vault" Fublio_bank
+   class vault_class,
+   with name "basis",
+        initial [;
+print "An vault labeled ~BASIS~ is \
+open in the wall";
+if (children(self) > 0) {
+   print ". Inside";
+   WriteListFrom(child(self), FULLINV_BIT + ENGLISH_BIT + ISARE_BIT);
+}
+".";
+        ],
+;
+Object s_vault "loans vault" Fublio_bank
+   class vault_class,
+   with name "loans",
+        initial [;
+print "An vault labeled ~LOANS~ is \
+open in the wall";
+if (children(self) > 0) {
+   print ". Inside";
+   WriteListFrom(child(self), FULLINV_BIT + ENGLISH_BIT + ISARE_BIT);
+}
+".";
+        ],
+;
+
+
+Object bank_memo "bank memo" Fublio_bank
+    with name "memo",
+description "BANK WORKER GUIDELINES^^\
+If at any point, account activity has been suspended \
+(i.e. all regular account vaults have no funds) then \
+it must be ensured that 20 zorkmids remain in basis, \
+for potential loan requests.^^\
+Otherwise, vaults must be maintained as follows:^^\
+For interest waiting to be paid, the amount must \
+equal the amount held in the loan payments vault. \
+If this amount goes over the loan payments, talk \
+to your local gnome manager to see about getting \
+some outstanding loans paid back.^^\
+Overhead should be kept at the amount in interest,
+plus five.^^\
+Loan payments should be kept at a positive amount.^^\
+Make sure that both the loan and interest vaults \
+are maintained properly, and at the same time, the \
+overhead vault is maintained while the basis vault \
+is kept at a non-suspended bank amount. If this \
+is not the case, you may need to put some overtime \
+in to straighten out the bank funds.",
+   size 15;
+
+Object c30 "coin" r_vault class coin_class;
+Object c31 "coin" r_vault class coin_class;
+Object c32 "coin" r_vault class coin_class;
+Object c33 "coin" r_vault class coin_class;
+Object c34 "coin" r_vault class coin_class;
+Object c35 "coin" r_vault class coin_class;
+Object c36 "coin" r_vault class coin_class;
+Object c37 "coin" r_vault class coin_class;
+Object c38 "coin" r_vault class coin_class;
+Object c39 "coin" r_vault class coin_class;
+Object c40 "coin" r_vault class coin_class;
+Object c41 "coin" r_vault class coin_class;
+Object c42 "coin" r_vault class coin_class;
+Object c43 "coin" r_vault class coin_class;
+Object c44 "coin" r_vault class coin_class;
+Object c45 "coin" r_vault class coin_class;
+Object c46 "coin" r_vault class coin_class;
+Object c47 "coin" r_vault class coin_class;
+Object c48 "coin" r_vault class coin_class;
+Object c49 "coin" r_vault class coin_class;
+
+Object Farm "Farm"
+   with description "You're standing in front of a small farmhouse. \
+A trail leads northeast, a sand bar lies to the southwest, \
+and another trail heads east.",
+        name "trail",
+        ne_to FUBLIO_GUSStop,
+        sw_to Veg_fields,
+        e_to Grasslands,
+   has light;
+   
+Nearby farmhouse "farmhouse"
+   with name "farmhouse" "house",
+        description "A small farmhouse, barely a shack.",
+        before [;
+           Enter: "The farmhouse is run-down enough already without you \
+                  stomping around in it.";
+        ],
+   has scenery;   
+   
+Object Veg_fields "Oyster Farm"
+   with description [;
+           print "A coastline sand bar curves west a short distance \
+here, ending in a shoal of large rocks. Nearby, \
+someone has dug some shallow holes in the \
+sand, probably farming for live Rotund Oysters, a popular \
+Eastland delicacy.";
+           if (self hasnt general)
+"Unfortunately, the oyster \
+beds are too far inland, and they appear to be \
+empty. A bit to the west you can see a small \
+shoreline cave in the rocks.";
+           else
+"The oyster \
+beds are filled with water (similar to a good portion \
+of the shoal) and look well stocked!";
+	     ],
+             name "sand" "bar" "shoal" "rocks" "cave",
+             before [;
+Fill: "Seawater is hardly a rare commodity these days.";
+             ],
+	     ne_to Farm,
+             w_to [;
+               if (self hasnt general) {
+                  print "You try to head towards the cave, but \
+the unstable rocks and sea waves make it "; 
+                  if (FUBLIO_Cave hasnt general) {
+                  give FUBLIO_Cave general;
+                  print "difficult \
+to get there from here. Suddenly, a rock slips from underfoot! \
+You fall...^";
+                  return FUBLIO_Cave;
+                  }
+                  else 
+                  print "impossible \
+to get there from here.^"; return 1;
+               } 
+               else
+                  "Any remainder of the sand bar west is \
+now submerged by a high tide or rise in the sea.";
+             ],
+   has light;
+   
+Nearby oyster_beds "oyster beds"
+   with name "beds" "holes" "hole",
+        description [; 
+          print "Some shallow";
+          if (Veg_fields hasnt general)
+            ", mostly empty holes in the sand.";
+            " holes in the sand, filled with sea water.";
+        ],
+        before [;
+           Search:
+              if (Veg_fields has general)
+                 "You find a couple immature oysters, and throw \
+them back."; 
+           Receive:
+              "Someone is obviously trying to use these holes \
+for oyster farming. Best to leave them as you found them.";
+        ],
+   has scenery;
+
+Object FUBLIO_Cave "Dark Damp Cave"
+   with description [;
+        print "You seem to be in some underground cave. ";
+        if (FUBLIO_Cave.number == 1)
+"There are no visible exits. You feel rather claustrophobic. \
+You also hear some unexpected noises.";
+        else 
+"There is a small dark tunnel leading south. \
+You hear the sounds of rushing water from somewhere nearby.";
+        ],
+        number 1,
+        name "tunnel",
+        s_to [;
+           if (FUBLIO_Cave.number == 1)
+              "You can't go that way.";
+           if (FUBLIO_Cave.number == 3)
+              "The dark tunnel becomes blocked after a short distance \
+by a great tidal swell! The sea has risen above the entrance!";              
+           else {
+              print "^You crawl through the dark tunnel, which \
+seems to snake back and forth. After what seems like an \
+eternity, you see daylight, and stumble forward. You find \
+yourself on the sand bar again! Looking back, you can't \
+locate the tunnel you just left at all!^";
+              FUBLIO_Cave.number = 3;
+              return Veg_fields;
+           } 
+        ],
+        before [;
+          Listen: "You hear the sounds of the sea all around you.";
+          Smell: "You smell the musty odor of the sea.";
+        ],
+;
+
+
+
+Object Grasslands "Grassland Beach"
+   with description [;
+        if (self hasnt general)
+          print "A nice beach with lots of tall grasses hides \
+behind a short dune here. The Great Sea stretches out \
+to the south.";
+        else 
+           print "A deep marsh hides behind a short dune here. The Great Sea \
+        is making some inroads here, apparently. That volcano in \
+        the water to the south may have had something to do with it.";
+        " From here, you can go north, west or east. \
+        You can just glimpse some sort of tower-like structure \ 
+        far across the bay in the east.";
+        ],
+        name "beach" "grasses" "dune" "marsh" "sea" "tower",
+        w_to [;
+             if (player in sailboat)
+                "You'll have to get out of the sailboat first.";
+             else return Farm;
+             ],
+        e_to [;
+             if (player in sailboat)
+                "You'll have to get out of the sailboat first.";
+             else return Fublio_forest;
+             ],
+        n_to [;
+             if (player in sailboat)
+                "You'll have to get out of the sailboat first.";
+             else return FUBLIO_GUSStop;
+             ],
+        s_to [;
+             if (player in sailboat) return On_Fublio_bay;
+             else
+                "The tides here make swimming unadvisable.";
+             ],
+        before [;
+             Swim:  
+                "The tides here make swimming unadvisable.";
+        ],
+  has light;
+  
+Nearby sailboat "small sailboat"
+   with name "sailboat" "boat",
+        description [; 
+           if (self hasnt general)
+              "A nice little sailboat that looks pretty sea-worthy. \
+The word ~MINIRVA~ is painted on one side.";
+           "A badly damaged sailboat. Several places bear deep \
+cracks, as though the boat had been tossed in a violent storm.";
+        ],
+        before [;
+           Go:
+              if (self has general) {
+                 print "In it's current condition, this boat is lucky to \
+                 be floating.^";
+                 return 2;  ! disallow movement but say nothing
+                 }
+              else rtrue;
+           Cast:
+              if (the_spell_was == fiznav_spell) {
+                 print "You perform a nice liturgy to the Sea Gods,";
+                 if (self has general) {
+                 give self ~general;
+                 Achieved(6);
+                 " and before your very eyes, the sailboat repairs itself!";
+                 }
+                 else " however the boat seems unchanged.";
+              }
+           Take: 
+              "That's too cumbersome to carry.";
+        ],
+        capacity 15,                                                          
+        size 30,
+   has enterable static container open;
+   
+! Object c6 "coin" sailboat class coin_class;
+
+Object On_Fublio_bay "On Fublio Bay"
+   with description [;
+        print "You are sailing on Fublio Bay. A shoreline lies \
+to the north. You could probably sail out of the bay \
+to the south, but I'd advise against it, \
+the winds aren't very strong. To the northeast \
+you can see ";
+        if (self hasnt general)
+           "the tip \
+           of a peninsula where a lighthouse tower is standing.";
+        else 
+           "a partially submerged lighthouse tower. \
+           Also, to the southeast is a small volcanic island where \
+           you could probably land.";
+        ],
+        name "shoreline" "bay" "peninsula" "tower" "lighthouse"
+"island",
+        n_to Grasslands,
+        s_to Lost_at_sea,
+        ne_to [;
+           if (self hasnt general)
+              "The winds blow the wrong way, and you end up back here.";
+           else return Lighthouse2;
+        ],
+        se_to [;
+           if (self hasnt general)
+              "You can't go that way.";
+           else return Volcano_island;
+        ],
+        before [;
+           Go:
+              if (noun==s_obj)
+                 print "^A sudden gust of wind sends your small craft \
+                   skimming out of control!^";
+           Swim, Exit:
+              if (player in sailboat)
+                 "The water's pretty deep here. I'd stay in the boat.";
+           Fill: "Seawater is hardly a rare commodity these days.";
+        ],
+        each_turn [;
+           if (seawater.number == 5) {
+              seawater.number = 10;
+              "^Many large bubbles are coming from somewhere deep in the \
+              seawater near you, as though the water was boiling! Also, \
+              you see some dark shape in the depths below rising!";
+           }
+           if (seawater.number == 4) {
+              seawater.number = 5;
+              "^There appears to be a steady stream of bubbles coming from \
+              somewhere deep in the water near you! Also, you see something \
+              dark rising from the depths below you!";
+           }
+           if (seawater.number == 3) {
+              seawater.number = 4;
+              "^You notice a few small bubbles rise to the surface of the sea.";
+           }
+           if (seawater.number == 2)
+              seawater.number = 3;
+        ],
+        
+   has light;
+
+Object Lost_at_sea "Lost at Sea"
+   with description [;
+          print "You're lost at sea. The winds are completely dead. \
+They managed to take you quite a ways out before they died, \
+however, and it's currently hard to tell which way land was \
+from here";
+         if (self has general)
+           ". Oddly, there's a volcano far out to the south, \
+           still smoldering from a recent eruption.";      
+         else ".";
+        ],
+        name "sea" "winds" "land",
+           cant_go "The winds are dead, and you're not going anywhere.",
+        before [;
+           Swim, Exit:
+              if (player in sailboat)
+                 "The water's pretty deep here. I'd stay in the boat.";
+           Fill: "Seawater is hardly a rare commodity these days.";
+        ],
+        each_turn [;
+           if (seawater.number == 9) {
+              seawater.number = 11;
+              "^Many large bubbles are coming from somewhere deep in the \
+              seawater near you, as though the water was boiling! Also, \
+              you see some dark shape in the depths below rising!";
+           }
+           if (seawater.number == 8) {
+              seawater.number = 9;
+              "^There appears to be a steady stream of bubbles coming from \
+              somewhere deep in the water near you.";
+           }
+           if (seawater.number == 7) {
+              seawater.number = 8;
+              "^You notice a small bubble rise to the surface of the sea.";
+           }
+           if (seawater.number == 6)
+              seawater.number = 7;
+        ],
+   has light;
+   
+Object Fublio_forest "On Peninsula"
+   with description [;
+        print "You stand ";
+        if (self hasnt general)
+         "in a clearing on a grassland peninsula. A \
+          trail leads northwest from here, and another leads west. \
+          Off to the \
+          southeast, there's an entrance into what looks like an old \
+          abandoned lighthouse, just at the tip of the peninsula.";
+        if (self has general)
+         "on the southeast tip of a grassland peninsula. A \
+          trail leads northwest from here, and another leads west. Off to the \
+          southeast, you can see the top of what looks like a \
+          lighthouse, partially submerged in the Great Sea.";
+        ],
+        name "clearing" "grassland" "peninsula" "trail" 
+"tower" "lighthouse" "sea",
+        nw_to FUBLIO_GUSStop,
+        w_to Grasslands,
+        se_to [;
+              if (self has general)
+              "Looks like you'd need a boat to get out to that \
+              lighthouse now."; 
+              else return Lighthouse1;
+              ],
+   has light;
+  
+Object Lighthouse1 "Bottom of Lighthouse"
+   with description [;
+        print "You're inside an ancient lighthouse. The place \
+           must have been deserted quite a long time ago, and \
+           is now a mess of broken stone, cobwebs and seabird \
+           droppings. The rest of the peninsula is back \
+           northwest. You can see a hole above where a stairway \
+           probably entered an upper floor of the place, but \
+           the stairway itself crumbled into dust long ago";
+           if ((self hasnt general) && (amulet has worn)) {
+              give self general;
+           ".^^Your amulet suddenly gives off a bright purple flash, then \
+           returns to normal!";
+           }
+           else ".";
+       ],
+       name "stone" "cobwebs" "droppings" "hole",
+       nw_to Fublio_forest,
+       u_to "The hole is too far above you.",
+   has light;
+ 
+! more scenery stuff.  This one's key though
+! (Sidenote:  Here's an example of a situation where one would probably
+! want an object that could be both a supporter and a container --
+! i.e. objects that float or sink could be handled easily.) 
+Object seawater "water"
+   with name "water" "sea" "ocean",
+        description "Salty blue-green water surrounds you.",
+        time_left 0,
+        number 1,
+        weight 0,
+        size 100,
+        before [;
+           ThrownAt, Receive:
+              if (noun == toy_volcano) {
+                 if (location == On_Fublio_bay)  {
+                    seawater.number = 2;
+                    seawater.weight = 1;
+                 }
+                 else {
+                    seawater.number = 6;
+                    seawater.weight = 2;
+                 }
+                 StartTimer(self,3);
+                 remove toy_volcano;
+                 "The toy volcano drops into the water and sinks like a stone.";
+              }                            
+              else {
+                 remove noun;
+                 if (noun == umbrella && umbrella has open)
+                    "The umbrella seems to float on the water like a \
+cloth dome for a short bit, but eventually sinks into the water.";
+                 CDefArt(noun); " sinks into the water and is soon out of sight.";
+              }              
+           Push, Pull, Turn, Take, Attack, Rub, Squeeze: "The sea water runs through your fingers.";
+           Taste, Drink: "It's just salty sea water.";
+           Search, LookUnder:
+              if (seawater.weight > 0 && seawater.number < 12)
+                 "There's something down there all right!";
+              else {
+                 if (random(10) < 2)
+                    "You glimpse a large grouper swimming under the \
+water, and watch it swim away.";
+                 else
+                    "The water seems choppy and deep. You notice \
+nothing beneath the waves at the moment.";
+              }
+        ],
+        found_in On_Fublio_bay Lost_at_sea,
+        time_out [ ;
+           ! a fairly simple event here, but nonetheless dramatic...
+           ! -- 1st, if we dropped the volcano in the bay (correct)
+           ! set water descriptions so that player won't see bubbles
+           seawater.number = 12;           
+           ! set CAVE number for endgame
+           FUBLIO_Cave.number = 3;
+           if (seawater.weight == 1) {
+           ! first, set up all room generals so that descriptions are 
+           ! changed.
+           give Grasslands general;
+           give Veg_fields general;
+           give Fublio_forest general;
+           give farmer general;  ! he'll give player sphere next encounter
+           give sailboat general;  ! damages sailboat, regardless of where it is
+           move sailboat to Grasslands;
+           ! Modify On_Fublio_bay paths, new one to island, new one to tower.
+           give On_Fublio_bay general;
+           ! Now, check location.  Certain areas will kill player in 
+           ! tidalwave.  Certain areas will cause an audible explosion.
+           ! Remainder do nothing (but shouldn't happen)
+           if (location == Veg_fields or Grasslands or Lighthouse1) {
+              deadflag = 1;
+              "^There's a massive explosion from the south! You turn \
+              and rub your eyes in disbelief. There's a \
+              volcano rising out of the sea! Unfortunately, \
+              there's also a large tidalwave headed your way \
+              (caused by volcanic eruption at sea, no doubt) which \
+              engulfs you as you try to scramble for higher ground! \
+              You struggle valiantly, but drown in deep water.";              
+           }
+           if (location == FUBLIO_GUSStop or Farm or Fublio_forest) {
+              "^You hear a massive explosion from the south! \
+              It sounded pretty far off, but whatever it was, it \
+              was loud.";           
+           }
+           if (location == On_Fublio_bay) {
+              deadflag = 1;
+		    "^Suddenly, the water around you literally lifts you into \
+		    the sky in an enormous explosion! The last thing you \
+		    see is the emerging mouth of an active and hungry volcano!";
+			  }        
+           if (location == Lost_at_sea) {
+              deadflag = 1;
+              "^You hear a large explosion off to the north! \
+A massive tidal swell rushes by and tosses your small craft violently, \
+knocking you into the water. As you watch the waves carry the boat
+away, a giant grouper swims up and swallows you."; 
+           }             
+           }
+           ! -- else, we dropped it in the sea (bummer)
+           ! (this implies that 1) only the sea descrp will change, 
+           ! 2) the player is still stuck at sea, and will be killed 
+           ! for his trouble.
+	  else {
+	     give sailboat general;  ! just keeping with the story...
+	     give Lost_at_sea general;
+	     move sailboat to Grasslands;  ! made it back to shore somehow...
+	     deadflag = 1;
+	     "^Suddenly, the water around you literally lifts you into \
+	     the sky in an enormous explosion! The last thing you \
+	     see is the emerging mouth of an active and hungry volcano!";
+	  }        
+        ],
+   has scenery container open;
+
+
+Object Lighthouse2 "Near Submerged Lighthouse"
+   with description [;
+          print "You're on the outside of what looks like the upper \
+           part of a lighthouse, sticking straight out of the sea. \
+           The lighthouse is broken in many places, and several areas \
+           provide ledge-space to stand on. In fact, you could probably \
+           climb into the lighthouse through one of many large \
+           cracks in the walls to the east. The rest of Fublio bay \
+           is back southwest";
+          if ((self has general) || (Lighthouse1 has general) || 
+              (amulet hasnt worn))
+           ".";
+           else {
+              give self general;
+           ".^^Your amulet suddenly gives off a bright purple flash, then \
+           returns to normal!";
+          }                             
+        ],
+        name "lighthouse" "cracks",
+        e_to [;
+           if (player in sailboat) 
+              "You'll need to get out of the boat first.";
+           else return In_lighthouse;
+        ],
+     !   in_to [;
+     !      if (player in sailboat) 
+     !         "You'll need to get out of the boat first.";
+     !      else return In_lighthouse;
+     !   ],
+        sw_to [;
+           if (player notin sailboat)
+              "The water looks pretty choppy. I'd suggest you use a \
+              sea-going vessel of some sort.";
+           else return On_Fublio_bay;
+        ],
+    has light;
+    
+    
+Object Volcano_island "Volcanic Island"
+   with description "You're on the north shore of a small volcanic \
+         island in the middle of Fublio bay. A little more \
+         shore lies to the south. The bay spreads out before \
+         you to the northwest.",
+        name "bay",
+        nw_to [;
+           if (player notin sailboat)
+              "The water looks pretty choppy. I'd suggest you use a \
+              sea-going vessel of some sort.";
+           else return On_Fublio_bay;
+        ],
+        s_to [;
+           if (player in sailboat) 
+              "You'll need to get out of the boat first.";
+           else return Island2;
+        ],
+        before [;
+           Swim:  "Near a still-active volcano? Not wise.";
+        ],
+   has light;                    
+
+Object Island2 "South Part of Island"
+   with description "You're on a southern section of a small \
+          volcanic island in the middle of Fublio bay. Most \
+          of the area here is lava-rock, still warm. You can \
+          see a more open shore to the north.",
+        name "bay" "rock" "lava" "shore",
+        n_to Volcano_island,
+        before [;
+           Swim:  "Near a still-active volcano? Not wise.";
+        ],
+   has light; 
+
+Nearby shipwreck "old shipwreck"
+   with name "shipwreck" "wreck" "ship",
+        initial "An old shipwreck is almost embedded in the lava \
+             here.",
+        description "It looks like an old navy vessel, \
+             stuck fast in the surrounding rock. Its obviously \
+             been underwater for some time, as it is covered in \
+             barnacles and seaweed. The hull has partially rotted apart \
+             in many places.",
+        before [;
+           Enter:
+              "You find that anything left to enter in the wreck \
+              has pretty much decayed away.";
+           Cast:
+              if (the_spell_was == fiznav_spell) 
+                 "You perform a nice ritual to the Sea Gods, and \
+                 before your very eyes, the ship attempts to repair \
+                 itself! But there's too much damage, and not \
+                 even the aid of the Sea Gods can fix this craft. \
+                 The chant fails.";
+           Search: 
+              if (self has general) {
+                 move green_rod_piece to parent(self);
+                 give self ~general;
+                 Achieved(7);
+                 "Something about the old boat rings a familiar tune. \
+You check near something that might have once been a mast, and \
+uncover a familiar green rod!";
+              }
+        ],
+   has static;   
+
+Object In_lighthouse "Lighthouse, upper level"
+   with description "You're inside an abandoned lighthouse, on what \
+          must be an upper floor. The whole interior is lifeless and \
+          barren. There's a large broken crack in the western wall. \
+          You also notice a hole in the floor nearby, which might \
+          have been an exitway a long, long time ago.",
+       name "crack" "hole",
+       w_to [;
+          if (water_spirit in self)
+             "The water spirit buffets you with water and \
+             prevents you from leaving.";
+          else return Lighthouse2;
+       ],
+       d_to [;
+          deadflag = 1;
+          "You drop through the hole, and land in cold dark water! \
+          Trapped in an enclosed pool of seawater, with the hole \
+          too far above you, you drown shortly afterwards.";
+       ],   
+       before [;
+          Listen:  "You hear some sloshing noises from below the floor.";
+       ],
+has light;
+
+
+
+! ************
+! creatures
+! ************
+
+Object farmer "farmer" Farm
+   with name "farmer",
+        initial "There's a tired-looking farmer here.",
+        description "It looks like he's been working pretty hard \
+                     in the sun.",
+        each_turn [;
+           if (self hasnt general) {
+              if (random(10) == 1)
+                 "^~'Forget zucchini,' they told me, 'Go into oyster \
+                 farming. You'll make a fortune.' Ha!~";
+           }
+           else {
+              remove farmer;
+              move silver_sphere to player;
+              "^The farmer sees you approach and rushes to \
+              greet you. ~I saw what you did, sir, yes indeed. \
+              A mighty crazy thing to do, calling a volcano outa \
+              the water like that. But you did it! And \
+              my oyster beds thank you kindly! I'd like to \
+              repay the favor, but I'm only a poor farmer.~ He \
+              pauses, then searches his pockets. ~Here,~ he says, \
+              putting something in your hand. ~Found it digging in \
+              the sand. Don't know what it is, but I'll bet you \
+              can use it.~ He smiles and disappears into the \
+              farmhouse.";
+           }
+        ], 
+        life [;
+           Attack, ThrowAt:
+              "Something about attacking a down-on-his-luck \
+farmer just doesn't seem right, so you stop.";
+           Answer:
+              if (special_word == 'hello')
+                 "The farmer nods in your direction. \
+~How do, stranger?~";
+           Ask:
+              if (second == 'oyster' or 'farm' or 'oysters')
+                 "~Did a foolish thing, sir, tried my luck with \
+                 oyster farming this year. The place is too far \
+                 from the sea, and I can't get any oysters in my \
+                 beds, 'cause there's no water to grow 'em in.~";
+           Show:
+              if (noun has is_sphere)
+                 "~Hey, I seen something like that once.~";
+           Give, Tell:
+              "The farmer smiles, but shakes his head.";
+           default:  "The farmer is preoccupied with something as \
+he squints into the sun.";
+        ],             
+        before [;
+           Cast:
+             if (the_spell_was == foblub_spell or espnis_spell)
+"~I'm just a simple farmer, sir. I'm afraid you're losing me \
+with your fancy words.~"; 
+        ],
+   has animate;
+
+Object water_spirit "water spirit" In_Lighthouse
+  with name "spirit",
+       description "It looks like a large moving mass of seawater, \
+                  in a somewhat man-like shape.",
+       each_turn [ i ;
+       ! spirit attack
+       ! (in general, the 4 spirits are _very_ dangerous.
+       ! There's a 1/5 chance of killing outright, and 2
+       ! chances of doing 10 and 5 points of damage respectively.
+       ! In short, the player needs to realize it's time to swanko,
+       ! and do so, quickly)
+       if (self hasnt general) {
+            give self general ~concealed;    
+            "^Suddenly, water seeps in from the west, and forms \
+            into a large vaguely-humanoid shape before your very \
+            eyes!";
+       }
+       i = random(5);
+       if (i == 1) {
+          deadflag = 1;
+          "^The water creature moves quickly, and smothers you \
+          in water! You try to escape, but the creature has \
+          amazing strength and weight! The spirit soon \
+          envelopes your head, and you drown...";
+       }
+       if (i == 2) 
+          Player_HP_CUR = Player_HP_CUR - 10;
+       if (i==3) 
+          Player_HP_CUR = Player_HP_CUR - 5;
+       if (Player_HP_CUR <= 0) {
+          deadflag = 1;
+          "^The last blow from the water spirit was too much for \
+          you, I'm afraid to say. You sink to the ground, to \
+          weak to defend yourself, as the spirit slowly oozes \
+          towards you for the final blow...";
+       } 
+       print "^The water spirit ";
+       if (i==2)
+          "blasts you with a jet of seawater! \
+          It feels like a battering ram just used you for a \
+          practice drawbridge!";
+       if (i==3)
+          "buffets you with small jets of water! \
+          You feel exposed areas of skin getting rubbed raw by \
+          the force of the water!";
+       "forms into a small wave and tries to \
+       crush you, but you evade just in time!";
+       ],
+       before [;
+          Cast:
+            if (the_spell_was == swanko_spell) {
+               remove self;
+               "As you speak the chant, the water spirit falls back \
+               in fear! You finish the chant, and the water spirit \
+               makes one last attempt to smother you, but dissipates \
+               with a splash!";
+            }
+            print "The creature makes a banshee-howl as you chant.^"; 
+       ],
+       life [ ;
+          Attack: 
+            print "You ";
+            if (random(20) >= 8)
+            "strike the water creature, but your attack passes \
+            harmlessly through it! You hear a strange noise from \
+            the creature -- akin to a drowning man laughing.";
+            "attack the water spirit, but miss!";
+          default: "It's too busy trying to kill you.";
+       ],
+   has animate concealed;
+
+Object mad_hermit "mad hermit" FUBLIO_Cave
+   with name "hermit" "madman" "mad",
+        description "He looks quite crazed -- his wild eyes \
+are almost unbearable to watch. His clothes are complete \
+tatters, and he looks rather emaciated.",
+        each_turn [ i ;
+        i = random(10);
+        switch(i) {
+        1: "^The hermit stares at you and screams. \
+~Demon, trickster -- you'll not fool me again!~";
+        2: "^The hermit smiles at you. ~Come to pay \
+your respects to an old man, Humboz? I know it's you.~";
+        3: "^The hermit shrinks into a corner and weeps. ~No more, no more. I \
+can help you no more.~"; 
+        4: "^The hermit hums a little tune.";
+        5: "^The hermit talks to someone or thing unseen. \
+~Closer, closer, nary a sound betray...~";
+        6: "^The hermit grabs your shoulder. ~I am hampered,~ \
+he pleads with you, ~by the lack of an algebraic solution! \
+That was where I went wrong!~";
+        7: "^The hermit babbles something about a shining \
+tower on a hill.";
+        8: "^The hermit pauses. ~Listen, do you hear them? \
+The voices -- everywhere!~";
+        default: "^The hermit giggles for no reason.";
+        }  
+        ],
+        life [;
+          Answer:
+            if (special_word=='hello')
+               "~We meet again, do we not?~";
+          Ask:
+            switch (second) {
+            'exit', 'outside':  "The hermit laughs. \
+~You want to leave already? Very well, you'll find \
+the exit where you came in.~";
+            'entrance': 
+               print "The hermit chuckles. ~Forgotten where \
+you came in? It hasn't gone anywhere.";  
+               if (FUBLIO_Cave.number == 1) {
+                  FUBLIO_Cave.number = 2;
+                  "~ He points at a space in the south wall, which \
+you realize is actually a well-hidden tunnel.";  
+               }
+               else "~";
+          !  'sack': "~A fine pet, mine and mine forever.~";
+            'food', 'fish': "~My friends of the deep, they \
+sacrifice themselves for me, as I will some day for them.~";
+            default: "~Many are the secrets you keep.~";
+            }
+          Give:
+            if (noun has edible) {
+               print "The hermit greedily takes ", (the) noun, " and \
+gobbles it quickly";
+               remove noun;
+               if (p1 in self) {
+                  move p1 to player;
+                  print ". ~Good, yes. \
+I have something for you -- something you will treasure as I have.~ He \
+gives you a piece of parchment.";
+               }
+               "."; 
+            }
+            "~No, no, I already have many of those.~";
+          Attack, ThrowAt, Order:
+            "The hermit cowers in one corner of \
+the cave, screaming. You stop, and reconsider.";
+          Kiss:
+            "Tears run down the hermit's cheek.";
+          Show, Tell:
+            if (noun has edible)
+               "The hermit visibly salivates.";
+            "The hermit gibbers maniacally."; 
+        ],
+        before [;
+           Cast:
+       "The hermit joins in with your chanting, and \
+twists the meaning of the words! You quickly stop.";
+        ],
+        time_left 0,
+        time_out [;
+           deadflag = 1;
+           "^The hermit seems to recognize you through his madness! \
+~You have returned! The Big Man! Biggest of them all! \
+Returned to deliver me from my prison. I had never forsaken \
+you!~^^\
+~Wait,~ you protest, ~stop this madness!~^^\
+But the crazed hermit continues. He prostrates in front \
+of you and babbles incoherently. ~I put all my faith \
+in you -- I have to leave here, before I go insane! \
+The others, they abandoned hope. But not me. No! \
+You have always had our best interests in mind.~^^\
+He begins an eerie, frenetic song that jars your very soul. \
+You watch the water level start to rise near the southern \
+entrance, and wait for the end.";
+        ],           
+   has animate transparent;
+
+
+ 
+! ************
+! spells/scrolls
+! ************
+
+Object spotted_scroll "spotted scroll" FUBLIO_Cave
+  class scroll_class,
+  with name "spotted",
+;
+
+Object bekdab_spell "turn iron to rust" spotted_scroll
+  class spell_class,
+  with name "bekdab",
+       magic [;
+             "Your chant goes unanswered. I guess you need pure iron.";
+       ],
+;
+
+! ************
+! Misc objects
+! ************
+
+
+Object sack "fur sack" sailboat
+   with name "sack" "fur",
+        description "A fairly large sack made of furs and animal \
+hides.",
+        ! weight 20, 
+        size 24,
+        ! capacity 20,
+   has container openable;
+
+! (wet -- Anabais is one of four evil elemental powers)
+Object p1 "wet parchment" mad_hermit
+   class parchment_class,
+   with name "wet",
+description "~...evidence that there are more demons like \
+the evil Anabais! In fact, I suspect that four demons, not \
+one, faced the Ancient Ones in spiritual battle at the \
+dawn of time! To suspect this is...~";
+
+
+! 1st rod piece -- GRAY
+Object gray_rod_piece "gray rod piece" In_Lighthouse
+  class rod_class,
+  with name "gray",
+       initial "In the center of the room is a short gray rod.",
+       description "It's a short section of a rod made of some \
+undeterminable hard substance, \
+colored gray like murky water. A piece of the Rod of \
+the Ancients, no doubt!",
+;
+
+! 1st sphere - SILVER
+Object silver_sphere "silver sphere"
+   class sphere_class,
+   with name "silver",
+        description "A tiny perfect silver sphere, made of some strange \
+           unknown metal.",
+;
+

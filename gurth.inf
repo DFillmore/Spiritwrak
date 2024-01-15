@@ -1,0 +1,925 @@
+
+! **************************************************************
+! GURTH.INF -- Add-on for SPIRITWRAK
+! (all rights reserved, copyright 1996, D. Yu
+! **************************************************************
+
+! (author note to self -- Gurth currently isn't going to be too
+! exciting -- I'm running out of .z5 code space.  The main 
+! planned features are:
+!   1) The abandoned house with the oven for baking the cake
+!   2) A deep forest area somewhat north of the city where
+!      a sphere piece will be hidden  
+
+! The string array for labels on the GUE Oven dial (may be changed)
+Array OVEN_settings table [;
+   "Warm Soup"; 
+   "Hot Chocolate"; 
+   "Pizza"; 
+   "Cake";
+   "Fish";
+   "Roast Chicken";
+   "Baked Potato";
+   "Rib Roast";
+   "Thermo-nuclear Flash";
+];
+
+Object GURTH_GUSStop "Gurth City Streets"
+   with description "A foggy sky covers the ever-busy city of \
+Gurth. A road heads southeast into a larger \
+portion of the city, and stairs lead down here.",
+        name "fog" "sky" "road" "stairs",
+        d_to GURTH_GUSStation,
+        se_to GURTH_NDistrict,
+   has light;
+
+Object umbrella "umbrella" GURTH_GUSStop
+   with name "umbrella",
+        description [;
+           if (self has open)
+              print "An open";
+           else print "A closed";
+           " black-cloth umbrella.";
+        ],
+        !weight 25,
+        size 16,
+        article "an",
+        before [;
+           Open:
+              if (parent(self) == player) {
+              give self open;
+              umbrella.size = 20;
+              "You snap the umbrella open.";
+              }
+              else "You need to be holding the umbrella to do that.";
+           Close:
+              if (parent(self) == player) {
+              give self ~open;
+              umbrella.size = 16;
+              "You snap the umbrella closed.";
+              }
+              else "You need to be holding the umbrella to do that.";
+        ],
+   has openable;
+
+Object GURTH_NDistrict "North District"
+   with description "Probably the safest district in Gurth, the \
+North District is mostly cobblestone roads and barricaded \
+buildings. A main road heads south, or forks northwest and \
+northeast.",
+        name "cobblestone" "buildings" "road",
+        nw_to GURTH_GUSStop,
+        s_to GURTH_MDistrict,
+        ne_to GURTH_Forest,
+   has light;
+
+Object GURTH_Forest "Forest Edge"
+   with description "Dark forest meets dark city outskirts here. \
+The only exit is along an old path to the southwest -- \
+the forest is too thick for travel otherwise. \
+Rain falls periodically from a dark stormy sky.",
+        name "forest" "path" "rain",
+        sw_to GURTH_NDistrict,
+        each_turn [;
+        if (random(10) < 4) {
+           "^A rumble of thunder booms overhead.";
+        }
+        ],
+        before [;
+           Listen:
+              if (Treant in GURTH_Forest)
+                 "You hear muffled cries for help from \
+somewhere inside the log cabin!";
+        ],
+   has light;
+
+Object storm1 "storm" GURTH_Forest
+   with name "storm" "clouds" "sky" "dark",
+        description "It does look a bit stormy overhead.",
+        before [;
+           Cast:
+              if (the_spell_was == shazok_spell) {
+                 print "A bolt of lightning rips down from the \
+clouds overhead as you finish your chant! It strikes ";
+                 if (Treant in GURTH_Forest) {
+                    print "the angry treant! \
+A portion of its top branches catch fire! Howling in pain, \
+the creature runs off into the woods and disappears!";
+                    SaveWoodsman();
+                    rtrue;
+                 }
+                 else {
+                    deadflag = 1;
+                    "you, frying you to a crisp!";
+                 }
+              }
+        ],
+   has scenery;
+
+Object Treant "angry treant" GURTH_Forest
+   with name "treant" "angry" "blighted",
+        description "Treants are basically animated trees. They \
+are considered mythical creatures, usually solitary and quite \
+rare. This particular treant looks similar to a great elm tree. \
+You notice that it seems covered with spots of some sort of \
+blight.",
+   article "an",
+   each_turn [ i ;
+     i = random(20);
+     print "^The treant ";
+     if (i > 10) {
+        if (WOOD_House.number == 3) {
+           WOOD_House.number = 4;
+           remove self;  
+           "pounds the cabin, and it collapses into \
+splinters! The treant grabs a hapless woodsman from the \
+wreckage and stalks off into the forest with his victim!";
+        }
+        else {
+          WOOD_House.number = WOOD_House.number + 1;
+          "hammers on the house and you hear a \
+crack! The cabin sustains some damage!";
+        }        
+     }
+     else "angrily attacks the wood cabin, which shakes \
+with the continued blows.";
+   ],        
+   before [;
+      Cast:
+         if (the_spell_was == egdelp_spell) {
+            deadflag = 1;
+            "The treant is covered with a waxy buildup, which \
+washes off in the rain. The treant, already \
+rather incensed, turns his attentions to you and mauls you \
+with two giant branches/arms.";
+         }
+         if (the_spell_was == throck_spell) {
+            deadflag = 1;
+            "The treant grows a bit bigger. His current bad \
+mood seems to increase proportionately! He turns his attentions \
+to you and pounds you with two huge branches/arms.";
+         }
+         if (the_spell_was == taclor_spell) {
+            print "The treant seems to turn a shade of deep \
+green, and the patches of blight disappear! The ancient tree \
+creature pauses, regards you solemnly, and then walks \
+off into the forest.";
+            SaveWoodsman();
+            rtrue;
+         } 
+   ],
+   has animate;
+
+Object WOOD_House "log cabin" GURTH_Forest
+   with name "cabin" "log" "house",
+        description [; 
+            print "A small house built of logs";
+            switch (self.number) {
+            0: print ".";
+            1: print ". It looks slightly damaged.";
+            2: print ". It looks partially damaged, the roof logs \
+are broken in several places.";
+            3: print ". It looks very damaged. One wall is \
+nearly broken through.";
+            default: print " that has collapsed into little more \
+than a pile of broken logs."; 
+            } 
+            if (self has general)
+               " You notice some area of wood have spots of wax \
+on them.";
+            new_line;
+            rtrue;
+        ],
+        before [;
+           Enter:
+              if (Treant in GURTH_Forest)
+              "The angry treant seems to be in the way.";
+              "It's just a tiny log cabin that probably \
+has nothing interesting inside.";
+           Cast:
+              if (the_spell_was == egdelp_spell) {
+                 give self general;
+                 "The outside of the cabin is now covered \
+with spots of waxy buildup.";
+              }
+        ],
+        number 0,
+   has static;
+
+[ SaveWoodsman ;
+   remove Treant;
+   move red_sphere to player;
+   "^^Moments later, a woodsman appears from the battered log \
+cabin. ~Much thanks, sir,~ he says. ~Appears I mistook that \
+treant for a dead tree and tried to cut it down. Can't say \
+he took it too well.~ he says sheepishly. ~Say, you don't \
+look like you're from around these parts. Kinda like this \
+funny thing I found in the woods the other day.~ He hands \
+you a strange round object. ~Maybe you know what to do with \
+it?~ He hefts a small hatchet over his shoulder. ~Well, \
+back to do a little logging,~ he says, as he walks off into the \
+deep forest, whistling.";
+];
+
+Object GURTH_MDistrict "Market District"
+   with description "The famous Gurth Market District is as noisy, \
+crowded, and dangerous as it ever was. A cobblestone road heads \
+north and south here.",
+        name "cobblestone" "road",
+        n_to GURTH_NDistrict,
+        s_to GURTH_SDistrict,
+        e_to "~Get out 'o me way!~ some rude fellow says as you \
+try to pass.",
+        w_to "~No push'n, no shov'n!~ some old hag screams at you, \
+and promptly shoves you back.",
+        each_turn [;
+           if ((random(10) < 5) && (self hasnt general)) {
+              give self general;
+              move c7 to self;
+              "^A clumsy hawker stumbles into you as he \
+crosses the street, hustling off without so much as an \
+apology. You notice he dropped something in his hurry.";
+           }
+        ],
+        has light;
+
+Object c7 "coin" class coin_class;
+
+Object GURTH_SDistrict "South District"
+   with description "The general gloomy atmosphere is more noticeable \
+than ever here, in the extremely dangerous South District. The \
+general area is filled with boarded-up houses, and a few shifty-eyed \
+characters are the only people milling about here. A road leads \
+north. To the east is an abandoned flat, probably in better shape \
+than the rest.",
+        name "houses" "characters" "people" "road" "flat",
+        n_to GURTH_MDistrict,
+        s_to [;
+           print "You wander down ";
+           if (random(20) == 5) {
+              deadflag = 1;
+              "a back alleyway, and are immediately \
+assaulted by a group of vicious thugs, who batter you senseless.";
+           }
+           else "an alleyway, find a dead-end, and return \
+here.";
+        ],
+        w_to [;
+           print "You wander down ";
+           if (random(20) == 5) {
+              deadflag = 1;
+              "a sidestreet, and are immediately \
+assaulted by a group of vicious thugs. One of them seems to \
+recognize you. ~That's the Preacher-man who got Davey arrested! \
+Let's show 'em what we think'o that!~ They proceed to beat you senseless.";
+           }
+           else "a sidestreet, find a dead-end, and return \
+here.";
+        ],
+        e_to GURTH_House,
+   has light;
+
+Object GURTH_House "Front of House"
+   with description "You're standing at the rotting front steps of \
+a small flat. The front door to the east has been battered down and \
+you could probably walk right in, or return to the street to \
+the west.",
+        name "street" "steps" "flat",
+        w_to GURTH_SDistrict,
+        e_to House_Ent,
+        in_to House_Ent,
+   has light;
+
+Object GURTH_House2 "Front of House"
+   with description  "You're standing near a small construction site. \
+A city street lies west, and a construction ditch is east.",
+        name "street" "ditch",
+        w_to [;
+               deadflag = 1;
+              "You step into the street, and several locals \
+give you strange looks. The surrounding neighborhood seems \
+new and busy -- various construction sites mark the \
+work of enterprising shop-keepers of the area.^^\
+~Watch out there!~ someone cries. A sudden \
+pile of bricks falls from a nearby scaffolding, and \
+crushes you.";
+        ],
+        e_to Construction_site,
+   has light;                      
+
+
+Object bad_brick "dusty brick" GURTH_House2
+   with name "brick" "dusty" "old",
+        initial "An old discarded brick lies nearby.",
+        description "An old brick, slightly cracked in several places.",
+        size 15,
+        time_left 0,
+        time_out [;
+           ! Construction Worker appears
+           if ((good_brick in Construction_site) || 
+               ((good_brick notin Construction_site) && 
+                (bad_brick notin Construction_site))) {
+              remove good_brick; 
+              foundation_wall.number = 1;
+           }
+           else {
+              remove bad_brick;
+              foundation_wall.number = 2;
+           }
+           if (location == Construction_site) {
+              print "^From behind some scaffolding, a construction \
+worker appears. He walks to a part of the ditch and starts to \
+make some finishing touches on part of a low wall. \
+He finds a brick nearby and applies it to the wall with \
+a good patch of mortar.";
+              if (foundation_wall.number == 1) 
+" Brushing himself off, he walks off \
+and is soon out of sight.";
+              else 
+" He looks at the patch somewhat \
+unsatisfied, but shrugs, and walks off, soon out of sight.";
+           }
+           else 
+              "^You hear some brief noises from the east."; 
+        ],
+;
+
+Object Construction_site "Construction Site"
+with description "This is a long square ditch that is \
+likely to be the starting point for some building. It is \
+framed by wood slats and short brick walls. The only way \
+out is to the west.",
+   name "ditch" "slats" "wood",
+   w_to GURTH_House2,
+   has light;
+
+Object good_brick "thick brick" Construction_site
+   with name "brick" "thick",
+        !weight 30, 
+        size 15,
+        initial "A thick brick lies nearby.",
+        description "A thick brick, solid as a rock.",
+;
+
+Object foundation_wall "portion of wall" Construction_site
+   with name "wall" "foundation" "portion" "hole" "recess",
+        initial "You notice a foundation side wall \
+in the ditch.",
+        number 0,
+        size 15,
+        description [;
+           switch (self.number) {
+           0: "It looks somewhat unfinished. Part of it \
+is open into a dark recess in the side of the ditch.";
+           1: "The wall is a finished work of brick and \
+mortar. It looks quite strong.";
+           2: "The wall is a finished work of brick and \
+mortar. You see a spot where the brickwork seems a bit \
+lower in quality.";
+           } 
+        ],
+        before [;
+           Receive:
+              if (self.number > 0)
+                 "The wall is currently sealed shut.";
+              else {
+                 move noun to self;
+                 print "You put ", (the) noun, " into the ";
+                 "small hole in the wall.";
+              }
+           Search, LetGo:
+              if (self.number > 0)
+                 "The wall is currently sealed shut.";
+           Attack:
+              if (self.number == 0) {
+                 deadflag = 1;
+                 "You kick at the wall. Unfortunately, it wasn't \
+all that stable, and the wall falls apart, burying you under a \
+pile of loose bricks.";
+              } 
+              if (self.number == 1) {
+                 remove foundation;
+                 print "You try to break the wall, but only end up \
+hurting your hand. ";
+              }
+              else {
+              give foundation general;
+              print "You knock on the weak portion of the \
+wall, and produce a slight crack, that no doubt will \
+cause the homeowners some worry in the future. ";
+              }
+!              give GURTH_House ~general;
+              while (child(player) ~= 0) remove child(player);
+!              while (child(GURTH_House) ~= 0) remove child(GURTH_House);
+print "The wall seems to start to glow a purple color, and you \
+step back, to find your surroundings replaced by cold natural \
+cave walls.^";
+              Mystical_Cave.number = Mystical_Cave.number + 1;
+              PlayerTo(Mystical_Cave);
+              rtrue;
+        ],
+   has static container open;
+
+Object House_Ent "Entrance Room"
+   with description "A bare room, with peeling paint and rotting, \
+water-stained walls. There's a room to the east, and a rickety \
+stairway down. The outdoors lie west.",
+        name "paint" "stairway" "outdoors",
+        e_to House_Kitchen,
+        d_to House_Basement,
+        w_to GURTH_House,
+        out_to GURTH_House,
+   has light;
+
+Object House_Basement "Basement"
+   with description "A musty, smelly basement. Stairs head up.",
+        name "stairs",
+        u_to House_Ent,
+        before [;
+           Smell: "It's smells musty down here, as though \
+the place has been unused for quite some time.";
+        ],
+;
+
+Object House_switchbox "dusty metal box" House_Basement
+   with name "dusty" "metal" "box",
+        when_closed "There's a dusty metal box attached to the wall here.",
+        when_open [ x;
+         print "There's an open metal box attached to the wall here. ";
+         x = children(self);
+         if (x == 0) "It seems to be empty.";
+         print "It contains:^";
+         x = FULLINV_BIT + INDENT_BIT + NEWLINE_BIT + RECURSE_BIT;
+         WriteListFrom (child(self), x, 1); 
+         rtrue;
+        ],
+        capacity 3,
+        size 10,
+        description "A dusty metal box, attached to the wall.",
+        before [;
+           Open, Push, Pull, Turn, Touch:
+              if (GHOST in House_Basement)
+                 "Slowly, but quite deliberately, the zombie \
+prevents you from getting near the box.";
+        ],
+   has static container openable;
+
+
+Object wire "thin wire" House_switchbox
+   with name "wire" "thin",
+        ! initial "Inside the box is a loose wire.",
+        description "A thin stiff string of metal.",
+        !weight 2,
+        size 1,  ! must fit in subway gate slot...
+        before [;
+          Cast:
+if ((the_spell_was == huncho_spell or luncho_spell) &&
+   (self hasnt general))
+"Your chant goes unanswered.";
+          Take, Push, Pull, Touch, Rub, Squeeze:
+             if (self hasnt general) {
+                if (rubber_gloves has worn) {
+                   if (action==##Take) give self general;
+                   print "As you touch the wire, you notice a \
+bright spark! Good thing you were wearing rubber gloves! ";
+                }
+                else {
+                   print "As your fingers get near the wire, \
+a bright spark of electricity ";
+                   if (random(10) < 4) {
+                   deadflag = 1;
+                   move GHOST to House_Basement;
+"arcs into your hand! The results are quite shocking, I'm afraid.";
+                   }
+                   else
+"flashes near your fingers! You pull back just in time.";
+                }
+             }
+        ],
+;        
+
+Object foundation "foundation" House_Basement
+   with name "foundation" "break" "hole",
+        initial "A large break in the wall exposes a good portion of \
+        the house's foundation.",
+        description "Water damage, or simply age, has exposed a large \
+        hole in one of the walls, through which you can see exposed \
+        wood and brick, part of the foundation of the house.",
+        before [;
+           Receive:
+              "No need to put things in the foundation like that.";
+           Search:
+              if (self hasnt general)
+                 "You briefly search the decaying foundation, but find nothing.";
+              else {
+                 print "You dig around in a familiar spot in the hole ";
+                 give self ~general;
+                 if (children(foundation_wall) == 0)
+                    "but find nothing.";
+                 Achieved(17);
+                 while (child(foundation_wall) ~= 0)
+                     move child(foundation_wall) to House_Basement;
+                 "and find something!"; 
+              }
+        ],
+   has static;
+   
+Object House_Kitchen "Kitchen"
+   with description "You're in the kitchen, by the looks of things. \
+Some broken cabinets are on the wall. Light from partially boarded-up \
+windows lets you see the rotting wood floors. Rooms lie to the \
+north and west.",
+        name "cabinets" "windows" "wood",
+        w_to House_Ent,
+        n_to House_Pantry,
+   has light;
+
+! (An oven, a typical inform object)
+Object OVEN "GUE-Automatic oven" House_Kitchen
+   with name "oven" "GUE-Automatic",
+        when_closed "Strangely untouched and undamaged, a GUE-Automatic oven is \
+sitting closed in a corner of the room.",
+        capacity 1,
+        when_open [ x;
+         print "Strangely untouched and undamaged, a GUE-Automatic oven is \
+sitting open in a corner of the room.";
+         x = children(self);
+         if (x == 0) " It seems to be empty.";
+         print "  It contains:^";
+         x = FULLINV_BIT + INDENT_BIT + NEWLINE_BIT + RECURSE_BIT;
+         WriteListFrom (child(self), x, 1); 
+         rtrue;
+        ],
+        size 15,
+        description "A FrobozzCo best-seller -- this small green oven is \
+perfect for those adventurers who want a home-cooked meal, but are short \
+on time and space. There's a dial and a button \
+on the top.",
+        before 
+        [ x ;
+           Open:
+              if (self hasnt open) {
+              give self open;
+              print "You open the oven, ";
+              x = children(self);
+              if (x==0) "which is empty.";
+              print "revealing:^";
+              x = FULLINV_BIT + INDENT_BIT + NEWLINE_BIT + RECURSE_BIT;
+              WriteListFrom (child(self), x, 1); 
+              rtrue; }             
+        ], 
+        add_to_scope oven_dial oven_button,
+   has static container openable;
+            
+Object oven_dial "oven dial" 
+   with name "dial",
+        number 5,
+        description [;
+          print "A round dial with small printed words. A line on the \
+oventop marks which dial setting is currently active, which at the \
+moment is ~", (string) OVEN_settings-->(oven_dial.number); "~.";
+        ],
+        before [;
+          Turn:
+            oven_dial.number = oven_dial.number + 1;
+            if (oven_dial.number > 9) oven_dial.number = 1;
+            print "The line is now pointing to ~", (string) OVEN_settings-->(oven_dial.number);
+            "~ on the dial.";
+          SetTo:
+            "The dial has somewhat unusual \
+settings. You'll need to turn to the one you want.";
+        ],
+   has static;
+
+Object oven_button "oven button" 
+   with name "button" "black",
+        number 0,
+        description "A small round black button on the top of the oven.",
+        before [;
+           Push:
+              if (OVEN has open)
+                 "There is an irritated buzz.";
+              else {
+                 print "You press the button and hear a low spinning noise. \
+Suddenly, the oven makes a ";
+              if (oven_dial.number == 9) {
+                 ! Ye old nuclear flash setting
+                 if (children(OVEN) ~= 0)
+                    remove child(OVEN);       
+"tremendous 'bang', and nearly springs off \
+the floor! A bright flash of light seems to originate from somewhere \
+inside the oven! Then, just as suddenly, everything is quiet again.";
+              } 
+              ! check object in oven
+              ! if obj exists, check for edible
+              ! or cake, mutate appropriately.
+              if (children(OVEN) ~= 0) {
+                 if ((Baking_Pan in oven) && (cake in Baking_Pan)) {
+                    ! we're no doubt cooking the cake again.
+                    ! as a nice feature of the GUE auto, if the cake
+                    ! was undone, and the oven setting == 4, give
+                    ! the cake the 'done' result
+                    if ((cake.number == 1) && (oven_dial.number == 4))
+                       cake.number = 0;
+                    ! otherwise, nothing changes
+                 }
+                 if ((Baking_Pan in oven) && (dough in Baking_Pan)) {
+                    ! first, check oven setting (too cold or too hot)
+                    ! if setting ok, check number of times folded
+                    ! (too few, too many).  Move 'cake' to pan, make
+                    ! dough child of cake, and set the 'result' number
+                    ! of cake accordingly (0, ok, 1 underdone, 2
+                    ! overdone, 3 underfolded, 4 overfolded) 
+                    ! (assumption is that dough will be only thing
+                    ! in pan [add's are trapped by dough]
+                    move dough to cake;   ! Zen cooking...
+                    move cake to Baking_Pan;
+                    if (oven_dial.number == 4) {
+                       if (dough.number < 83)
+                          cake.number = 3;
+                       if (dough.number > 83)
+                          cake.number = 4;
+                       else cake.number = 0;   ! well done baker
+                    }
+                    else {
+                       if (oven_dial.number < 4)
+                          cake.number = 1;
+                       if (oven_dial.number > 4)
+                          cake.number = 2;
+                    } 
+                 }
+              }
+"a loud 'pop' and nearly springs off \
+the floor! Then, just as suddenly, everything is quiet again.";
+              }
+        ],
+   has static;
+
+Object House_Pantry "Pantry"
+   with description "This was once probably a pantry of some \
+sort. It's now a bare closet-sized room. The exit is south.",
+   s_to House_Kitchen,
+   has light;
+    
+Object Baking_Pan "baking pan" House_Pantry  
+   with name "pan" "baking",
+        description "It's a nice round flat-bottomed ceramic pan.",
+        capacity 20,
+        !weight 10,
+        size 14,
+        before 
+        [ i ;
+          Mix:
+             if (children(Baking_Pan) == 0)
+                "There doesn't seem to be anything in the pan to mix.";
+             else {
+                if (cake in Baking_Pan)
+                   "You can't mix anything with the already baked cake in the pan.";
+                ! if the dough is already in the pan, add the 
+                ! 'new children', if any
+                if (dough in Baking_Pan) {
+                   i = 0;
+                   move dough to OVEN;  ! Temp
+                   while (child(Baking_Pan) ~= 0) {
+                         i = i + 1;
+                         move child(Baking_Pan) to dough;
+                   }
+                   move dough to Baking_Pan;
+                   if (i == 0) 
+                      "You need to add something to the pan if you \
+want to mix something new into the dough.";
+                   "You mix in the new ingredients into the dough.";
+                }
+                ! Minimally, if the flour, butter and egg are in the 
+                ! pan, 'dough' will be produced 
+                if ((flour notin Baking_Pan) || 
+                    (corbie_egg notin Baking_Pan) ||
+                    (butter notin Baking_Pan))
+                   "You mix the contents of the pan around a bit, but \
+some things don't quite coagulate, and the contents remain unmixed.";
+                else {
+                   while (child(Baking_Pan) ~= 0) {
+                        move child(Baking_Pan) to dough;
+                   }
+                   move dough to Baking_Pan;
+                   "You start mixing. Like magic, in short time you \
+have a doughy mixture in the pan."; 
+                } 
+             }
+          LetGo:
+             if (noun == dough or cake) { 
+                CDefArt(noun); " is stuck fast in the pan and \
+                you can't get it out.";
+             }
+             else {
+             ! we've modified certain ingredient objs that we want \
+             ! to 'preserve' in the pan.
+                if ((noun == flour) || (noun == sugar_cube) ||
+                    (noun == baking_powder) || (noun == butter) ||
+                    (noun == corbie_egg) || (noun==dornberries)) 
+                   "It's somewhat scattered about in the pan right \
+now, and you can't quite remove it cleanly.";
+             }
+          Receive:
+             if (cake in self)
+                "The cake takes up the entire space in the pan.";
+             ! -- trap and nicely parse putting
+             ! ingredients in pan, will require modifying 
+             ! 'short_name's of various ingredients.
+             if (noun == flour) {
+                flour.short_name = "pile of flour";
+                move flour to Baking_Pan;
+                flour.description = "A heap of white flour.";
+                "You break open the bag and add the flour to the pan."; 
+             }
+             if (noun == sugar_cube) {
+                sugar_cube.short_name = "quantity of sugar";
+                move sugar_cube to Baking_Pan;
+                sugar_cube.description = "Some sugar scattered about.";
+                "You crumble the sugar cube into the pan.";
+             }
+             if (noun == baking_powder) {
+                baking_powder.short_name = "small sprinkling of baking powder";
+                move baking_powder to Baking_Pan;
+                baking_powder.description = "A small pile of very fine white powder.";
+                "You open the packet and add the powder to the pan.";
+             }
+             if (noun == corbie_egg) {
+                corbie_egg.short_name = "bit of raw egg";
+                move corbie_egg to Baking_Pan;
+                corbie_egg.description = "The yolk and the white parts from an egg.";
+                "You crack the egg and drop the gooey contents into the \
+                pan, discarding the shell.";
+             }
+        ],
+   has container open;
+
+Object pan_sticker "sticker" Baking_Pan
+   with name "sticker",
+        initial "There's a sticker stuck to the bottom of the pan.",
+        description "\
+Frobozz Magic Baking Pan^^\
+HELLO, BAKER!^^\
+To mix ingredients placed in pan, simply say 'MIX PAN'. \
+Baked goods should be removed with a Frobozz Magic \
+Spatula.",
+        !weight 1,
+        size 5,
+;
+
+Object dough "lump of dough"
+   with name "dough",
+        number 0,   ! equals the number of times folded
+        !weight 10,
+        size 14,
+        description "It looks like a nice beige lump of uncooked dough.", 
+        before [;
+          Eat, Taste:
+             if (action==##Eat) remove self;
+             "Ugg. Raw dough.";
+          Cast:
+             if (the_spell_was == gloth_spell) {
+                dough.number = dough.number + 83;
+                if (dough.number > 500) dough.number = 500;
+                "As you speak the chant, the dough seems to \
+twinkle! With a sudden puff of flour, the dough spins and \
+neatly kneads itself many times!";
+             }
+          Fold:
+             dough.number = dough.number + 1;
+             print "You roll up your sleeves and start kneading. \
+The dough "; 
+             if (dough.number > 500) dough.number = 500;
+             if (dough.number < 50)
+                "folds easily.";
+             if (dough.number > 200)
+                "has the consistency of a soft rock.";
+             "is pliable.";
+        ], 
+   has edible;
+
+Object cake "cake" 
+   with name "cake",
+        number 0,  
+! number = condition:
+! 0 ok, 1 undercooked, 2 overck, 3 underfld, 4 overfld
+        description [;
+              print "It's a ";
+              switch (cake.number) {
+                1: "somewhat raw-looking cake.";
+                2: "nice-looking cake, except that it \
+looks a little burned.";
+                default: "nice-looking cake.";
+                ! The player will have to taste the cake to check the
+                ! 'fold quality'.
+              }
+        ],
+        before [;
+           Eat:
+                remove self;
+                "Not bad. Unfortunately, it looks like you can't have \
+your cake and eat it too.";
+           Taste:
+              print "You taste a tiny bit of the cake. ";
+              switch (cake.number) {
+                1: "It tastes a bit underdone.";
+                2: "It tastes a little burned.";
+                3: "It's a little too soft.";
+                4: "It's a bit tough.";
+                default: "It tastes great!";
+              }
+           ], 
+        !weight 10,
+        size 14,
+   has edible;
+
+
+
+! ***************
+! animated beings
+! ***************
+
+Object GHOST "frightening zombie" House_Basement
+   with name "zombie" "frightening",
+        description "A frightening gaunt member of the \
+living dead, with pale skin, and even paler eyes.",
+        before [;
+           Cast:
+              if (the_spell_was == wigro_spell) {
+                 remove self;
+                 "The zombie crumbles into dust, turned.";
+              }
+        ],
+        life [;
+           ThrowAt:
+              if (noun==holywater) {
+                 remove holywater; remove self;
+                 "The vial breaks into shards, scattering \
+holy water all over the zombie. The zombie shrieks, and \
+crumbles into dust."; 
+              }
+           Attack: "Your attack knocks it back, but it \
+seems completely unharmed, somehow!";
+           Give:
+if (noun==rubber_gloves) {
+   move wire to House_Basement;
+   move rubber_gloves to House_Basement;
+   give rubber_gloves ~worn;
+   give wire general;
+   give House_switchbox open;
+   remove self;
+   "The zombie seems to regard the gloves, and slowly puts \
+them on. It proceeds to open the metal box and remove a \
+loose wire, producing a few sparks in the process. Finally, \
+it places the loose wire on the floor, satisfied. It \
+slowly crumbles into dust, but you just manage to hear, \
+~Thanks, I've been trying to get rid of that wire for ages,~ \
+in the faintest of whispers.";
+}    
+           default: "Zombies are usually not very responsive to \
+those among the living. This one is no exception.";
+        ],
+   has animate;
+
+! ***************
+! spells/scrolls
+! ***************
+
+Object gray_scroll "gray scroll" House_Basement
+  class scroll_class,
+  with name "gray",
+;
+
+Object tossio_spell "turn granite to pasta" gray_scroll
+  class spell_class,
+  with name "tossio",
+       magic [;
+         if ((location == THIEF_Storeroom) && 
+             (second == w_obj) && (THIEF_Storeroom hasnt general)) {
+         give THIEF_Storeroom general;
+         move pasta to THIEF_Storeroom;
+         move c50 to THIEF_Storeroom;
+         "As you finish the chant, the granite wall is replaced \
+by a large mass of pasta. A hidden section of the room is revealed, \
+along with the mass of gold coins it was holding! The coins spill \
+out, and nearly flood the room.^^In a flash, a large group of \
+financial nymphs appear on the scene. ~It looks like we found the \
+missing GUS earnings,~ one nymph says to another. Producing large \
+sacks, they quickly collect the mass of coins and disappear with a \
+twinkle.^^Moments later, a single coin falls out of a crack in the \
+previously hidden alcove, rolling to a stop near your feet.";
+         }
+         "Your chant goes unanswered. I guess you need pure granite.";
+       ],
+;
+
+! ***************
+! misc items
+! ***************
+
+Object red_sphere "red sphere"
+   class sphere_class
+   with name "red",
+        description "A tiny perfect red sphere, made of some strange \
+         unknown metal.",
+;

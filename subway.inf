@@ -1,0 +1,2033 @@
+
+! ******************************************************************
+! subway.inf
+! ----------
+! Add-on file for SPIRITWRAK
+! -- Contains Great Underground Subway system (trains and tunnels 
+!    and various denizens)
+! ******************************************************************
+
+! First, some globals (sigh)
+! Two for each train line -- one indicates 'direction' of train,
+! the second indicates the current 'location' of train.
+global PURPLELINE_dir = 0;  ! 0 North, 1 South
+global PURPLELINE_loc = 1;  ! 1-10, frostham to fublio
+global ORANGELINE_dir = 0;  ! 0 West, 1 East
+global ORANGELINE_loc = 1;  ! 1-10, Aragain to Gurth 
+global GREENLINE_dir = 0; ! 0 North, 1 South
+global GREENLINE_loc = 1; ! 1-10, New Borphee to Miznia
+
+! (Subway stops in each city are named as part of the city in
+!  caps, concat'd with "_GUSStation".  All are (of course)
+! underground.
+
+Object FROSTHAM_GUSStation "Frostham GUS Station"
+   with description [;
+         print "You are standing ";
+         if (self hasnt general) {
+           give self general; 
+           "in a dimly lit underground \
+           chamber. There seems \
+           to be a much larger room to the southeast, which is \
+           unfortunately almost completely blocked by a long metal \
+           barricade and gate. Stairs lead up to the outside.";
+         }
+         "at the entrance to the Frostham \
+          Great Underground Subway (GUS) station. The train \
+          platform lies past the gate to the southeast, or \
+          stairs lead up into the city.";
+       ],
+       name "stairs" "platform",
+       u_to FROSTHAM_GUSStop,
+       se_to FG_Gate,
+       before [;
+          Go:
+             if (noun==se_obj) {
+                if (FG_Gate_slot hasnt general)
+                  "A strange buzzing noise sounds as you try \ 
+                  to pass through the gate, and an invisible \
+                  force blocks your way!";
+                else {
+                  give FG_Gate_slot ~general; 
+                  print "You saunter through the apparently open gate.^";
+                }
+             }
+       ],
+   has light;
+
+
+Object ARAGAIN_GUSStation "Aragain GUS Station"
+   with description "You are standing at the entrance to the Aragain \
+Great Underground Subway (GUS) station. The train \
+platform lies past the gate to the southeast, or \
+stairs lead up into the city. Some lettering on the \
+wall reads ~TRANSFER STATION~.",
+       name "stairs" "platform",
+       u_to ARAGAIN_GUSStop,
+       se_to AG_Gate,
+       before [;
+          Go:
+             if (noun==se_obj) {
+                if (AG_Gate_slot hasnt general)
+                  "A strange buzzing noise sounds as you try \ 
+                  to pass through the gate, and an invisible \
+                  force blocks your way!";
+                else {
+                  give AG_Gate_slot ~general; 
+                  print "You saunter through the apparently open gate.^";
+                }
+             }
+       ],
+   has light;
+
+Object FUBLIO_GUSStation "Fublio Valley GUS Station"
+   with description "You are standing at the entrance to the \
+South Fublio Valley \
+Great Underground Subway (GUS) station. The train \
+platform lies past the gate to the southeast, or \
+stairs lead up into the city.",
+       name "stairs" "platform",
+       u_to FUBLIO_GUSStop,
+       se_to FublioG_Gate,
+       before [;
+          Go:
+             if (noun==se_obj) {
+                if (FublioG_Gate_slot hasnt general)
+                  "A strange buzzing noise sounds as you try \ 
+                  to pass through the gate, and an invisible \
+                  force blocks your way!";
+                else {
+                  give FublioG_Gate_slot ~general; 
+                  print "You saunter through the apparently open gate.^";
+                }
+             }
+       ],
+   has light;
+
+! (Orange stations - one)
+Object ANTHAR_GUSStation "Greater Anthar GUS Station"
+   with description "You are standing at the entrance to the Greater Anthar \
+Great Underground Subway (GUS) station. The train \
+platform lies past the gate to the south, or \
+stairs lead up into the city.",
+       name "stairs" "platform",
+       u_to ANTHAR_GUSStop,
+       s_to AntharG_Gate,
+       before [;
+          Go:
+             if (noun==s_obj) {
+                if (AntharG_Gate_slot hasnt general)
+                  "A strange buzzing noise sounds as you try \ 
+                  to pass through the gate, and an invisible \
+                  force blocks your way!";
+                else {
+                  give AntharG_Gate_slot ~general; 
+                  print "You saunter through the apparently open gate.^";
+                }
+             }
+       ],
+   has light;
+   
+! (Green stations - three)
+Object GURTH_GUSStation "Gurth City GUS Station"
+   with description "You are standing at the entrance to the Gurth City \
+Great Underground Subway (GUS) station. The train \
+platform lies past the gate to the southwest, or \
+stairs lead up into the city. Some lettering on the \
+wall reads ~TRANSFER STATION~.",
+       name "stairs" "platform",
+       u_to GURTH_GUSStop,
+       sw_to GurthG_Gate,
+       before [;
+          Go:
+             if (noun==u_obj)
+                print "You are greeted by a light rain as you leave the \
+station.^";
+             if (noun==sw_obj) {
+                if (GurthG_Gate hasnt general) ! note diff
+                  "A strange buzzing noise sounds as you try \ 
+                  to pass through the gate, and an invisible \
+                  force blocks your way!";
+                else {
+                  give GurthG_Gate ~general; 
+                  print "You saunter through the apparently open gate.^";
+                }
+             }
+       ],
+   has light;
+
+Object BORPHEE_GUSStation "New Borphee GUS Station"
+   with description "You are standing at the entrance to the New Borphee \
+Great Underground Subway (GUS) station. The train \
+platform lies past the gate to the southwest, or \
+stairs lead up into the city.",
+       name "stairs" "platform",
+       u_to BORPHEE_GUSStop,
+       sw_to BorpheeG_Gate,
+       before [;
+          Go:
+             if (noun==u_obj)
+                print "You enter the city and are nearly \
+                      flattened by crowds rushing past.^";
+             if (noun==sw_obj) {
+                if (BorpheeG_Gate_slot hasnt general) 
+                  "A strange buzzing noise sounds as you try \ 
+                  to pass through the gate, and an invisible \
+                  force blocks your way!";
+                else {
+                  give BorpheeG_Gate_slot ~general; 
+                  print "You saunter through the apparently open gate.^";
+                }
+             }
+       ],
+   has light;
+
+Object MIZNIA_GUSStation "Miznia GUS Station"
+   with description "You are standing at the entrance to the Miznia \
+Great Underground Subway (GUS) station. The train \
+platform lies past the gate to the southwest, or \
+stairs lead up into the city.",
+       name "stairs" "platform",
+       u_to MIZNIA_GUSStop,
+       sw_to MizniaG_Gate,
+       before [;
+          Go:
+             if (noun==sw_obj) {
+                if (MizniaG_Gate_slot hasnt general) 
+                  "A strange buzzing noise sounds as you try \ 
+                  to pass through the gate, and an invisible \
+                  force blocks your way!";
+                else {
+                  give MizniaG_Gate_slot ~general; 
+                  print "You saunter through the apparently open gate.^";
+                }
+             }
+       ],
+   has light;
+
+Object FROSTHAM_GUSPlatform "Frostham Train Platform"
+   with description [;
+           print "You are standing in a long underground \
+           chamber. The east side of the room contains a \
+           lowered set of what appear to be train tracks. \           
+           The tracks run south into a dark tunnel. \
+           Along one wall painted lettering \
+           reads ~FROSTHAM STATION~. \
+           A short walkway leads northwest, to a metal fence";
+          if (self has general)
+           ". There is a large train car sitting on the tracks \
+           to the east.";
+          else ".";
+        ],
+        name "tunnel",
+        nw_to FG_Gate,
+        s_to "A helpful subway worker says ~Hey pal, get outa there!~",
+        e_to PURPLELINE_car,
+        in_to PURPLELINE_car,
+        before [;
+           Go:
+!              if (noun == nw_obj)
+!                print "You saunter through the apparently open gate.^";
+              if ((self hasnt general) &&
+                  (noun == e_obj or in_obj))
+              "You'd fall onto the tracks if you went that way.";              
+        ],     
+        each_turn [ i ;
+           if (self hasnt general) {
+              i = random(10);
+              if (i==1 or 2 or 3) {
+                 give self general;
+                 PURPLELINE_loc = 1;            
+                 PURPLELINE_dir = 1;    ! will be heading south
+                 "^Suddenly, from the south, a train emerges from \
+                 the tunnel! It pulls to a screeching halt, the \
+                 doors open, and several people rush out and exit \
+                 the station.";
+              }
+              if (i==10) 
+                 "^You hear a distant rumbling noise from the south.";
+           }
+           else {
+              if (self has general) {
+                 if (PURPLELINE_loc == 2) {
+                    give self ~general;
+                    "^The train doors close, and the train rolls off \
+                    to the south."; 
+                 }
+                 else {
+                    PURPLELINE_loc = 2;
+                    "^A few exit the train, and hurry out \
+                    of the station. You hear a voice from inside the \
+                    train say, ~Doors will be closing, please stand \
+                    clear.~";
+                 }
+              }
+           }
+        ],        
+   has light;
+
+
+! (Classes for gates and slots)
+Class GUS_Gate_Class
+   with name "gate" "metal",
+   initial "A metal gate bisects the fence.",
+   door_dir nw_to,
+   door_to FROSTHAM_GUSPlatform,
+   before [; 
+      Climb, JumpOver: "A subway worker yells ~Hey pal, no fare-jumpers!";
+      Open:  "It looks like it's already open.";
+      Close:  "There doesn't seem to be anything to close.";
+      Enter: "You'll have to walk in the appropriate direction to go through it.";    
+   ],
+   description "It's an odd metal gate that only comes up to about \
+your waist. Odder still is the fact that there's \
+no door on the gate, just two metal sides",
+   has static door transparent open;
+Class GUS_Gate_Slot_Class
+   with name "slot" "metal" "thin" "small",
+       description "You see a rather small, thin slot that seems to be \
+almost cut into one of the metal sides of the gate.",
+       before [;
+          LetGo: "There's no way to get anything out of that tiny, \
+thin slot.";
+          Receive:
+             if (noun has is_coin) {
+                give self general;
+                remove noun;  ! collection
+                "The coin slides into the slot with a satisfying thunk.";
+             }
+             "It doesn't look like that's going to fit into the slot."; 
+       ],
+       size 1,
+   has scenery container open;
+   
+ 
+Object FG_Gate "platform gate"
+   class GUS_Gate_Class,
+   with initial [;
+           if (location==FROSTHAM_GUSStation)
+              "A metal gate bisects the fence to the southeast.";
+           "A metal gate bisects the fence to the northwest.";
+        ],
+        door_dir [;
+           if (location==FROSTHAM_GUSStation)
+              return se_to;
+           return nw_to;
+        ],
+        door_to [;
+           if (location==FROSTHAM_GUSStation)
+              return FROSTHAM_GUSPlatform;
+           return FROSTHAM_GUSStation;
+        ],
+        before [; 
+           Enter:
+              if (location==FROSTHAM_GUSStation) <<Go se_obj>>;
+              else <<Go nw_obj>>;
+        ],
+        description [;
+        print "It's an odd metal gate that only comes up to about \
+               your waist. Odder still is the fact that there's \
+               no door on the gate, just two metal sides";
+        if (location == FROSTHAM_GUSStation)
+           ". There's a thin slot on one of the sides.";
+        else ".";
+        ],
+        found_in FROSTHAM_GUSStation FROSTHAM_GUSPlatform,
+;
+   
+   
+      
+Object FG_Gate_slot "metal slot" FG_Gate
+   class GUS_Gate_Slot_Class
+   with description [;
+          if (location == FROSTHAM_GUSPlatform)
+             "You can't see any such thing.";
+          if (location == FROSTHAM_GUSStation)
+             "You see a rather small, thin slot that seems to be \
+almost cut into one of the metal sides of the gate.";
+     ],
+       before [;
+          if (location == FROSTHAM_GUSPlatform)
+                "You can't see any such thing.";
+       ],
+;
+   
+   
+Object AG_Gate "platform gate"
+   class GUS_Gate_Class
+   with initial [;
+           if (location==ARAGAIN_GUSStation)
+              "A metal gate bisects the fence to the southeast.";
+           "A metal gate bisects the fence to the northwest.";
+        ],
+        door_dir [;
+           if (location==ARAGAIN_GUSStation)
+              return se_to;
+           return nw_to;
+        ],
+        door_to [;
+           if (location==ARAGAIN_GUSStation)
+              return ARAGAIN_GUSPlatform;
+           return ARAGAIN_GUSStation;
+        ],
+        before [; 
+           Enter:
+              if (location==FROSTHAM_GUSStation) <<Go se_obj>>;
+              else <<Go nw_obj>>;
+        ],
+        description [;
+       print "It's an odd metal gate that only comes up to about \
+               your waist. Odder still is the fact that there's \
+               no door on the gate, just two metal sides";
+           if (location == ARAGAIN_GUSStation)
+              ". There's a thin slot on one of the sides.";
+           else ".";
+        ],
+        found_in ARAGAIN_GUSStation ARAGAIN_GUSPlatform,
+;
+   
+Object AG_Gate_slot "metal slot" AG_Gate
+   class GUS_Gate_Slot_Class
+   with description [;
+          if (location == ARAGAIN_GUSPlatform)
+             "You can't see any such thing.";
+          if (location == ARAGAIN_GUSStation)
+             "You see a rather small, thin slot that seems to be \
+almost cut into one of the metal sides of the gate.";
+     ],
+       before [;
+          if (location == ARAGAIN_GUSPlatform)
+                "You can't see any such thing.";
+       ],
+;
+   
+   
+Object FublioG_Gate "platform gate"
+   class GUS_Gate_Class
+   with initial [;
+           if (location==FUBLIO_GUSStation)
+              "A metal gate bisects the fence to the southeast.";
+           "A metal gate bisects the fence to the northwest.";
+        ],
+        door_dir [;
+           if (location==FUBLIO_GUSStation)
+              return se_to;
+           return nw_to;
+        ],
+        door_to [;
+           if (location==FUBLIO_GUSStation)
+              return FUBLIO_GUSPlatform;
+           return FUBLIO_GUSStation;
+        ],
+        before [; 
+           Enter:
+              if (location==FUBLIO_GUSStation) <<Go se_obj>>;
+              else <<Go nw_obj>>;
+        ],
+        description [;
+       print "It's an odd metal gate that only comes up to about \
+            your waist. Odder still is the fact that there's \
+            no door on the gate, just two metal sides";
+           if (location == FUBLIO_GUSStation)
+              ". There's a thin slot on one of the sides.";
+           else ".";
+        ],
+        found_in FUBLIO_GUSStation FUBLIO_GUSPlatform,
+;
+   
+Object FublioG_Gate_slot "metal slot" FublioG_Gate
+   class GUS_Gate_Slot_Class
+   with description [;
+          if (location == FUBLIO_GUSStation)
+             "You see a rather small, thin slot that seems to be \
+             almost cut into one of the metal sides of the gate.";
+!! See if this works instead...
+          "You can't see any such thing.";
+       ],
+       before [;
+          if (location == FUBLIO_GUSPlatform)
+             "You can't see any such thing.";
+       ],
+;
+
+! (Orange gates (1))
+Object AntharG_Gate "platform gate"
+   class GUS_Gate_Class
+   with initial [;
+           if (location==ANTHAR_GUSStation)
+              "A metal gate bisects the fence to the south.";
+           "A metal gate bisects the fence to the north.";
+        ],
+        door_dir [;
+           if (location==ANTHAR_GUSStation)
+              return s_to;
+           return n_to;
+        ],
+        door_to [;
+           if (location==ANTHAR_GUSStation)
+              return ANTHAR_GUSPlatform;
+           return ANTHAR_GUSStation;
+        ],
+        before [; 
+           Enter:
+              if (location==ANTHAR_GUSStation) <<Go s_obj>>;
+              else <<Go n_obj>>;
+        ],
+        description [;
+        print "It's an odd metal gate that only comes up to about \
+            your waist. Odder still is the fact that there's \
+            no door on the gate, just two metal sides";
+           if (location == ANTHAR_GUSStation)
+               ". There's a thin slot on one of the sides.";
+           else ".";
+        ],
+        found_in ANTHAR_GUSStation ANTHAR_GUSPlatform,
+;
+   
+Object AntharG_Gate_slot "metal slot" AntharG_Gate
+   class GUS_Gate_Slot_Class
+   with description [;
+          if (location == ANTHAR_GUSStation)
+             "You see a rather small, thin slot that seems to be \
+             almost cut into one of the metal sides of the gate.";
+          "You can't see any such thing.";
+       ],
+       before [;
+          if (location == ANTHAR_GUSPlatform) 
+             "You can't see any such thing.";
+       ],
+;   
+
+
+! (Green gates (3))
+Object BorpheeG_Gate "platform gate"
+   class GUS_Gate_Class
+   with initial [;
+           if (location==BORPHEE_GUSStation)
+              "A metal gate bisects the fence to the southwest.";
+           "A metal gate bisects the fence to the northeast.";
+        ],
+        door_dir [;
+           if (location==BORPHEE_GUSStation)
+              return sw_to;
+           return ne_to;
+        ],
+        door_to [;
+           if (location==BORPHEE_GUSStation)
+              return BORPHEE_GUSPlatform;
+           return BORPHEE_GUSStation;
+        ],
+        before [; 
+           Enter:
+              if (location == BORPHEE_GUSStation) <<Go sw_obj>>;
+              else <<Go ne_obj>>;
+        ],
+        description [;
+            print "It's an odd metal gate that only comes up to about \
+               your waist. Odder still is the fact that there's \
+               no door on the gate, just two metal sides";
+           if (location == BORPHEE_GUSStation)
+              ". There's a thin slot on one of the sides.";
+           else ".";
+        ],
+        found_in BORPHEE_GUSStation BORPHEE_GUSPlatform,
+;
+   
+Object BorpheeG_Gate_slot "metal slot" BorpheeG_Gate
+   class GUS_Gate_Slot_Class
+   with description [;
+          if (location == BORPHEE_GUSStation)
+             "You see a rather small, thin slot that seems to be \
+             almost cut into one of the metal sides of the gate.";
+          "You can't see any such thing.";
+       ],
+       before [;
+          if (location == BORPHEE_GUSPlatform) 
+             "You can't see any such thing.";
+       ],
+;
+   
+! (NOTE: Gurth is different, read: broken)   
+Object GurthG_Gate "platform gate"
+   class GUS_Gate_Class
+   with initial [;
+           if (location==GURTH_GUSStation)
+              "A metal gate bisects the fence to the southwest.";
+           "A metal gate bisects the fence to the northeast.";
+        ],
+        door_dir [;
+           if (location==GURTH_GUSStation)
+              return sw_to;
+           return ne_to;
+        ],
+        door_to [;
+           if (location==GURTH_GUSStation)
+              return GURTH_GUSPlatform;
+           return GURTH_GUSStation;
+        ],
+        before [; 
+           Enter:  if (location == GURTH_GUSStation) <<Go sw_obj>>;
+                   else <<Go ne_obj>>;
+        ],
+        description [;
+           print "It's an odd metal gate that only comes up to about \
+            your waist. Odder still is the fact that there's \
+            no door on the gate, just two metal sides";
+           if (location == GURTH_GUSStation)
+              ". There's a thin slot on one of the sides that looks \
+              slightly dented.";
+           else ".";
+        ],
+        found_in GURTH_GUSStation GURTH_GUSPlatform,
+;
+   
+Object GurthG_Gate_slot "metal slot" GurthG_Gate
+   class GUS_Gate_Slot_Class
+   with name "dented",
+       description [;
+          if (location == GURTH_GUSStation)
+             "You see a rather small, thin slot that seems to be \
+             almost cut into one of the metal sides of the gate. \
+             It looks slightly dented.";
+          "You can't see any such thing.";
+       ],
+       before [;
+          if (location == GURTH_GUSPlatform)
+             "You can't see any such thing.";
+          Receive:
+             if (noun has is_coin) {
+                give self general;
+                remove noun;
+                "The coin slides into the slot, but you hear a strange click \
+                almost immediately.^^\
+                A subway nymph suddenly appears. She looks at the gate \
+                disapprovingly. ~Broken again? I thought they \
+                just fixed it. Well, fine.~ She seems rather annoyed. \
+                ~We'll get someone to look at it, eventually. Bye!~ She \
+                disappears.";
+             }
+             if (noun==wire) {
+                if (self hasnt general)
+                   "You poke the wire in the slot for a bit, but nothing \
+                   happens.";
+                if (self has general) {
+                   give self ~general;
+                   Achieved(20);
+                   give GurthG_Gate general;
+                   "You poke around in the slot, and manage to free something! \
+                   There is a solid thunk-like noise.";
+                }             
+             }
+             "It doesn't look like that's going to fit into the slot."; 
+       ],
+;   
+
+Object MizniaG_Gate "platform gate"
+   class GUS_Gate_Class
+   with initial [;
+           if (location==MIZNIA_GUSStation)
+              "A metal gate bisects the fence to the southwest.";
+           "A metal gate bisects the fence to the northeast.";
+        ],
+        door_dir [;
+           if (location==MIZNIA_GUSStation)
+              return sw_to;
+           return ne_to;
+        ],
+        door_to [;
+           if (location==MIZNIA_GUSStation)
+              return MIZNIA_GUSPlatform;
+           return MIZNIA_GUSStation;
+        ],
+        before [; 
+           Enter: if (location==MIZNIA_GUSStation) <<Go sw_obj>>;
+                  else <<Go ne_obj>>;
+        ],
+        description [;
+           print "It's an odd metal gate that only comes up to about \
+            your waist. Odder still is the fact that there's \
+            no door on the gate, just two metal sides";
+           if (location == MIZNIA_GUSStation)
+              ". There's a thin slot on one of the sides.";
+           else ".";
+        ],
+        found_in MIZNIA_GUSStation MIZNIA_GUSPlatform,
+;
+   
+Object MizniaG_Gate_slot "metal slot" MizniaG_Gate
+   class GUS_Gate_Slot_Class
+   with description [;
+          if (location == MIZNIA_GUSStation)
+             "You see a rather small, thin slot that seems to be \
+             almost cut into one of the metal sides of the gate.";
+          "You can't see any such thing.";
+       ],
+       before [;
+          if (location==MIZNIA_GUSPlatform)
+             "You can't see any such thing.";
+       ],
+;
+
+
+   
+!Object FS_Platform_sign2 "laminated paper" FROSTHAM_GUSPlatform
+!   with name "paper" "laminated" "safety",
+!      initial "A small stiff-looking piece of paper is attached to the west wall.",
+!      description "The paper reads: ^^\
+!      GREAT UNDERGROUND SUBWAY STATION RULES:^
+!      1) No going onto tracks.^
+!      2) No going into tunnels on foot unless authorized.",
+!   has static;
+   
+Object train_tracks "train tracks"
+   with name "tracks" "train",
+        description "A pair of large metal train tracks.",
+        found_in FROSTHAM_GUSPlatform ARAGAIN_GUSPlatform FUBLIO_GUSPlatform
+                 ARAGAIN_GUSPlatform2,
+   has scenery;
+   
+   
+Object ARAGAIN_GUSPlatform "Aragain Train Platform"
+   with description [;
+           print "You are standing in a long underground \
+           chamber. The east side of the room contains a \
+           lowered set of what appear to be train tracks. \
+           The tracks run north and south into dark tunnels. \
+           Along one wall painted lettering \
+           reads ~ARAGAIN STATION~. \
+           A short walkway leads northwest, to a metal fence. \
+           There is also a stairway down here";
+          if (self has general)
+           ". In addition, there is a large train car sitting on the tracks \
+           to the east.";
+          else ".";
+        ],
+        name "tunnel" "tunnels" "stairway",
+        nw_to AG_Gate,
+        s_to "A helpful subway worker says ~Hey pal, get outa there!~",
+        n_to "A helpful subway worker says ~Hey pal, get outa there!~",
+        e_to PURPLELINE_car,
+        d_to ARAGAIN_GUSPlatform2,
+        in_to PURPLELINE_car,
+        before [;
+           Go:
+!              if (noun == nw_obj)
+!                print "You saunter through the apparently open gate.^";
+              if ((self hasnt general) &&
+                  (noun == e_obj or in_obj))
+              "You'd fall onto the tracks if you went that way.";              
+        ],     
+        each_turn [ i ;
+           if (self hasnt general) {
+              i = random(10);
+              if (i==1 or 3 or 5) {
+                 give self general;
+                 PURPLELINE_loc = 5;            
+                 PURPLELINE_dir = 1;    ! will be heading south
+                 "^Suddenly, from the north, a train emerges from \
+                 the tunnel! It pulls to a screeching halt, the \
+                 doors open, and several people rush out and exit \
+                 the station.";
+              }
+              if (i==2 or 4 or 6) {
+                 give self general;
+                 PURPLELINE_loc = 5;            
+                 PURPLELINE_dir = 0;    ! will be heading north
+                 "^Suddenly, from the south, a train emerges from \
+                 the tunnel! It pulls to a screeching halt, the \
+                 doors open, and several people rush out and exit \
+                 the station.";
+              }
+              if (i==9)
+                 "^You hear a distant rumbling noise from the north.";
+              if (i==10) 
+                 "^You hear a distant rumbling noise from the south.";
+           }
+           else {
+              if (self has general) {
+                 if (PURPLELINE_loc == 6) {
+                    give self ~general;
+                    "^The train doors close, and the train rolls off."; 
+                 }
+                 else {
+                    PURPLELINE_loc = 6;
+                    "^A few exit the train, and hurry out \
+                    of the station. You hear a voice from inside the \
+                    train say, ~Doors will be closing, please stand \
+                    clear.~";
+                 }
+              }
+           }
+        ],        
+   has light;
+ 
+Object ARAGAIN_GUSPlatform2 "Aragain Train Platform (lower)"
+   with description [;
+           print "You are standing in a long underground \
+           chamber. The south side of the room contains a \
+           lowered set of what appear to be train tracks. \
+           The tracks run west into a dark tunnel. \
+           Along one wall painted lettering \
+           reads ~ARAGAIN STATION~. \
+           A set of stairs leads up out of the gloom";
+          if (self has general)
+           ". There is a large train car sitting on the tracks \
+           to the south.";
+          else ".";
+        ],
+        name "tunnel" "stairs",
+        w_to "A helpful subway worker says ~Hey pal, get outa there!~",
+        s_to ORANGELINE_car,
+        in_to ORANGELINE_car,
+        u_to ARAGAIN_GUSPlatform,
+        before [;
+           Go:
+              if ((self hasnt general) &&
+                  (noun == s_obj or in_obj))
+              "You'd fall onto the tracks if you went that way.";              
+        ],     
+        each_turn [ i ;
+           if (self hasnt general) {
+              i = random(10);
+              if (i==1 or 3 or 5) {
+                 give self general;
+                 ORANGELINE_loc = 9;            
+                 ORANGELINE_dir = 0;    ! will be heading west
+                 "^Suddenly, from the west, a train emerges from \
+                 the tunnel! It pulls to a screeching halt, the \
+                 doors open, and several people rush out and up \
+                 the stairs.";
+              }
+              if (i==10) 
+                 "^You hear a distant rumbling noise from the west.";
+           }
+           else {
+              if (self has general) {
+                 if (ORANGELINE_loc == 10) {
+                    give self ~general;
+                    "^The train doors close, and the train heads off \
+                    to the west."; 
+                 }
+                 else {
+                    ORANGELINE_loc = 10;
+                    "^A few people exit the train, and hurry up the stairs. \
+                    You hear a voice from inside the \
+                    train say, ~Doors will be closing, please stand \
+                    clear.~";
+                 }
+              }
+           }
+        ],        
+   has light;      
+   
+   
+Object FUBLIO_GUSPlatform "Fublio Valley Train Platform"
+   with description [;
+           print "You are standing in a long underground \
+           chamber. The east side of the room contains a \
+           lowered set of what appear to be train tracks. \
+           The tracks run north into a dark tunnel. \
+           Along one wall painted lettering \
+           reads ~FUBLIO VALLEY STATION~. \
+           A short walkway leads northwest, to a metal fence";
+          if (self has general)
+           ". There is a large train car sitting on the tracks \
+           to the east.";
+          else ".";
+        ],
+        name "tunnel",
+        nw_to FublioG_Gate,
+        n_to "A helpful subway worker says ~Hey pal, get outa there!~",
+        e_to PURPLELINE_car,
+        in_to PURPLELINE_car,
+        before [;
+           Go:
+!              if (noun == nw_obj)
+!                print "You saunter through the apparently open gate.^";
+              if ((self hasnt general) &&
+                  (noun == e_obj or in_obj))
+              "You'd fall onto the tracks if you went that way.";              
+        ],     
+        each_turn [ i ;
+           if (self hasnt general) {
+              i = random(10);
+              if (i==1 or 3 or 4) {
+                 give self general;
+                 PURPLELINE_loc = 10;            
+                 PURPLELINE_dir = 0;    ! will be heading north
+                 "^Suddenly, from the north, a train emerges from \
+                 the tunnel! It pulls to a screeching halt, the \
+                 doors open, and several people rush out and exit \
+                 the station.";
+              }
+              if (i==10) 
+                 "^You hear a distant rumbling noise from the north.";
+           }
+           else {
+              if (self has general) {
+                 if (PURPLELINE_loc == 9) {
+                    give self ~general;
+                    "^The train doors close, and the train rolls off \
+                    to the north."; 
+                 }
+                 else {
+                    PURPLELINE_loc = 9;
+                    "^A few people exit the train, and hurry out \
+                    of the station. You hear a voice from inside the \
+                    train say, ~Doors will be closing, please stand \
+                    clear.~";
+                 }
+              }
+           }
+        ],        
+   has light;      
+
+   
+! *** Orange line platforms
+
+
+Object GURTH_GUSPlatform2 "Gurth City Train Platform (lower)"
+   with description [;
+           print "You are standing in a long underground \
+           chamber. The south side of the room contains a \
+           lowered set of what appear to be train tracks. \
+           The tracks run east into a dark tunnel. \
+           Along one wall painted lettering \
+           reads ~GURTH CITY STATION~. \
+           A set of stairs leads up out of the gloom";
+          if (self has general)
+           ". There is a large train car sitting on the tracks \
+           to the south.";
+          else ".";
+        ],
+        name "tunnel" "stairs", 
+        e_to "A helpful subway worker says ~Hey pal, get outa there!~",
+        s_to ORANGELINE_car,
+        in_to ORANGELINE_car,
+        u_to GURTH_GUSPlatform,
+        before [;
+           Go:
+              if ((self hasnt general) &&
+                  (noun == s_obj or in_obj))
+              "You'd fall onto the tracks if you went that way.";              
+        ],     
+        each_turn [ i ;
+           if (self hasnt general) {
+              i = random(10);
+              if (i==1 or 2 or 4) {
+                 give self general;
+                 ORANGELINE_loc = 1;            
+                 ORANGELINE_dir = 1;    ! will be heading east
+                 "^Suddenly, from the east, a train emerges from \
+                 the tunnel! It pulls to a screeching halt, the \
+                 doors open, and several people rush out and up \
+                 the stairs.";
+              }
+              if (i==10) 
+                 "^You hear a distant rumbling noise from the east.";
+           }
+           else {
+              if (self has general) {
+                 if (ORANGELINE_loc == 2) {
+                    give self ~general;
+                    "^The train doors close, and the train heads off \
+                    to the east."; 
+                 }
+                 else {
+                    ORANGELINE_loc = 2;
+                    "^A few people exit the train, and hurry up the stairs. \
+                    You hear a voice from inside the \
+                    train say, ~Doors will be closing, please stand \
+                    clear.~";
+                 }
+              }
+           }
+        ],        
+   has light;      
+   
+Object ANTHAR_GUSPlatform "Greater Anthar Train Platform"
+   with description [;
+           print "You are standing in a long underground \
+           chamber. The south side of the room contains a \
+           lowered set of what appear to be train tracks. \
+           The tracks run east and west into dark tunnels. \
+           Along one wall painted lettering \
+           reads ~ANTHAR STATION~. \
+           A short walkway leads north, to a metal fence";
+          if (self has general)
+           ". There is a large train car sitting on the tracks \
+           to the south.";
+          else ".";
+        ],
+        name "tunnel" "tunnels" "walkway",
+        n_to AntharG_Gate,
+        e_to "A helpful subway worker says ~Hey pal, get outa there!~",
+        w_to "A helpful subway worker says ~Hey pal, get outa there!~",        
+        s_to ORANGELINE_car,
+        in_to ORANGELINE_car,
+        before [;
+           Go:
+!              if (noun == n_obj)
+!                print "You saunter through the apparently open gate.^";
+              if ((self hasnt general) &&
+                  (noun == s_obj or in_obj))
+              "You'd fall onto the tracks if you went that way.";              
+        ],     
+        each_turn [ i ;
+           if (self hasnt general) {
+              i = random(10);
+              if (i==1 or 4 or 5) {
+                 give self general;
+                 ORANGELINE_loc = 5;            
+                 ORANGELINE_dir = 1;    ! will be heading east
+                 "^Suddenly, from the west, a train emerges from \
+                 the tunnel! It pulls to a screeching halt, the \
+                 doors open, and several people rush out and exit \
+                 the station.";
+              }
+              if (i==2 or 3 or 6) {
+                 give self general;
+                 ORANGELINE_loc = 5;            
+                 ORANGELINE_dir = 0;    ! will be heading west
+                 "^Suddenly, from the east, a train emerges from \
+                 the tunnel! It pulls to a screeching halt, the \
+                 doors open, and several people rush out and exit \
+                 the station.";
+              }
+              if (i==9)
+                 "^You hear a distant rumbling noise from the east.";
+              if (i==10) 
+                 "^You hear a distant rumbling noise from the west.";
+           }
+           else {
+              if (self has general) {
+                 if (ORANGELINE_loc == 6) {
+                    give self ~general;
+                    "^The train doors close, and the train rolls off."; 
+                 }
+                 else {
+                    ORANGELINE_loc = 6;
+                    "^A few people exit the train, and hurry out \
+                    of the station. You hear a voice from inside the \
+                    train say, ~Doors will be closing, please stand \
+                    clear.~";
+                 }
+              }
+           }
+        ],        
+   has light;
+
+
+! *** Green line platforms
+
+Object BORPHEE_GUSPlatform "New Borphee Train Platform"
+   with description [;
+           print "You are standing in a long underground \
+           chamber. The west side of the room contains a \
+           lowered set of what appear to be train tracks. \
+           The tracks run south into a dark tunnel. \
+           Along one wall painted lettering \
+           reads ~NEW BORPHEE STATION~. \
+           A short walkway leads northeast, to a metal fence";
+          if (self has general)
+           ". There is a large train car sitting on the tracks \
+           to the west.";
+          else ".";
+        ],
+        name "tunnel" "walkway",
+        ne_to BorpheeG_Gate,
+        s_to "A helpful subway worker says ~Hey pal, get outa there!~",
+        w_to GREENLINE_car,
+        in_to GREENLINE_car,
+        before [;
+           Go:
+!              if (noun == ne_obj)
+!                print "You saunter through the apparently open gate.^";
+              if ((self hasnt general) &&
+                  (noun == w_obj or in_obj))
+              "You'd fall onto the tracks if you went that way.";              
+        ],     
+        each_turn [ i ;
+           if (self hasnt general) {
+              i = random(10);
+              if (i==1 or 2 or 3) {
+                 give self general;
+                 GREENLINE_loc = 1;            
+                 GREENLINE_dir = 1;    ! will be heading south
+                 "^Suddenly, from the south, a train emerges from \
+                 the tunnel! It pulls to a screeching halt, the \
+                 doors open, and several people rush out and exit \
+                 the station.";
+              }
+              if (i==10) 
+                 "^You hear a distant rumbling noise from the south.";
+           }
+           else {
+              if (self has general) {
+                 if (GREENLINE_loc == 2) {
+                    give self ~general;
+                    "^The train doors close, and the train rolls off \
+                    to the south."; 
+                 }
+                 else {
+                    GREENLINE_loc = 2;
+                    "^A few people exit the train, and hurry out \
+                    of the station. You hear a voice from inside the \
+                    train say, ~Doors will be closing, please stand \
+                    clear.~";
+                 }
+              }
+           }
+        ],        
+   has light;      
+
+Object MIZNIA_GUSPlatform "Miznia Train Platform"
+   with description [;
+           print "You are standing in a long underground \
+           chamber. The west side of the room contains a \
+           lowered set of what appear to be train tracks. \
+           The tracks run north into a dark tunnel. \
+           Along one wall painted lettering \
+           reads ~MIZNIA STATION~. \
+           A short walkway leads northeast, to a metal fence";
+          if (self has general)
+           ". There is a large train car sitting on the tracks \
+           to the west.";
+          else ".";
+        ],
+        name "tunnel" "walkway",
+        ne_to MizniaG_Gate,
+        n_to "A helpful subway worker says ~Hey pal, get outa there!~",
+        w_to GREENLINE_car,
+        in_to GREENLINE_car,
+        before [;
+           Go:
+!              if (noun == ne_obj)
+!                print "You saunter through the apparently open gate.^";
+              if ((self hasnt general) &&
+                  (noun == w_obj or in_obj))
+              "You'd fall onto the tracks if you went that way.";              
+        ],     
+        each_turn [ i ;
+           if (self hasnt general) {
+              i = random(10);
+              if (i==1 or 2 or 3) {
+                 give self general;
+                 GREENLINE_loc = 9;            
+                 GREENLINE_dir = 0;    ! will be heading south
+                 "^Suddenly, from the north, a train emerges from \
+                 the tunnel! It pulls to a screeching halt, the \
+                 doors open, and several people rush out and exit \
+                 the station.";
+              }
+              if (i==10) 
+                 "^You hear a distant rumbling noise from the north.";
+           }
+           else {
+              if (self has general) {
+                 if (GREENLINE_loc == 10) {
+                    give self ~general;
+                    "^The train doors close, and the train rolls off \
+                    to the north."; 
+                 }
+                 else {
+                    GREENLINE_loc = 10;
+                    "^A few people exit the train, and hurry out \
+                    of the station. You hear a voice from inside the \
+                    train say, ~Doors will be closing, please stand \
+                    clear.~";
+                 }
+              }
+           }
+        ],        
+   has light;      
+
+Object GURTH_GUSPlatform "Gurth City Train Platform"
+   with description [;
+           print "You are standing in a long underground \
+           chamber. The west side of the room contains a \
+           lowered set of what appear to be train tracks. \
+           The tracks run north and south into dark tunnels. \
+           Along one wall painted lettering \
+           reads ~GURTH CITY STATION~. \
+           A short walkway leads northeast, to a metal fence. \
+           There is also a stairway down here";
+          if (self has general)
+           ". There is a large train car sitting on the tracks \
+           to the west.";
+          else ".";
+        ],
+        name "tunnel" "tunnels" "walkway" "stairway",
+        ne_to GurthG_Gate,
+        s_to "A helpful subway worker says ~Hey pal, get outa there!~",
+        n_to "A helpful subway worker says ~Hey pal, get outa there!~",
+        w_to GREENLINE_car,
+        d_to GURTH_GUSPlatform2,
+        in_to GREENLINE_car,
+        before [;
+           Go:
+!              if (noun == ne_obj)
+!                print "You saunter through the apparently open gate.^";
+              if ((self hasnt general) &&
+                  (noun == w_obj or in_obj))
+              "You'd fall onto the tracks if you went that way.";              
+        ],     
+        each_turn [ i ;
+           if (self hasnt general) {
+              i = random(10);
+              if (i==1 or 3) {
+                 give self general;
+                 GREENLINE_loc = 5;            
+                 GREENLINE_dir = 1;    ! will be heading south
+                 "^Suddenly, from the north, a train emerges from \
+                 the tunnel! It pulls to a screeching halt, the \
+                 doors open, and several people rush out and exit \
+                 the station.";
+              }
+              if (i==2 or 4) {
+                 give self general;
+                 GREENLINE_loc = 5;            
+                 GREENLINE_dir = 0;    ! will be heading north
+                 "^Suddenly, from the south, a train emerges from \
+                 the tunnel! It pulls to a screeching halt, the \
+                 doors open, and several people rush out and exit \
+                 the station.";
+              }
+              if (i==9)
+                 "^You hear a distant rumbling noise from the north.";
+              if (i==10) 
+                 "^You hear a distant rumbling noise from the south.";
+           }
+           else {
+              if (self has general) {
+                 if (GREENLINE_loc == 6) {
+                    give self ~general;
+                    "^The train doors close, and the train rolls off."; 
+                 }
+                 else {
+                    GREENLINE_loc = 6;
+                    "^A few people exit the train, and hurry out \
+                    of the station. You hear a voice from inside the \
+                    train say, ~Doors will be closing, please stand \
+                    clear.~";
+                 }
+              }
+           }
+        ],        
+   has light;    
+
+! **************************
+! TRAINS
+! Some notes:
+!     While it may seem more logical to implement the trains with
+!     an 'enterable' property, I decided to implement them as 
+!     'rooms' instead.  Mainly, I did this because:
+!     1) I wanted total control of the "movement" of the train.
+!     2) I wanted to fill the cars with various people/things.
+!     3) I wanted seats on the train :)
+!     Again, this is all probably possible with 'vehicles', I
+!     just saw things slightly differently.
+!     Be warned, the logic in moving the train is probably one
+!     of the more unfathomable things I've ever coded.
+! **************************
+
+! *** The purple line (Eastlands)
+
+Object PURPLELINE_car "Subway car"
+   with description "You are in an underground train car. Various \
+           people fill the train, some in uncomfortable-looking seats.",
+        name "car" "people",
+        w_to FROSTHAM_GUSPlatform,  ! we adjust this, see below
+        out_to FROSTHAM_GUSPlatform,
+        after [;
+         Go:
+          if (noun == e_obj or in_obj) {
+           ! determine boarding location, direction train was
+           ! traveling 
+           give self general; ! we're off and moving...
+           print "^You enter the train car. The doors slam shut behind you.^";
+           if (PURPLELINE_loc == 1 or 2) {
+              ! Frostham, south
+	      give FROSTHAM_GUSPlatform ~general;
+	      PURPLELINE_loc = 3; ! leaving
+           }
+           if (PURPLELINE_loc == 5 or 6) {
+              ! Aragain
+              ! give ARAGAIN_GUSPlatform ~general;
+              if (PURPLELINE_dir == 1) {
+                 ! South
+                 PURPLELINE_loc = 7;
+              }
+              else {
+                 ! North
+                 PURPLELINE_loc = 4;
+              }
+           }
+           if (PURPLELINE_loc == 9 or 10) {
+              ! Fublio, north
+              ! give FUBLIO_GUSPlatform ~general;
+              PURPLELINE_loc = 8;
+           }
+          }
+        ],
+        before [;
+          Go:
+            if (noun == w_obj or out_obj) {
+               if (self has general)
+                  "The train is moving right now. Better wait til \
+                  it stops to get off.";               
+               if (thug in self)
+                  "As you try to get off, the thug gets in your way. \
+                  ~Going somewhere, Padre?~.";
+            }
+        ],
+        each_turn [;
+          ! check location of train, print appropriate msg, 
+          ! and increment location of train, given direction
+          if (PURPLELINE_loc == 1) {
+            ! reached Frostham, dir = S, not moving
+            give self ~general;
+            give FROSTHAM_GUSPlatform general;
+            PURPLELINE_dir = 1;
+            PURPLELINE_loc = 2;
+            PURPLELINE_car.w_to = FROSTHAM_GUSPlatform;
+            PURPLELINE_car.out_to = FROSTHAM_GUSPlatform;
+            "^The train suddenly lurches to a stop! A voice from \
+            somewhere overhead says ~Frostham station, watch your \
+            step please.~";
+          }
+          if (PURPLELINE_loc == 2) {
+            ! still in Frostham, not moving
+            PURPLELINE_loc = 3;
+            "^A voice overhead says ~Doors will be closing, please \
+             stand clear.~";
+          }
+          if (PURPLELINE_loc == 3) {
+            if (PURPLELINE_dir == 1) {
+               ! moving away from Frostham
+               give self general;
+               give FROSTHAM_GUSPlatform ~general;
+               PURPLELINE_loc = 4;
+               "^The train starts to move, quickly exiting the station \
+               going south.";
+            }
+            if (PURPLELINE_dir == 0) {
+               ! moving towards Frostham
+               PURPLELINE_loc = 1;  ! We will 'arrive' in Frostham next
+               "^The train rumbles as it moves.";
+            }
+          }
+          if (PURPLELINE_loc == 4) {
+            if (PURPLELINE_dir == 0) {
+               ! We're leaving Aragain
+               PURPLELINE_loc = 3;
+               give self general;
+               give ARAGAIN_GUSPlatform ~general;
+               "^The train starts to move, quickly exiting the station \
+               going north.";
+            }
+            if (PURPLELINE_dir == 1) {
+               PURPLELINE_loc = 5; 
+               "^The train rumbles as it moves.";
+            }
+          }
+          if (PURPLELINE_loc == 5) {
+            ! reached Aragain, stop the train
+            give self ~general;
+            give ARAGAIN_GUSPlatform general;
+            PURPLELINE_loc = 6;  ! we'll be stopping for 1 turn
+            PURPLELINE_car.w_to = ARAGAIN_GUSPlatform;
+            PURPLELINE_car.out_to = ARAGAIN_GUSPlatform;
+            "^The train suddenly lurches to a stop! A voice from \
+            somewhere overhead says ~Aragain station, watch your \
+            step please.~";
+          }
+          if (PURPLELINE_loc == 6) {
+            ! about to leave Aragain station
+            if (PURPLELINE_dir == 0) 
+               PURPLELINE_loc = 4;
+            else
+               PURPLELINE_loc = 7;
+            "^A voice overhead says ~Doors will be closing, please \
+             stand clear.~";
+          }
+          if (PURPLELINE_loc == 7) {
+             if (PURPLELINE_dir == 1) {
+               ! We're leaving Aragain
+               PURPLELINE_loc = 8;
+               give self general;
+               give ARAGAIN_GUSPlatform ~general;
+               "^The train starts to move, quickly exiting the station \
+               going south.";
+            }
+            if (PURPLELINE_dir == 0) {
+               PURPLELINE_loc = 5;   ! we will arrive in Aragain shortly...
+               "^The train rumbles as it moves.";
+            }
+          }
+          if (PURPLELINE_loc == 8) {
+            if (PURPLELINE_dir == 0) {
+               ! we're leaving Fublio
+               PURPLELINE_loc = 7;
+               give self general;
+               give FUBLIO_GUSPlatform ~general;
+               "^The train starts to move, quickly exiting the station \
+               going north.";
+            }
+            if (PURPLELINE_dir == 1) {
+               PURPLELINE_loc = 10;  ! will arrive in Fublio (BACKWARDS!!)
+               "^The train rumbles as it moves.";
+            }
+          }
+          if (PURPLELINE_loc == 9) {
+            ! still waiting in Fublio
+            PURPLELINE_loc = 8;
+            "^A voice overhead says ~Doors will be closing, please \
+             stand clear.~";
+          }
+          if (PURPLELINE_loc == 10) {
+            ! arriving in Fublio
+            PURPLELINE_loc = 9;   
+            PURPLELINE_dir = 0; ! north
+            give self ~general;
+            give FUBLIO_GUSPlatform general;
+            PURPLELINE_car.w_to = FUBLIO_GUSPlatform;
+            PURPLELINE_car.out_to = FUBLIO_GUSPlatform;
+            "^The train suddenly lurches to a stop! A voice from \
+            somewhere overhead says ~Fublio station, watch your \
+            step please.~";
+          }
+        ],
+   has light;
+
+Class Train_Car_Seat_Class
+   with name "seat" "seats",
+   description "There seem to be a few seats that haven't been taken.",
+   before [;
+      Enter:
+         if (random(10) < 3)
+            "As you attempt to grab an open seat, someone rudely \
+            beats you to it.";
+   ],
+has scenery enterable;
+
+
+Object PURPLELINE_car_seats "subway seat" PURPLELINE_car
+   class Train_Car_Seat_Class
+   with before [;
+           Search:
+              if (self hasnt general) {
+                 give self general;
+                 move c9 to player;
+                 "Good fortune is your friend! You notice a \
+forgotten coin stuck in a seat crack, and fend off two \
+passengers to grab it.";
+              }
+        ],
+;
+
+
+! *** ORANGE LINE CAR (Gurth to Aragain)
+
+
+Object ORANGELINE_car "Subway car"
+   with description "You are in an underground train car. Various \
+           people fill the train, some in uncomfortable-looking seats.",
+        name "car" "people",
+        n_to ANTHAR_GUSPlatform,  ! we adjust this, see below
+        out_to ANTHAR_GUSPlatform,
+        after [;
+         Go:
+          if (noun == s_obj or in_obj) {
+           ! determine boarding location, direction train was
+           ! traveling 
+           give self general;  ! we're off and moving...
+           print "^You squeeze onto the train car. The doors close behind you.^";
+           if (ORANGELINE_loc == 1 or 2) {
+              ! Gurth, east
+	      give GURTH_GUSPlatform2 ~general;
+	      ORANGELINE_loc = 3; ! leaving
+           }
+           if (ORANGELINE_loc == 5 or 6) {
+              ! Anthar
+              give ANTHAR_GUSPlatform ~general;
+              if (ORANGELINE_dir == 1) {
+                 ! east
+                 ORANGELINE_loc = 7;
+              }
+              else {
+                 ! west
+                 ORANGELINE_loc = 4;
+              }
+           }
+           if (ORANGELINE_loc == 9 or 10) {
+              ! Aragain, west
+              give ARAGAIN_GUSPlatform2 ~general;
+              ORANGELINE_loc = 8;
+           }
+          }
+        ],
+        before [;
+          Go:
+            if (noun == n_obj or out_obj) {
+               if (self has general)
+                  "The train is moving right now. Better wait til \
+                  it stops to get off.";               
+            }
+        ],
+        each_turn [;
+          ! check location of train, print appropriate msg, 
+          ! and increment location of train, given direction
+          if (ORANGELINE_loc == 1) {
+            ! reached Gurth, dir = S, not moving
+            give self ~general;
+            give GURTH_GUSPlatform2 general;
+            ORANGELINE_dir = 1;
+            ORANGELINE_loc = 2;
+            ORANGELINE_car.n_to = GURTH_GUSPlatform2;
+            ORANGELINE_car.out_to = GURTH_GUSPlatform2;
+            "^The train suddenly lurches to a stop! A voice from \
+            somewhere overhead says ~Gurth City station, watch your \
+            step please.~";
+          }
+          if (ORANGELINE_loc == 2) {
+            ! still in Gurth, not moving
+            ORANGELINE_loc = 3;
+            "^A voice overhead says ~Doors will be closing, please \
+             stand clear.~";
+          }
+          if (ORANGELINE_loc == 3) {
+            if (ORANGELINE_dir == 1) {
+               ! moving away from Gurth
+               give self general;
+               give GURTH_GUSPlatform2 ~general;
+               ORANGELINE_loc = 4;
+               "^The train starts to move, quickly exiting the station \
+               going east.";
+            }
+            if (ORANGELINE_dir == 0) {
+               ! moving towards Gurth
+               ORANGELINE_loc = 1;  ! We will 'arrive' in Gurth next
+               "^The train rumbles as it moves.";
+            }
+          }
+          if (ORANGELINE_loc == 4) {
+            if (ORANGELINE_dir == 0) {
+               ! We're leaving Anthar
+               ORANGELINE_loc = 3;
+               give self general;
+               give ANTHAR_GUSPlatform ~general;
+               "^The train starts to move, quickly exiting the station \
+               going west.";
+            }
+            if (ORANGELINE_dir == 1) {
+               ORANGELINE_loc = 5; 
+               "^The train rumbles as it moves.";
+            }
+          }
+          if (ORANGELINE_loc == 5) {
+            ! reached Anthar, stop the train
+            give self ~general;
+            give ANTHAR_GUSPlatform general;
+            ORANGELINE_loc = 6;  ! we'll be stopping for 1 turn
+            ORANGELINE_car.n_to = ANTHAR_GUSPlatform;
+            ORANGELINE_car.out_to = ANTHAR_GUSPlatform;
+            "^The train suddenly lurches to a stop! A voice from \
+            somewhere overhead says ~Greater Anthar station, watch your \
+            step please.~";
+          }
+          if (ORANGELINE_loc == 6) {
+            ! about to leave Anthar station
+            if (ORANGELINE_dir == 0) 
+               ORANGELINE_loc = 4;
+            else
+               ORANGELINE_loc = 7;
+            "^A voice overhead says ~Doors will be closing, please \
+             stand clear.~";
+          }
+          if (ORANGELINE_loc == 7) {
+             if (ORANGELINE_dir == 1) {
+               ! We're leaving Anthar
+               ORANGELINE_loc = 8;
+               give self general;
+               give ANTHAR_GUSPlatform ~general;
+               "^The train starts to move, quickly exiting the station \
+               going east.";
+            }
+            if (ORANGELINE_dir == 0) {
+               ORANGELINE_loc = 5;   ! we will arrive in anthar shortly...
+               "^The train rumbles as it moves.";
+            }
+          }
+          if (ORANGELINE_loc == 8) {
+            if (ORANGELINE_dir == 0) {
+               ! we're leaving Aragain
+               ORANGELINE_loc = 7;
+               give self general;
+               give ARAGAIN_GUSPlatform2 ~general;
+               "^The train starts to move, quickly exiting the station \
+               going west.";
+            }
+            if (ORANGELINE_dir == 1) {
+               ORANGELINE_loc = 9;  ! will arrive in Aragain
+               "^The train rumbles as it moves.";
+            }
+          }
+          if (ORANGELINE_loc == 10) {
+            ! still waiting in Aragain
+            ORANGELINE_loc = 8;
+            "^A voice overhead says ~Doors will be closing, please \
+             stand clear.~";
+          }
+          if (ORANGELINE_loc == 9) {
+            ! arriving in Aragain
+            ORANGELINE_loc = 10;   
+            ORANGELINE_dir = 0; ! west
+            give self ~general;
+            give ARAGAIN_GUSPlatform2 general;
+            ORANGELINE_car.n_to = ARAGAIN_GUSPlatform2;
+            ORANGELINE_car.out_to = ARAGAIN_GUSPlatform2;
+            "^The train suddenly lurches to a stop! A voice from \
+            somewhere overhead says ~Aragain station, watch your \
+            step please.~";
+          }
+        ],
+   has light;
+
+Object ORANGELINE_car_seats "subway seat" ORANGELINE_car
+   class Train_Car_Seat_Class
+   with before [;
+           Search:
+              if (self hasnt general) {
+                 give self general;
+                 move c10 to player;
+                 "Good fortune is your friend! You notice a \
+forgotten coin stuck in a seat crack, and fend off two \
+passengers to grab it.";
+              }
+        ],
+;
+
+
+! *** GREEN LINE (Borphee to Miznia)
+
+Object GREENLINE_car "Subway car"
+   with description "You are in an underground train car. Various \
+           people fill the train, some in uncomfortable-looking seats.",
+        name "car" "people",
+        e_to BORPHEE_GUSPlatform,  ! we adjust this, see below
+        out_to BORPHEE_GUSPlatform,
+        after [;
+         Go:
+          if (noun == w_obj or in_obj) {
+           ! determine boarding location, direction train was
+           ! traveling 
+           give self general;  ! we're off and moving
+           print "^You shove your way onto train car. The doors close behind you.^";
+           if (GREENLINE_loc == 1 or 2) {
+              ! Borphee, south
+	      give BORPHEE_GUSPlatform ~general;
+	      GREENLINE_loc = 3; ! leaving
+           }
+           if (GREENLINE_loc == 5 or 6) {
+              ! Gurth
+              give GURTH_GUSPlatform ~general;
+              if (GREENLINE_dir == 1) {
+                 ! South
+                 GREENLINE_loc = 7;
+              }
+              else {
+                 ! North
+                 GREENLINE_loc = 4;
+              }
+           }
+           if (GREENLINE_loc == 9 or 10) {
+              ! Miznia, north
+              give MIZNIA_GUSPlatform ~general;
+              GREENLINE_loc = 8;
+           }
+          }
+        ],
+        before [;
+          Go:
+            if (noun == e_obj or out_obj) {
+               if (self has general)
+                  "The train is moving right now. Better wait til \
+                  it stops to get off.";               
+               if (yupple in self)
+                  "As you try to get off, the yupple jumps up and gets in your \
+                  way. ~Wait, wait, we have so much to talk about!~.";
+            }
+        ],
+        each_turn [;
+          ! check location of train, print appropriate msg, 
+          ! and increment location of train, given direction
+          if (GREENLINE_loc == 1) {
+            ! reached Borphee, dir = S, not moving
+            give self ~general;
+            give BORPHEE_GUSPlatform general;
+            GREENLINE_dir = 1;
+            GREENLINE_loc = 2;
+            GREENLINE_car.e_to = BORPHEE_GUSPlatform;
+            GREENLINE_car.out_to = BORPHEE_GUSPlatform;
+            "^The train suddenly lurches to a stop! A voice from \
+            somewhere overhead says ~New Borphee station, watch your \
+            step please.~";
+          }
+          if (GREENLINE_loc == 2) {
+            ! still in Borphee, not moving
+            GREENLINE_loc = 3;
+            "^A voice overhead says ~Doors will be closing, please \
+             stand clear.~";
+          }
+          if (GREENLINE_loc == 3) {
+            if (GREENLINE_dir == 1) {
+               ! moving away from Borphee
+               give self general;
+               give BORPHEE_GUSPlatform ~general;
+               GREENLINE_loc = 4;
+               "^The train starts to move, quickly exiting the station \
+               going south.";
+            }
+            if (GREENLINE_dir == 0) {
+               ! moving towards BORPHEE
+               GREENLINE_loc = 1;  
+               "^The train rumbles as it moves.";
+            }
+          }
+          if (GREENLINE_loc == 4) {
+            if (GREENLINE_dir == 0) {
+               ! We're leaving gurth
+               GREENLINE_loc = 3;
+               give self general;
+               give GURTH_GUSPlatform ~general;
+               "^The train starts to move, quickly exiting the station \
+               going north.";
+            }
+            if (GREENLINE_dir == 1) {
+               GREENLINE_loc = 5; 
+               "^The train rumbles as it moves.";
+            }
+          }
+          if (GREENLINE_loc == 5) {
+            ! reached Gurth, stop the train
+            give self ~general;
+            give GURTH_GUSPlatform general;
+            GREENLINE_loc = 6;  ! we'll be stopping for 1 turn
+            GREENLINE_car.e_to = GURTH_GUSPlatform;
+            GREENLINE_car.out_to = GURTH_GUSPlatform;
+            "^The train suddenly lurches to a stop! A voice from \
+            somewhere overhead says ~Gurth City station, watch your \
+            step please.~";
+          }
+          if (GREENLINE_loc == 6) {
+            ! about to leave gurth station
+            if (GREENLINE_dir == 0) 
+               GREENLINE_loc = 4;
+            else
+               GREENLINE_loc = 7;
+            "^A voice overhead says ~Doors will be closing, please \
+             stand clear.~";
+          }
+          if (GREENLINE_loc == 7) {
+             if (GREENLINE_dir == 1) {
+               ! We're leaving gurth
+               GREENLINE_loc = 8;
+               give self general;
+               give GURTH_GUSPlatform ~general;
+               "^The train starts to move, quickly exiting the station \
+               going south.";
+            }
+            if (GREENLINE_dir == 0) {
+               GREENLINE_loc = 5;   ! we will arrive in gurth shortly...
+               "^The train rumbles as it moves.";
+            }
+          }
+          if (GREENLINE_loc == 8) {
+            if (GREENLINE_dir == 0) {
+               ! we're leaving Miznia
+               GREENLINE_loc = 7;
+               give self general;
+               give MIZNIA_GUSPlatform ~general;
+               "^The train starts to move, quickly exiting the station \
+               going north.";
+            }
+            if (GREENLINE_dir == 1) {
+               GREENLINE_loc = 9;  
+               "^The train rumbles as it moves.";
+            }
+          }
+          if (GREENLINE_loc == 10) {
+            ! still waiting in Miznia
+            GREENLINE_loc = 8;
+            "^A voice overhead says ~Doors will be closing, please \
+             stand clear.~";
+          }
+          if (GREENLINE_loc == 9) {
+            ! arriving in Miznia
+            GREENLINE_loc = 10;   
+            GREENLINE_dir = 0; ! north
+            give self ~general;
+            give MIZNIA_GUSPlatform general;
+            GREENLINE_car.e_to = MIZNIA_GUSPlatform;
+            GREENLINE_car.out_to = MIZNIA_GUSPlatform;
+            "^The train suddenly lurches to a stop! A voice from \
+            somewhere overhead says ~Miznia station, watch your \
+            step please.~";
+          }
+        ],
+   has light;
+
+Object GREENLINE_car_seats "subway seat" GREENLINE_car
+   class Train_Car_Seat_Class
+   with before [;
+           Search:
+              if (self hasnt general) {
+                 give self general;
+                 move c11 to player;
+                 "Good fortune is your friend! You notice a \
+forgotten coin stuck in a seat crack, and fend off two \
+passengers to grab it.";
+              }
+        ],
+;
+
+
+! *** A fake scenery item, to describe the subway cars from outside ***
+Object subway_car_fake "subway car"
+   with name "car" "train",
+       description [;
+          print "It's a rather large, sleek-looking train car, oddly colored ";
+          if (((location==FROSTHAM_GUSPlatform) && (FROSTHAM_GUSPlatform has general)) ||
+              ((location==ARAGAIN_GUSPlatform) && (ARAGAIN_GUSPlatform has general)) ||
+              ((location==FUBLIO_GUSPlatform) && (FUBLIO_GUSPlatform has general))) 
+             "purple.";
+          if (((location==ANTHAR_GUSPlatform) && (ANTHAR_GUSPlatform has general)) ||
+              ((location==ARAGAIN_GUSPlatform2) && (ARAGAIN_GUSPlatform2 has general)) ||
+              ((location==GURTH_GUSPlatform2) && (GURTH_GUSPlatform2 has general))) 
+             "orange.";
+          if (((location==BORPHEE_GUSPlatform) && (BORPHEE_GUSPlatform has general)) ||
+              ((location==GURTH_GUSPlatform) && (GURTH_GUSPlatform has general)) ||
+              ((location==MIZNIA_GUSPlatform) && (MIZNIA_GUSPlatform has general))) 
+             "green.";
+           "You can't see any such thing.";
+       ],
+   found_in FROSTHAM_GUSPlatform ARAGAIN_GUSPlatform FUBLIO_GUSPlatform
+   ANTHAR_GUSPlatform ARAGAIN_GUSPlatform2 GURTH_GUSPlatform2
+   BORPHEE_GUSPlatform GURTH_GUSPlatform MIZNIA_GUSPlatform,   
+   before [;
+      Enter:
+         "A subway nymph suddenly appears. ~Remember passengers, to \
+         board the subway cars, you just have to go 'in', or in the \
+         appropriate direction of the car. Bye!~";
+   ],
+   has scenery;
+                            
+Object metal_fence "metal fence"
+   with name "fence" "barricade",
+        description "It looks like a smooth metal fence.",
+        before [;
+           Climb, JumpOver: 
+              "A subway worker yells ~Hey pal, no fare-jumpers!";
+        ],
+   found_in FROSTHAM_GUSPlatform ARAGAIN_GUSPlatform FUBLIO_GUSPlatform
+            FROSTHAM_GUSStation ARAGAIN_GUSStation FUBLIO_GUSStation
+   ANTHAR_GUSPlatform BORPHEE_GUSPlatform GURTH_GUSPlatform MIZNIA_GUSPlatform
+   ANTHAR_GUSStation BORPHEE_GUSStation GURTH_GUSStation MIZNIA_GUSStation,   
+   has scenery;            
+   
+
+! **************************
+! People/denizens/creatures
+! **************************
+      
+! Thug, on PURPLE LINE
+Object thug "sinister-looking thug" PURPLELINE_car
+   with name "thug" "hoodlum" "Davey",
+        description "A thug, clearly. Some scrapper with an attitude, \
+          and the desire to use it.",
+        each_turn [ i ;
+           if (self hasnt general) {
+              give self general;
+              "^The sinister-looking thug notices you from the back \
+              of the car, and approaches. ~Well, well, well,~ he \
+              says, ~what do we have here?~.";
+           }
+           i = random(4);
+           if (i==1)
+              "^The thug pokes you in the ribs.";
+           if (i==2)
+              "^The thug snarls at you. ~Hey, I'm talking to you, \
+              Preacher-man.~";
+           if (i==3)
+              "^The thug tries to act friendly, and fails.";
+           if (i==4)
+              "^The thug scowls. ~You gonna tell me the error of \
+              my ways, Padre?~";
+        ],
+        life [;
+           Attack:
+              "As you move to show the rake a lesson, you notice \
+              several more thugs in the background, eyeing your every \
+              move. The thug smiles as you back-off, cautiously.";      
+           default:  "The thug is too busy being sinister.";
+        ],
+        before [;
+           Cast:
+              if (the_spell_was == espnis_spell) {
+                 remove thug;
+                 "You begin to extol the virtues of bedtime prayers, \
+                 and the thug starts to yawn. Soon, his eyes blink \
+                 slowly, and before long, he nods off to sleep! Two \
+                 subway police officers, hiding until now, get up the \
+                 nerve to capture the snoring thug, and drag him \
+                 off, disappearing into the throng of people.";
+              }
+              if (the_spell_was == foblub_spell) {
+                 "You give the thug a timely sermon on the \
+folly of crime in a moral society. He seems momentarily \
+fascinated. Too bad he wasn't actually sitting in anything."; 
+              }
+        ],        
+   has animate;
+        
+! Annoying Yupple, on GREEN LINE (kinda a cross between a yuppie and a yipple)
+Object yupple "annoying yupple" GREENLINE_car
+   with name "yupple" "annoying",
+        description "A young yupple, immaculately dressed in a pinstripe \
+          three-piece suit and tie.",
+        article "an", 
+        each_turn [ i ;
+           if (self hasnt general) {
+              give self general;
+              "^The annoying-looking yupple notices you from the back \
+              of the car, and approaches. ~A priest,~ he \
+              says, ~Just the person I was looking for.~ He \
+              squeezes into a seat near you.";
+           }
+           i = random(4);
+           if (i==1)
+              "^The yupple talks unceasingly about rainfall in some \
+              place called ~the Amazon basin~.";
+           if (i==2)
+              "^The yupple smiles brightly. ~There's so much I have to \
+              talk about!~";
+           if (i==3)
+              "^The yupple drones on about the science behind large \
+              corporate takeovers.";
+           if (i==4)
+              "^The yupple laughs -- a sound somewhat like a snoring \
+              bloodworm. ~So the guy says, 'I thought you meant my _wife_.' \
+              Get it? Wife?~";
+        ],
+        life [;
+           Attack:
+              "Much as you'd like to, that's just something the \
+              Order would probably frown upon.";              
+        ],
+        before [;
+           Cast:
+              if (the_spell_was == espnis_spell) {
+                 "You give a sermon on the dangers of \
+improper bathtub caulking, but the yupple seems quite \
+fascinated. ~That reminds me of...~ You cringe.";
+              }
+              if (the_spell_was == foblub_spell) {
+                 remove self;
+                 "You draw a stunning parallel between corporate \
+morality and monarchy ruling. The yupple's jaw drops. ~I've got \
+to tell my boss that,~ he says, and tries to leave his seat, \
+but finds himself stuck fast. Several passengers nearby \
+take the opportunity to remove the yupple (seat included) to \
+a different part of the train.";
+              }
+        ],        
+   has animate;
+
+
+! **************************
+! misc objects
+! **************************
+
+Object c9 "coin" class coin_class;
+Object c10 "coin" class coin_class;
+Object c11 "coin" class coin_class;
+
+! (Some common objects associated with GUS)
+Object GUS_sign "Sign" 
+   with name "sign" "circular" "pole" "GUS",
+        initial "Standing on a tall pole next to the stairs is \
+                 a circular sign.",
+        description "The sign reads ~GUS~, and has an arrow \
+                     pointing down.",
+        found_in FROSTHAM_GUSStop ARAGAIN_GUSStop ANTHAR_GUSStop
+                 FUBLIO_GUSStop BORPHEE_GUSStop MIZNIA_GUSStop
+                 GURTH_GUSStop,
+   has static;
+
+
+Object GUS_brochure "subway brochure" FROSTHAM_Governer1
+   with name "brochure" "subway" "GUS",
+        description "\
+           ~The Great Underground Subway~^^
+           Adventurers who really need to get where they're going \
+           in a hurry are going to love GUS! The new underground \
+           high-speed rail system can be your personal ride to the \
+           major travel points in Quendor, for just one mere zorkmid! \
+           For Eastland travel to Frostham, Aragain and Fublio Valley, \
+           the Purple line is at your service! For Westland travel \
+           to New Borphee, Gurth City and Miznia, just jump on board \
+           the Green line! And for you folks who need to get across \
+           the Great Sea in a hurry, don't forget the Orange line, \
+           stopping off at Aragain, Anthar and Gurth City! Remember, \
+           there's no costs for transferring between lines either. \
+           So don't delay, take the GUS today!",
+    ! weight 5, 
+    size 10,
+;
+        
+Object newspaper "newspaper" PURPLELINE_car
+   with name "newspaper" "paper",
+        initial "There's a discarded newspaper in a seat nearby.",
+        description "A copy of ~The Fublio Tribune~, with \
+        news, sports and feature sections to read about.",
+        before
+            [ w1; Consult:
+            if (consult_words > 1)
+               "Try reading about 'news', 'sports' or 'features'.";
+            wn = consult_from; w1 = NextWord();
+            switch (w1) {
+               'news', 'headline', 'headlines':
+                  "The news section has three major stories. \
+The headliner is the continued failure to resolve peace in the \
+Kobold war in southern Egreth. Recently, various troops have \
+been cut-off from the main camps by clever kobold raiding groups. \
+^^A second story details the shocking death of a GUE Tech student \
+found in the subway tunnels in Gurth City Station, the apparent \
+victim of a GUS train. ~Don't know how he got in there.~ a \
+subway worker is quoted as saying.^^\
+Finally, a sad local news story about a nice couple in Fublio \
+valley who recently were victims of the kidnaping of their son. No \
+leads as of yet.";
+               'sports':
+               "Apparently, the golem brothers at Flathead \
+Stadium have amassed an amazing 322-0 win streak.";
+               'features', 'feature':
+               "The paper points out that culture seekers \
+should check out the newly discovered Leonardo Flathead \
+painting on exhibit at the Royal Museum.";     
+               'ads', 'classified':
+               "~FOR SALE: A new IF game -- 'SPIRITWRAK'. \
+               Price: $0.00~";
+               'comics', 'funnies':
+               "No comics section. Bummer.";
+               default: "You can't find anything in the paper about that.";             
+            }
+            ],
+        ! weight 15, 
+        size 15,
+;
+
+! **************************
+! spells & scrolls
+! **************************

@@ -1,0 +1,1642 @@
+
+! *******************************************************************
+! ARAGIN.INF
+! -- Add-on for SPIRITWRAK (don't use alone!)
+!    for Aragain city, royal grounds, possibly Barsap's Gambit
+! *******************************************************************
+
+
+Object ARAGAIN_GUSStop "Aragain North"
+   with description "You are just north of the newly \
+built Aragain City. The general vicinity \
+is busy with important-looking people. \
+A stairway goes down here, \
+while a large walkway heads south into Aragain.",
+       name "people" "stairway" "walkway",
+       d_to ARAGAIN_GUSStation,
+       s_to ARAGAIN_Entrance,
+   has light;
+
+Object ARAGAIN_Entrance "Aragain Entrance"
+   with description "Before you is a truly astounding sight. \
+A huge metal gate to the south blocks the entrance into the newly \
+built Aragain Royal Grounds. Worse yet, a seemingly \
+endless line of people stands before the gate. \
+They look like dignitaries, diplomats, or \
+just plain politicians. A walkway heads north.",
+        name "walkway" "pastries",
+        n_to ARAGAIN_GUSStop,
+        s_to ARAGAIN_Entrance_gate,
+        cant_go "The only interesting place seems to be past \
+                that gate.",
+   has light;
+
+Nearby line1 "line"
+   with name "line" "people" "dignitaries" "diplomats" "politicians",
+        description "A god-awful line of well-dressed people. You \
+                    notice that many of them are holding what appear \
+                    to be round pastries of some sort.",
+        life [;
+default: "No one in the line seems to be paying you any attention.";
+        ],
+        before [;
+           Cast:
+              if (the_spell_was == espnis_spell)
+"A few people doze off as you canvass the line. They are \
+quickly replaced by others.";
+        ],
+   has animate concealed;
+
+Object gate_sign "large sign" ARAGAIN_Entrance
+   with initial "There is a large sign bolted to the gate.",
+        name "sign" "large",
+        description [;
+           print "The sign reads:^^\
+~WELCOME TO ARAGAIN!^^\
+As today (and everyday henceforth) has been decreed \
+his royal lordship's birthday, we request that all \
+visitors respect good king Sydney Flathead's wishes \
+and present a cake appropriate for the occasion before \
+entering.";
+           if (self hasnt general) {
+              give self general;
+"~^^Well, that's odd. If memory and Brother \
+TuffBerry's Quendor History lessons serve, the \
+Flathead family died off more than a hundred years \
+ago."; 
+           }
+           else "~"; 
+        ],
+   has static;
+
+ 
+Object ARAGAIN_Entrance_gate "huge entrance gate" ARAGAIN_Entrance
+   with name "gate" "entrance",
+        description "A solid steel gate, probably 40 feet tall, \
+complete with spikes at the top and close-set bars.",
+        door_dir [;
+           if (self in ARAGAIN_Entrance)
+               return s_to;
+           else return n_to;
+        ],
+        door_to [;
+           if (self in ARAGAIN_Entrance)
+               return ARAGAIN_Courtyard;
+           else return ARAGAIN_Entrance;
+        ],
+        found_in ARAGAIN_Entrance ARAGAIN_Courtyard,
+        when_open "The massive gate is open.",
+        when_closed "The massive gate is closed.",
+        before [;
+           Open, Push, Pull:
+              if (Entrance_guardian hasnt general)
+                 "The guard shoves you away as you approach the gate. \
+                 He points at the sign. ~No cake, no castle.~";
+           Close:
+              "It must weigh a ton, you can't seem to move it.";
+        ],
+   has static door openable locked;
+
+Object ARAGAIN_Courtyard "Courtyard"
+  with description "You're standing in a lovely courtyard with \
+magnificent topiary designs and real marble walkways. A large \
+gate stands to the north. To the east is a red stone building \
+with spires and columns. To the west is a large flat stone \
+building. To the south is a huge entranceway into what must \
+be the new Royal Palace, which appears to be carved out of the \
+face of a massive mountain.",
+       name "marble" "walkway" "red" "spires" "columns" "flat"
+"entranceway" "mountain" "Palace",
+       n_to ARAGAIN_Entrance_gate,
+       e_to ARAGAIN_Museum,
+       w_to ARAGAIN_Gambit,
+       s_to ARAGAIN_Palace,
+has light;
+
+Nearby topiary "topiary"
+   with name "topiary",
+        description "Cleverly abused shrubs in the shape of giant \
+crowns.",
+   has scenery;
+
+! -- The (rather empty) Royal Museum 
+
+Object ARAGAIN_Museum "Royal Museum"
+   with description "You're in the entrance to a museum. The \
+lighting is rather dim, throwing light shadows all over the \
+walls. There are exhibit rooms to the north and south, or \
+an exit west.",
+   name "lighting" "shadows",
+        w_to ARAGAIN_Courtyard,
+        n_to Museum_north,
+        s_to Museum_south,
+   has light;
+
+Object Museum_north "North Exhibit Room"
+   with description "You are in a small exhibit room designed with \
+dark wood floors and plaster-on-stucco walls. The room is dimly lit by \
+hidden lamps or torches behind recessed wall niches. \
+The exit is south.",
+        name "wood" "plaster" "stucco" "lamps" "torches" "niches",
+        s_to ARAGAIN_Museum,
+        each_turn [;
+          if ((glass_wall in self) && (Thief notin Delbins)) {
+             if (random(10) == 2 or 7)
+                "^You get the odd feeling that there's someone behind \
+you, but when you turn around, you see no one!";
+          }
+        ],
+        before [;
+          Cast:
+if (the_spell_was == huncho_spell or luncho_spell)
+"From nearby, a museum curator walks up and abruptly \
+stops your chant. ~Please don't disturb the other patrons,~ \
+he says and walks off. There doesn't seem to be anyone else \
+around, however.";
+          Blow:
+             if ((noun == whistle) && (glass_wall in self)) {
+                remove glass_wall;
+                print "You produce an extremely high-pitched noise. \
+Suddenly, to the north, a near-invisible wall of glass shatters \
+into a million little shards";
+                if (Thief notin Delbins) {
+                   move Painting_REAL to THIEF_Storeroom;
+                   Painting_REAL.initial = nothing;
+                   move magic_door to Museum_north;
+                   "!^^From out of the shadows, a man dressed \
+in black appears! He performs a half-bow in your direction \
+before deftly prying the painting off the wall! ~I'm a great \
+appreciator of the arts, you understand,~ he says, as with a quick \
+twist of his cape, he melds into the shadows and disappears \
+with the painting!^^As you reflect on the thief's actions, \
+you can't help but notice that he apparently dropped something \
+while making his dramatic exit.";
+                }
+                else "!";
+! -- guards always come and move player to jail room ?
+! -- if thief still in delbins, attempt to get painting is \
+! trapped below, player CANT TAKE IT (as a priest)
+             }
+        ],
+   has light; 
+
+Nearby glass_wall "glass wall"
+   with name "wall" "glass",
+        description "Yes, there's a glass wall covering the \
+north wall, all right. It's exceptionally smooth and transparent.",
+        before [;
+          Attack:
+              "Your blows have no effect, it must be quite thick.";
+        ],
+   has static concealed;
+
+Object Painting_REAL "priceless painting" Museum_north
+   with name "painting",
+        short_name "priceless painting",
+        plural "priceless paintings",
+        initial "There is a priceless painting hanging on the north wall.",
+        description "It's a beautiful oil painting of a dark stormy \
+scene. On the horizon, you can see the edges of mountaintops. Near \
+the top of the painting, two winged figures are carrying a lone \
+individual towards a break in the clouds, where a bright white light \
+seems to emanate.",
+        size 25,
+        before [;
+          Take, Pull, Push, Turn, Attack, Rub, Cut, Touch, Search:
+            if (self in Museum_north) {
+               if (glass_wall in Museum_north)
+ "As you get close to the painting, you find yourself stopped by a \
+nearly-invisible glass wall!";
+               else {
+                  if (action == ##Search)
+                  "You notice a slightly loose part \
+of the canvas in one corner, but the painting is apparently \
+bonded to the wall, which limits your investigation.";
+                  if (action ~= ##Touch)
+                  "You can't seem to move the painting at all. \
+It's somehow bonded to the museum wall!";
+               }
+            }
+            else {
+               if ((action == ##Take) && (self in THIEF_Storeroom) && 
+                   (Painting_FAKE in THIEF_Storeroom))
+                  "They both look so genuine! You can't decide!";
+               if (action == ##Search) {
+                   if ((self in THIEF_Storeroom) && 
+                   (Painting_FAKE in THIEF_Storeroom))
+                   "Search which one? Goodness, you can't decide!";
+                   if (self hasnt general) {
+                      give self general;
+                      move white_scroll to player;
+                      "You notice a slightly loose part \
+of the canvas in one corner. You carefully peel back a part of the \
+canvas from the back and reveal a hidden scroll!";  
+                   }
+               }
+            }
+          Drop:
+            if (location == Museum_north) {
+               ! player returned painting to museum, give him a reward
+               move c4 to player;
+               move self to Museum_north;
+               "A museum curator appears and graciously takes the \
+painting. ~Thank you for recovering this priceless work.~ He \
+gives you a coin. ~The reward. We've been a little short on funds \
+lately.~ The curator somehow attaches the painting to the north wall, \
+and leaves.";               
+            }               
+        ],
+;
+
+Object c4 "coin" class coin_class;
+ 
+Object Painting_plaque "plaque" Museum_north
+   with name "plaque",
+        initial [;
+print "A metal plaque is attached to the wall";
+if (Painting_REAL in Museum_north)
+   " next to the painting.";
+else ".";
+        ],
+        description "~ASCENDENCY~   Leonardo Flathead, 777 GUE",
+        before [;
+          Take, Pull, Push, Turn, Attack, Rub, Cut, Touch:
+            if ((self in Museum_north) && (glass_wall in Museum_north))
+ "As you get close to the painting, you find yourself stopped by a \
+nearly-invisible glass wall!";
+        ],
+   has static;
+ 
+Object Museum_south "South Exhibit Room"
+   with description "You are in a square exhibit room with \
+wood flooring and plain plaster walls. In the center of the \
+room is an exhibit platform made from a large slab of marble. \
+The room is lit brightly by hidden torches. The exit is north.",
+        name "wood" "plaster" "torches",
+        n_to ARAGAIN_Museum
+   has light;
+
+Nearby museum_dais "platform"
+  with name "platform" "slab" "marble",
+       description "It's a large flat slab of marble, polished \
+smooth, in the center of the floor.",
+       capacity 20,
+  has scenery supporter;
+
+Object TEMPLE_Artifact "flower vase" museum_dais
+   with name "artifact" "vase",
+        initial "There's an ancient wood vase sitting on the marble platform.",
+        description "An extremely narrow short wood vase, possibly for \
+holding long-stemmed flowers. It's clearly of ancient origin, well \
+preserved, with strange carvings and designs \
+of robed figures all over.",
+        capacity 1,
+        before [;
+           Receive:
+              if (noun hasnt is_rod)
+                 "Strangely, it doesn't quite fit.";
+           LetGo:
+              if (self in TEMPLE_1_Opening)
+              "You can't reach the vase, much less the contents of the vase.";
+        ],
+        size 10,
+   has container open;
+
+! -- Okay maze-lovers, you asked for it -- Barsap's Gambit
+
+Object ARAGAIN_Gambit "Warm Room"
+  with description "You are in a long stone room, which is strangely \
+warm. In the very center of the room is a hole, with a ladder \
+down. An outdoor courtyard lies to the east.",
+       name "hole" "courtyard" "ladder",
+       e_to ARAGAIN_Courtyard,
+       d_to GAMBIT_11,
+  has light;
+
+Nearby Gambit_sign "large sign"
+   with initial "There is a large sign posted near the doorway.",
+        name "sign",
+        description "~Welcome to Barsap's Royal Gambit, a \
+delight to entertain all guests to the Aragain Royal Grounds. \
+Please consult your tourbook for rules and regulations regarding \
+this area. His highness, Sydney Flathead, and those in his \
+employ, cannot be held responsible for any accidents or minor
+spills at this location.~",
+   has static;
+
+! (room names -- GAMBIT_XY, where X=level (1,2,3), Y=room #)
+
+
+! -----------------------------------------------------
+! The all-important "CheckGambit" routine.  Called by a 
+! room when a player attempts  to move onto a beam.
+! Various important things need to be passed...
+! RETNS: 0 if cant go, 1 if player fell, 2 if can go
+[ CheckGambit 
+    i   ! niche associated with dir player moving in
+    j   ! niche directly below (if player falls) [0 if lev 3]
+    k   ! 'level' currently on (1, 2 or 3)
+    m   ! (local var)
+   ;
+  ! ** Step one -- check if there's even a beam there at all
+  if (children(i) == 0)
+     return 0;
+  ! ** Step two -- check if the beam is strong enough
+     m = child(i);
+     if (m.number == 99) ! (we have the 'wrong half')
+        m = child(i.counter_niche);
+     if (m.number <= 0) {
+        ! -- nope, beam breaks, we're about to fall
+        ! -- remove broken beam
+        remove child(i); remove child(i.counter_niche);
+        print "As you step onto the wood beam, it breaks with a \
+shuddering crack! ";
+        if (has_resist_gravity == 0) {
+             deadflag = 1;   
+             print "You plummet quickly through the air, ";
+             switch (k) {
+             1: print "pass by two levels of floating cubes and beams, ";
+             2: print "pass by one level of floating cubes and beams, ";
+             }
+             print "and find the bottom of the chamber is filled with \
+ red-hot lava...";
+             return 1;
+        }
+        else {
+           ! -- player will float, but see if there's anything to float to...
+           print "Amazingly, you float downwards like a \
+feather, instead of falling to your death! ";
+           if (k==3) {  ! (j==0) {  on the bottom level
+              deadflag = 1;
+              print "Unfortunately, you float slowly down to \
+the bottom of the chamber, which is filled with red-hot lava.";
+              return 1;
+           }
+           print "You float down towards another network of floating \
+cubes and beams. ";
+           if (children(j) == 0) {  ! no wood beam waiting
+              deadflag = 1;
+              print "You pass between two giant floating cubes, \
+similar to the ones you just left. Sadly, no wood beam seems \
+to connect these particular cubes, and you float downwards ";
+              if (k==1) 
+                print "past yet another level of floating cubes and beams, ";
+              print "to a pit of hot lava.";
+              return 1;
+           }
+           print "You float to another wood beam and your feet \
+land on it, perfectly balanced! ";
+           m = child(j);
+           if (m.number == 99) ! (we have the 'wrong half')
+           m = child(j.counter_niche);
+           if (m.number <= 0) {
+           ! -- beam breaks (again!), player dies
+           ! -- remove broken beam
+           remove child(j); remove child(j.counter_niche);
+           print "Sadly, this wood beam also breaks! You \
+continue to float downwards ";
+           if (k==1)
+              print "past yet another level of floating cubes and beams ";
+           print "into a pit of hot lava.";
+           deadflag = 1;
+           return 1;	
+           }
+           else  {
+             print "^";
+             ! -- beam is ok, decrement strength counter
+             m.number = m.number - 1;
+             ! -- MOVE PLAYER TO NEW BEAM
+             !    set-up new WN_TO and ES_TO
+             if (j.niche_dir == 3 or 4) {
+                WN_TO = parent(j);
+                ES_TO = parent(j.counter_niche);
+             }
+             else {
+                ES_TO = parent(j);
+                WN_TO = parent(j.counter_niche);
+             }
+             !    move to appropriate 'on beam' room
+             !   TODO update beam description....
+             if (j.niche_dir == 2 or 4) {
+                if (k==1)
+                   PlayerTo(GAMBIT_W21);
+                else
+                   PlayerTo(GAMBIT_W31);
+             }
+             else {
+                if (k==1)
+                   PlayerTo(GAMBIT_W22);
+                else
+                   PlayerTo(GAMBIT_W32);
+             }
+             return 1;
+           }
+        }
+     }
+     else {
+        ! -- beam is ok, decrement strength counter
+        m.number = m.number - 1;
+        print "You step gingerly onto the wood beam...^";
+        if (i.niche_dir == 3 or 4) {
+           WN_TO = parent(i);
+           ES_TO = parent(i.counter_niche);
+        }
+        else {
+           ES_TO = parent(i);
+           WN_TO = parent(i.counter_niche);
+        }
+        return 2;
+     }
+]; 
+! -----------------------------------------------------
+
+
+Class Gambit_Room_Lev1_Class
+   with description "You are standing on a large floating white \
+stone cube in a very large underground chamber. The entire place is \
+dimly lit red from somewhere below.",
+        name "white" "stone" "cube" "chamber",
+   has light;
+
+
+Object GAMBIT_11 "On Giant White Cube"
+   with description "As far as you can tell, you are standing on a \
+large white stone cube that somehow floats without visible supports in \
+a terrifyingly large underground chamber. The entire place is \
+dimly lit red from somewhere below. There is a ladder up to a hole \
+high in the ceiling here.",
+        name "white" "stone" "cube" "chamber" "ladder" "hole",
+        u_to ARAGAIN_Gambit,
+        w_to 
+        [ i ;
+          i = CheckGambit(n112,n212,1);
+          if (i ~= 2) return i;
+          else return GAMBIT_W1;
+        ],
+        s_to 
+        [ i ;
+          i = CheckGambit(n113,n213,1);
+          if (i ~= 2) return i;
+          else return GAMBIT_W2;
+        ],
+   has light;
+
+Object GAMBIT_12 "On Giant White Cube"
+   class Gambit_Room_Lev1_Class
+   with e_to
+        [ i ;
+          i = CheckGambit(n124,n224,1);
+          if (i ~= 2) return i;
+          else return GAMBIT_W1;
+        ],
+        w_to
+        [ i ;
+          i = CheckGambit(n122,n222,1);
+          if (i ~= 2) return i;
+          else return GAMBIT_W1;
+        ],
+        s_to 
+        [ i ;
+          i = CheckGambit(n123,n223,1);
+          if (i ~= 2) return i;
+          else return GAMBIT_W2;
+        ],
+;
+
+Object GAMBIT_13 "On Giant White Cube"
+   class Gambit_Room_Lev1_Class
+   with e_to
+        [ i ;
+          i = CheckGambit(n134,n234,1);
+          if (i ~= 2) return i;
+          else return GAMBIT_W1;
+        ],
+        s_to
+        [ i ;
+          i = CheckGambit(n133,n233,1);
+          if (i ~= 2) return i;
+          else return GAMBIT_W2;
+        ],
+;
+
+Object GAMBIT_14 "On Giant White Cube"
+   class Gambit_Room_Lev1_Class
+   with w_to
+        [ i ;
+          i = CheckGambit(n142,n242,1);
+          if (i ~= 2) return i;
+          else return GAMBIT_W1;
+        ],
+        n_to 
+        [ i ;
+          i = CheckGambit(n141,n241,1);
+          if (i ~= 2) return i;
+          else return GAMBIT_W2;
+        ],   
+        s_to 
+        [ i ;
+          i = CheckGambit(n143,n243,1);
+          if (i ~= 2) return i;
+          else return GAMBIT_W2;
+        ],   
+;
+
+Object GAMBIT_15 "On Giant White Cube"
+   class Gambit_Room_Lev1_Class
+   with e_to
+        [ i ;
+          i = CheckGambit(n154,n254,1);
+          if (i ~= 2) return i;
+          else return GAMBIT_W1;
+        ],
+        w_to
+        [ i ;
+          i = CheckGambit(n152,n252,1);
+          if (i ~= 2) return i;
+          else return GAMBIT_W1;
+        ],
+        n_to 
+        [ i ;
+          i = CheckGambit(n151,n251,1);
+          if (i ~= 2) return i;
+          else return GAMBIT_W2;
+        ],   
+        s_to 
+        [ i ;
+          i = CheckGambit(n153,n253,1);
+          if (i ~= 2) return i;
+          else return GAMBIT_W2;
+        ],   
+;
+       
+Object GAMBIT_16 "On Giant White Cube"
+   class Gambit_Room_Lev1_Class
+   with e_to
+        [ i ;
+          i = CheckGambit(n164,n264,1);
+          if (i ~= 2) return i;
+          else return GAMBIT_W1;
+        ],
+        n_to 
+        [ i ;
+          i = CheckGambit(n161,n261,1);
+          if (i ~= 2) return i;
+          else return GAMBIT_W2;
+        ],   
+        s_to 
+        [ i ;
+          i = CheckGambit(n163,n263,1);
+          if (i ~= 2) return i;
+          else return GAMBIT_W2;
+        ],   
+;
+
+Object GAMBIT_17 "On Giant White Cube"
+   class Gambit_Room_Lev1_Class
+   with w_to
+        [ i ;
+          i = CheckGambit(n172,n272,1);
+          if (i ~= 2) return i;
+          else return GAMBIT_W1;
+        ],
+        n_to 
+        [ i ;
+          i = CheckGambit(n171,n271,1);
+          if (i ~= 2) return i;
+          else return GAMBIT_W2;
+        ],   
+;
+
+Object GAMBIT_18 "On Giant White Cube"
+   class Gambit_Room_Lev1_Class
+   with w_to
+        [ i ;
+          i = CheckGambit(n182,n282,1);
+          if (i ~= 2) return i;
+          else return GAMBIT_W1;
+        ],
+        n_to 
+        [ i ;
+          i = CheckGambit(n181,n281,1);
+          if (i ~= 2) return i;
+          else return GAMBIT_W2;
+        ],
+        e_to
+        [ i ;
+          i = CheckGambit(n184,n284,1);
+          if (i ~= 2) return i;
+          else return GAMBIT_W1;
+        ],
+;
+
+Object GAMBIT_19 "On Giant White Cube"
+   class Gambit_Room_Lev1_Class
+   with e_to
+        [ i ;
+          i = CheckGambit(n194,n294,1);
+          if (i ~= 2) return i;
+          else return GAMBIT_W1;
+        ],
+        n_to 
+        [ i ;
+          i = CheckGambit(n191,n291,1);
+          if (i ~= 2) return i;
+          else return GAMBIT_W2;
+        ],   
+;
+
+
+! (level 1 niches)
+ 
+Object n112 "western niche" GAMBIT_11
+   class niche_class
+   with name "western",
+        counter_niche n124,
+        niche_dir 2,  ! 2 = on western edge of floor
+        ;
+Object n113 "southern niche" GAMBIT_11
+   class niche_class
+   with name "southern",
+        counter_niche n141,
+        niche_dir 3;
+
+Object n124 "eastern niche" GAMBIT_12
+   class niche_class
+   with name "eastern",
+        counter_niche n112,
+        niche_dir 4;
+Object n123 "southern niche" GAMBIT_12
+   class niche_class
+   with name "southern",
+        counter_niche n151,
+        niche_dir 3;
+Object n122 "western niche" GAMBIT_12
+   class niche_class
+   with name "western",
+        counter_niche n134,
+        niche_dir 2;
+
+Object n134 "eastern niche" GAMBIT_13
+   class niche_class
+   with name "eastern",
+        counter_niche n122,
+        niche_dir 4;
+Object n133 "southern niche" GAMBIT_13
+   class niche_class
+   with name "southern",
+        counter_niche n161,
+        niche_dir 3;
+
+Object n141 "northern niche" GAMBIT_14
+   class niche_class
+   with name "northern",
+        counter_niche n113,
+        niche_dir 1;
+Object n142 "western niche" GAMBIT_14
+   class niche_class
+   with name "western",
+        counter_niche n154,
+        niche_dir 2;
+Object n143 "southern niche" GAMBIT_14
+   class niche_class
+   with name "southern",
+        counter_niche n171,
+        niche_dir 3;
+
+Object n151 "northern niche" GAMBIT_15
+   class niche_class
+   with name "northern",
+        counter_niche n123,
+        niche_dir 1;
+Object n154 "eastern niche" GAMBIT_15
+   class niche_class
+   with name "eastern",
+        counter_niche n142,
+        niche_dir 4;
+Object n152 "western niche" GAMBIT_15
+   class niche_class
+   with name "western",
+        counter_niche n164,
+        niche_dir 2;
+Object n153 "southern niche" GAMBIT_15
+   class niche_class
+   with name "southern",
+        counter_niche n181,
+        niche_dir 3;
+
+Object n164 "eastern niche" GAMBIT_16
+   class niche_class
+   with name "eastern",
+        counter_niche n152,
+        niche_dir 4;
+Object n161 "northern niche" GAMBIT_16
+   class niche_class
+   with name "northern",
+        counter_niche n133,
+        niche_dir 1;
+Object n163 "southern niche" GAMBIT_16
+   class niche_class
+   with name "southern",
+        counter_niche n191,
+        niche_dir 3;
+
+Object n171 "northern niche" GAMBIT_17
+   class niche_class
+   with name "northern",
+        counter_niche n143,
+        niche_dir 1;
+Object n172 "western niche" GAMBIT_17
+   class niche_class
+   with name "western",
+        counter_niche n184,
+        niche_dir 2;
+
+Object n181 "northern niche" GAMBIT_18
+   class niche_class
+   with name "northern",
+        counter_niche n153,
+        niche_dir 1;
+Object n182 "western niche" GAMBIT_18
+   class niche_class
+   with name "western",
+        counter_niche n194,
+        niche_dir 2;
+Object n184 "eastern niche" GAMBIT_18
+   class niche_class
+   with name "eastern",
+        counter_niche n172,
+        niche_dir 4;
+
+Object n191 "northern niche" GAMBIT_19
+   class niche_class
+   with name "northern",
+        counter_niche n163,
+        niche_dir 1;
+Object n194 "eastern niche" GAMBIT_19
+   class niche_class
+   with name "eastern",
+        counter_niche n182,
+        niche_dir 4;
+
+! (level 1 initial wood beam layout)
+! wood beam, as two 'halves'
+! (the 'trick' here, is to devise a method of testing for the 
+! correct '.number', without having to constantly update
+! both halves (which, when separated in niches, is impossible)
+! Thus, one half will always have number=99, which indicates
+! 'wrong half to test'.  The other half, which is gained by
+! checking child(self.counter_niche), has the useful .number
+
+! Object e11 "ebony beam" n112 class ebony_beam_class;
+! Object e111 "ebony beam" n124 class ebony_beam_class with number 99;
+Object e12 "ebony beam" n113 class ebony_beam_class;
+Object e121 "ebony beam" n141 class ebony_beam_class with number 99;
+Object e13 "ebony beam" n153 class ebony_beam_class;
+Object e131 "ebony beam" n181 class ebony_beam_class with number 99;
+
+Object p11 "pine beam" n123 class pine_beam_class;
+Object p111 "pine beam" n151 class pine_beam_class with number 99;
+Object p12 "pine beam" n122 class pine_beam_class;
+Object p121 "pine beam" n134 class pine_beam_class with number 99;
+Object p13 "pine beam" n133 class pine_beam_class;
+Object p131 "pine beam" n161 class pine_beam_class with number 99;
+Object p14 "pine beam" n194 class pine_beam_class;
+Object p141 "pine beam" n182 class pine_beam_class with number 99;
+Object p15 "pine beam" n112 class pine_beam_class;
+Object p151 "pine beam" n124 class pine_beam_class with number 99;
+
+! (side note: with balsa beams, 2nd side need not be 99, since 
+! it will always break on the first try, and the default number is 0
+Object b11 "balsa beam" n152 class balsa_beam_class;
+Object b111 "balsa beam" n164 class balsa_beam_class;
+Object b12 "balsa beam" n143 class balsa_beam_class;
+Object b121 "balsa beam" n171 class balsa_beam_class;
+Object b13 "balsa beam" n163 class balsa_beam_class;
+Object b131 "balsa beam" n191 class balsa_beam_class;
+Object b14 "balsa beam" n142 class balsa_beam_class;
+Object b141 "balsa beam" n154 class balsa_beam_class;
+Object b15 "balsa beam" n172 class balsa_beam_class;
+Object b151 "balsa beam" n184 class balsa_beam_class;
+
+               
+! (remaining 2 levels in sep. files)
+Include "gambit2.inf";
+Include "gambit3.inf";
+ 
+
+! tricky 'on beam' rooms -- only two for each level
+! change description of fake_beam as appropriate
+Object GAMBIT_W1 "On wood beam"
+   with description "You're walking along a very narrow wood beam that runs \
+east to west into darkness. Below, you can see the dark \
+silhouette of a network of beams and floating cubes. Much \
+farther below you can see a dull red glow.",
+        name "darkness" "network" "silhouette" "cubes" "glow",
+        w_to [; give self ~visited; return WN_TO; ],
+        e_to [; give self ~visited; return ES_TO; ],
+        before [;
+           Jump:
+              "There's barely enough room to walk, much less jump.";
+           Drop:
+              print "Dropping "; DefArt(noun);
+              print " will result in your losing both ";
+              DefArt(noun); 
+              " and probably your balance.";
+        ],
+   has light;
+
+Object GAMBIT_W2 "On wood beam"
+   with description "You're walking along a very narrow wood beam that runs \
+north to south into darkness. Below, you can see the dark \
+silhouette of a network of beams and floating cubes. Much \
+farther below you can see a dull red glow.",
+        name "darkness" "network" "silhouette" "cubes" "glow",
+        n_to [; give self ~visited; return WN_TO; ],
+        s_to [; give self ~visited; return ES_TO; ],
+        before [;
+           Jump:
+              "There's barely enough room to walk, much less jump.";
+           Drop:
+              print "Dropping "; DefArt(noun);
+              print " will result in your losing both ";
+              DefArt(noun); 
+              " and probably your balance.";
+        ],
+   has light;
+
+Object GAMBIT_W21 "On wood beam"
+   with description "You're walking along a very narrow wood beam that runs \
+east to west into darkness. Both above and below, you can see the dark \
+silhouette of a network of beams and floating cubes. \
+Farther below you can see a dull red glow.",
+        name "darkness" "network" "silhouette" "cubes" "glow",
+        w_to [; give self ~visited; return WN_TO; ],
+        e_to [; give self ~visited; return ES_TO; ],
+        before [;
+           Jump:
+              "There's barely enough room to walk, much less jump.";
+           Drop:
+              print "Dropping "; DefArt(noun);
+              print " will result in your losing both ";
+              DefArt(noun); 
+              " and probably your balance.";
+        ],
+   has light;
+
+Object GAMBIT_W22 "On wood beam"
+   with description "You're walking along a very narrow wood beam that runs \
+north to south into darkness. Both above and below, you can see the dark \
+silhouette of a network of beams and floating cubes. \
+Farther below you can see a dull red glow.",
+        name "darkness" "network" "silhouette" "cubes" "glow",
+        n_to [; give self ~visited; return WN_TO; ],
+        s_to [; give self ~visited; return ES_TO; ],
+        before [;
+           Jump:
+              "There's barely enough room to walk, much less jump.";
+           Drop:
+              print "Dropping "; DefArt(noun);
+              print " will result in your losing both ";
+              DefArt(noun); 
+              " and probably your balance.";
+        ],
+   has light;
+
+Object GAMBIT_W31 "On wood beam"
+   with description [;
+     print "You're walking along a very narrow wood beam that runs \
+east to west into darkness. Above you can see a network of floating beams \
+and cubes. Below you can see a red glow";
+     if ((self hasnt general) && (GAMBIT_W32 hasnt general) && 
+         (amulet has worn) && (ES_TO == GAMBIT_37)) {
+        give self general;
+        ".^^Your amulet suddenly gives off a bright flash, then fades!";
+        }
+     else ".";
+],
+        name "darkness" "network" "cubes" "glow",
+        w_to [; give self ~visited; return WN_TO; ],
+        e_to [; give self ~visited; return ES_TO; ],
+        before [;
+           Jump:
+              "There's barely enough room to walk, much less jump.";
+           Drop:
+              print "Dropping "; DefArt(noun);
+              print " will result in your losing both ";
+              DefArt(noun); 
+              " and probably your balance.";
+        ],
+   has light;
+
+Object GAMBIT_W32 "On wood beam"
+   with description [;
+     print "You're walking along a very narrow wood beam that runs \
+north to south into darkness. Above you can see a network of floating beams \
+and cubes. Below you can see a red glow.";
+     if ((self hasnt general) && (GAMBIT_W31 hasnt general) && 
+         (amulet has worn) && (ES_TO == GAMBIT_37)) {
+        give self general;
+        ".^^Your amulet suddenly gives off a bright flash, then fades!";
+        }
+     else ".";
+ ],
+        name "darkness" "network" "cubes" "glow",
+        n_to [; give self ~visited; return WN_TO; ],
+        s_to [; give self ~visited; return ES_TO; ],
+        before [;
+           Jump:
+              "There's barely enough room to walk, much less jump.";
+           Drop:
+              print "Dropping "; DefArt(noun);
+              print " will result in your losing both ";
+              DefArt(noun); 
+              " and probably your balance.";
+        ],
+   has light;
+
+Object fake_beam "wood beam"
+   with name "wood" "beam",
+        description "A long thin wood beam, barely wide enough for \
+        both of your feet.", ! change as appropriate
+        before [;
+           Turn, Search, Rub, LookUnder, Attack, Take, Push, Pull:
+              "You'll have to show me how you intend to do \
+this, since you're standing on the wood beam.";
+        ],
+        found_in GAMBIT_W1 GAMBIT_W2 GAMBIT_W21 GAMBIT_W22
+                 GAMBIT_W31 GAMBIT_W32,
+   has scenery;
+   
+
+
+! -- The Royal Palace, and its strange secret
+
+Object ARAGAIN_Palace "Palace Entrance Hall"
+   with description "A vast hall runs north and south \
+in this massive palace. Royal trappings decorate the walls \
+and ceiling, and red carpet lines the floor. \
+A tremendous open archway exits to the north into some \
+courtyard, while two open solid brass doors mark the \
+entrance south into some audience chamber. Two smaller \
+exits head east and west towards stairways up and down \
+respectively.",
+        name "trappings" "carpet" "archway" "courtyard"
+"brass" "doors",
+        n_to ARAGAIN_Courtyard,
+        s_to Palace_Audience,
+        e_to Palace_office,
+        w_to Palace_Westwing,
+        u_to Palace_office,
+        d_to Palace_Westwing,
+   has light;
+
+Object Palace_Audience "Audience Hall"
+   with description "This is a giant audience hall, equivalent to \
+a large auditorium with a throne on the stage. The hall is \
+filled with luxurious decorations -- red carpeting, expensive \
+chandeliers, sweeping gold-edged drapery. The hall is also \
+currently filled with a large number of dignitaries and \
+important-looking people taking up all the seats. Open brass \
+doors lie to the north.",
+   name "carpeting" "chandeliers" "drapery" "seats" "brass" "doors",
+      n_to ARAGAIN_Palace,
+   has light;
+   
+Nearby audience_people "people"
+   with name "people" "dignitaries" "diplomats",
+        description "Just your average throng of official-looking \
+people. Interestingly, many of them seem to be smeared \
+with flour.",
+        life [;
+           default:  "The audience seems to be too busy waiting \
+for something interesting to happen.";
+        ],
+        before [;
+Cast:
+   if (the_spell_was == foblub_spell)
+      "You give a marvelous sermon on patience. The audience \
+seems glued to their seats, which changes little.";
+   if (the_spell_was == espnis_spell)
+      "You give a rather overdone sermon on patience. A few \
+people in the back rows drop off to sleep.";
+        ],
+   has animate concealed;
+      
+Object throne "throne"
+   with name "throne",
+        description "A large throne.",
+        before [;
+           Enter: "This is no time to be playing king.";
+        ],
+   has scenery enterable;
+
+Object Palace_office "Royal Bedroom"
+   with description "This might have once been a lavish bedroom \
+for royalty. At the moment, it seems like someone has converted \
+it into a private lounge of some sort. A stairway heads down.",
+        name "stairway",
+        d_to ARAGAIN_Palace,
+   has light;
+
+Object cab_key "shiny key" Gov_desk2
+   with name "key" "shiny",
+        !weight 5, 
+        size 5,
+        description "A shiny key.",
+;
+
+Object Palace_cabinet "cabinet" Palace_office
+   with name "cabinet",
+        with_key cab_key,
+        description [;
+           print "A rather new-looking wooden cabinet";
+           if (self has general)
+              ", with a bit of waxy build-up all over it.";
+           else ".";
+        ],
+       when_closed "A wooden cabinet stands against one wall, \
+clearly a new addition to the room.",
+       when_open [ x;
+         print "The wooden cabinet has been opened. ";
+         x = children(self);
+         if (x == 0) "It seems to be empty.";
+         print "It contains:^";
+         ! if (x == 1) print "is "; else print "are:^";
+         x = FULLINV_BIT + INDENT_BIT + NEWLINE_BIT + RECURSE_BIT;
+         WriteListFrom (child(self), x, 1); 
+         rtrue;
+       ],
+       before [;
+          Cast: 
+            if (the_spell_was == egdelp_spell) {
+               give self general;
+               "The cabinet is covered in waxy build-up.";
+            }
+          Open:
+            if ((self hasnt locked) && (self hasnt open)) {
+               print "You give the cabinet a good tug";
+               if (self hasnt general)
+                  ", but the \
+cabinet doors barely budge. The new-looking wood seems \
+to be rather tightly fitted.";
+               else {
+                  give self open;
+                  ". The wax makes the doors open with ease.";  
+               } 
+            }
+       ],
+       size 25,
+       capacity 20,
+   has static container openable lockable locked;
+   
+
+! (warped -- true story of the great battle)
+Object p6 "warped parchment" Palace_cabinet
+   class parchment_class,
+   with name "warped",
+description "~...truth. In fact, the truth too terrible to \
+believe, but believe it I must, for all the evidence I \
+have found indicates that the Ancient Ones went up against \
+the evil elementals and lost! With the Rod in hand, they \
+were defeated by trickery! The Rod was broken and \
+scattered into the world, but can be regained and rejoined \
+by any whose heart and spirit are pure! Did the \
+Ancient Ones forsake the spheres of...~";
+
+
+Object Palace_Westwing "Palace Dungeons"
+   with description "Dark and spooky, the palace dungeons seem \
+empty at the moment. The north portion of the room is sectioned-off \
+by iron bars that form a makeshift cell.",
+   n_to [; <<Enter prison_cell>>; ],
+   u_to ARAGAIN_Palace,
+   has light;
+   
+Nearby prison_cell "prison cell"
+   with name "cell" "bars" "iron",
+       when_open [ x;
+         print "The cell stands open.";
+         x = children(self);
+         if (x == 0) { new_line; rtrue; }
+         print " Inside you notice:^";
+         x = FULLINV_BIT + INDENT_BIT + NEWLINE_BIT + RECURSE_BIT;
+         WriteListFrom (child(self), x, 1); 
+         rtrue;
+       ],
+       when_closed [ x;
+         print "The cell is closed.";
+         x = children(self);
+         if (x == 0) { new_line; rtrue; }
+         print "  Inside you notice:^";
+         x = FULLINV_BIT + INDENT_BIT + NEWLINE_BIT + RECURSE_BIT;
+         WriteListFrom (child(self), x, 1); 
+         rtrue;
+       ],
+        description "A cramped space with a wall of iron bars.",
+        before [;
+        Cast:
+        if (the_spell_was == bekdab_spell) {
+           print "The bars seem to rust a bit";
+           if (self has locked) {
+             give self ~locked;
+             ". You hear a lock mechanism in the cell door break!";
+           }
+           else ".";
+        }
+        Go:
+           if ((noun == s_obj) && (player in prison_cell)) {
+              <Exit prison_cell>; return 2; }
+        ],
+        size 50,
+   has static container openable transparent enterable;   
+   
+
+! *****************
+! Creatures/people
+! *****************
+
+Object Entrance_guardian "Tough-looking Palace guard" ARAGAIN_Entrance
+   with name "guardian" "guard",
+        initial "A tough-looking palace guard is standing by the gate.",
+        description "Typical guard -- big, armed to the teeth, and a \
+sour disposition.",
+        before [;
+           Cast:
+              "The guard stops you in mid-chant by blowing a rather \
+shrill whistle. ~None of that priest mumbo-jumbo on \
+my watch!.~";
+        ],
+        react_before [;
+           Blow:
+              if (noun==whistle)
+"The guard stops you as you are about to blow the whistle. \
+~I blow the whistles around here.~";
+        ],
+        life 
+        [ i ;
+           Attack, ThrowAt:
+              "I'd advise against this. He's probably knows 101 \
+ways to dismember an opponent. \
+Also, he's armed and encased in plate mail.";
+           Ask:
+             if ((noun == 'cake' or 'gate') && (self hasnt general))
+              "~It's pretty simple. Give me a cake, and you get in. \
+That's the rules.~";
+           Show:
+             if ((noun == Baking_Pan) && (cake in Baking_Pan))
+                "~Well, hand it over already.~";
+           Give:
+             ! Now for the fun...
+             if ((noun == Baking_Pan) && (cake notin Baking_Pan))
+                "The guard looks at the pan, and hands it back. \
+~I don't see any cake. What are you, a wise guy or something?~";
+             if ((noun == Baking_Pan) && (cake in Baking_Pan)) {
+                move Baking_Pan to Entrance_guardian;
+                print "The guard grabs the pan, and, to your \
+annoyance, cuts himself a massive slice of cake with his broadsword. \
+The guard takes a bite";
+                ! 1st, check for strange foreign objects
+                objectloop (i in dough) {
+                   if ((i ~= flour) &&
+                       (i ~= sugar_cube) &&
+                       (i ~= baking_powder) &&
+                       (i ~= corbie_egg) &&
+                       (i ~= dornberries) &&
+                       (i ~= butter)) { 
+                   if (i hasnt edible) {
+                   print " and you hear a strange \
+'crunch'. He removes ", (a) i; " from his teeth. ~What's this?~ the \
+guard says, clearly angry. ~I oughta report you to the 'Better \
+Bakers Bureau'.~";  ! hopefully, this will break out of objectloop
+                   }
+                   else {
+                   print ", and chews for a bit. \
+His eyes widen, and he spits the cake out. ~Hey pal, I taste ", (name) i;
+" in this so-called cake of yours! Grues could've done a better job \
+than this!~";
+                   }
+                   }
+                }
+                ! 2nd, check overall quality of cake 
+                if (cake.number ~= 0) {
+                   print ", and chews for a bit. \
+He frowns. ~Sorry pal, this doesn't pass inspection. ";
+                   if (cake.number == 1) 
+                      "It could stand some more cooking.~";
+                   if (cake.number == 2) 
+                      "Did ya burn it or something?~";
+                   if (cake.number == 3) 
+                      "It'd make an okay pancake, though.~";
+                   if (cake.number == 4) 
+                      "It's hard as a rock!~";
+                }
+                ! finally, check that all proper ingredients are there.
+                if ((butter in dough) &&
+                    (sugar_cube in dough) &&
+                    (corbie_egg in dough) &&
+                    (baking_powder in dough) &&
+                    (dornberries in dough) &&
+                    (flour in dough)) { 
+                    ! good cake
+                    give self general;
+                    give ARAGAIN_Entrance_gate open ~locked;
+                    Achieved(4);
+                    ", and smacks \
+his lips. ~Finally, someone who can bake an acceptable cake.~ \
+He unlocks and opens the gate. ~You can pass.~";  
+                }
+                else 
+                  ", and chews for a bit. He seems displeased. \
+~I don't know where you learned to bake, but there's definitely \
+something missing here.~";
+             }
+           default:
+              "The guard is amazingly good at ignoring distractions.";
+        ],
+        each_turn [ i;
+           i = random(25);
+           if (i == 1)
+              "^A couple of dignitaries from Gurth push their way to the \
+front and present a flat object to the guard. The guard frowns. \
+~A fish cake? I don't think so.~ The dignitaries return to the line.";
+           if (i==3)
+              "^The guard paces back and forth.";
+           if (i==5)
+              "^A representative from Borphee steps up and presents \
+a pile of baked dough-bits on a plate to the guard. ~Frobolli cake, eh? \
+Well, this may be popular where you come from, but it ain't popular \
+here.~ The representative walks off.";
+           if (i==7)
+              "^The guard practices his menacing stares.";
+           if (i==8)
+              "^The guard blows his whistle at some people in line.";
+           if (i==9)
+              "^An official presents a nice morgia root pie to the \
+guard. ~A pie?~ the guard says, clearly exasperated. He points at \
+the sign as the official leaves. ~Cakes folks, we're taking C-A-K-E-S.~";
+           if (i==11)
+              "^The guard polishes a spot on his armor.";
+           if (i==13)
+              "^Some dignitary presents the guard with a strange \
+green cake with the words ~EAT ME~ written in frosting. The guard smiles, \
+cuts himself a piece, and suddenly stuffs it into the dignitary's mouth! \
+~You boys are going to have to do better than that,~ he says to the 
+now tiny dignitary, who stalks off.";
+           if (i==15)
+              "^The guard hums a military dirge to himself."; 
+        ],
+has animate;
+
+! -- The evil magistrate
+Object Magistrate "magistrate" Palace_Audience
+    with name "magistrate",
+         initial "There is a royal magistrate here.",
+         description "A rather nasty-looking thin tall fellow with an \
+evil grin.",
+         number 1,
+         life [;
+            Attack, ThrowAt:
+               magroutine1(1); rtrue;
+            Show:
+               if (noun==Gov_ledger && Sydney notin Palace_Audience) {
+                  move Sydney to Palace_Audience;
+                  remove Gov_ledger;
+                  "The Magistrate grabs the ledger and \
+frowns as he reads it. ~Fine, you want a presentation?~ He grabs a \
+young boy who was hiding behind \
+the throne and shoves him forward. ~Presenting his royal \
+Highness, King Sydney Flathead, lost heir to the Flathead monarchy!~ \
+The crowd reaction is somewhat mixed. ~Well, his head does look \
+flat,~ you hear one person say.";
+               }
+               if (noun==cab_key) {
+                  move cab_key to self;
+                  "The magistrate moves with surprising speed and \
+takes the key. ~I was looking for that!~ he says.";
+               }
+               else "~Oh, very interesting.~ he says with heavy \
+sarcasm.";            
+            Give:
+               if (noun==Gov_ledger && Sydney notin Palace_Audience) {
+                  <<Show Gov_ledger Magistrate>>;
+               }
+               if (noun==cab_key) {
+                  move cab_key to self;
+                  "The magistrate takes the key. \
+~I was looking for that!~ he says.";
+               }
+               else "~I have no need for that!~ he says with a sneer.";
+            default: "The magistrate pays you absolutely no attention.";
+         ],
+         react_before [;
+            Cast:
+               if (the_spell_was ~= ledak_spell) {
+               magroutine1(2); rtrue; 
+               }
+         ], 
+         each_turn [ i ;
+         i = random(20);
+             if (Sydney in Palace_Audience) {
+                if (i==1)
+                   "^A diplomat approaches the little boy with a \
+                   document. The Magistrate steps forward and \
+                   stops him. ~Sydney is much too busy to bother \
+                   with that.~ the Magistrate says.";
+             }
+             else {
+                if (i==5)
+                   "^An impatient diplomat shouts out, \
+                   ~Bring out the King!~ The Magistrate smiles \
+                   and says, ~Did anyone make a petition for \
+                   a royal presentation?~ The crowd is silent. \
+                   ~I didn't think so.~";
+             }
+         ],
+ has animate;
+
+! (a short code-space saving routine)
+[ magroutine1 
+   w 
+  ;
+
+  ! remove player's possessions
+  while (child(player) ~= 0) {
+     give child(player) ~worn;
+     move child(player) to Palace_office;
+  }
+  if (w == 1)
+     print "You move quickly, but from nowhere, two royal palace \
+guards appear and wrestle you to the ground. ~Lock this \
+fanatic up!~ ";
+  if (w == 2) 
+     print "You start to chant, but the magistrate has sharp \
+ears, and recognizes your magic! With a quick signal, \
+two royal palace guards appear and wrestle you to the ground. \
+~Lock this babbler up!~ ";
+print "the Magistrate says with a sneer. The guards \
+strip you of your possessions and drag you down to the royal \
+dungeons.^";
+   PlayerTo(prison_cell);
+   give prison_cell ~open locked;
+   rtrue;
+];
+
+
+
+Object Sydney "young child" 
+  with name "child" "boy" "sydney",
+       ! describe "There is a young boy here",
+       description [;
+          print "A little boy dressed in uncomfortable-looking frilly clothes";
+          if (flat_hat in self)
+             ". He's wearing a small red hat."; 
+          else ".";
+       ],
+       before [;
+          Cast:
+             if (the_spell_was == foblub_spell or espnis_spell)
+"The boy seems to miss the subtle nuances of your sermon. All \
+that happens is that now he seems even more nervous than before.";
+       ],
+       life
+       [;
+          Ask, Tell:
+             if (self has general)
+                "Young Sydney Flathead only tucks his head lower and whimpers.";
+             else
+             "Young Sydney Flathead only shrugs.";
+          Answer:
+             if (special_word=='hello' or 'hi') {
+                if (self hasnt general)
+                 "Young Sydney Flathead doesn't respond -- he seems \
+to find you a bit frightening.";
+                else  
+                 "~Hello,~ the young lad says, somewhat shyly.";
+             }
+             "Young Sydney Flathead only stares at you.";
+          Attack, ThrowAt: 
+  give self ~general;
+  deadflag = 1;
+  "The young boy screams in terror as you move to threaten him \
+  (shame on you!). Several guards appear out of nowhere, and club \
+  you to death for attempting regicide.";
+          Give:
+             if (noun==stuffed_toy) {
+                give self general;
+                move stuffed_toy to self;
+                "Tentatively, the boy takes the stuffed toy. You \
+catch the glimpse of a sad smile as he holds it tightly.";
+             }
+             "Young Sydney cowers and shakes his head.";
+          Order:
+             if (action==##Give) {
+                if (noun==flat_hat) {
+                   if (self has general) {
+                      remove Magistrate;
+                      remove self;
+                      move flat_hat to player;
+                      move brown_sphere to player;
+                      "Little Sydney smiles and removes the hat and \
+hands it to you. You notice his head is actually round, and the hat \
+was cleverly hiding this.^^\
+~He's no Flathead!~ someone in the audience hall yells out. A distinct \
+murmur of discontent rises from the crowd. The Magistrate slowly \
+backs away. ~Wait! I can explain!~ the Magistrate \
+starts, but soon runs screaming out of the hall, with several angry diplomats \
+hot on his heels!^^\
+~Thank you, kind sir,~ someone behind you says. You turn around. \
+Little Sydney is happily in the arms of a kindly-looking couple. The woman \
+continues. ~Our son was kidnaped, a little while ago. We've \
+been waiting here, hoping to get him back. You did a very brave thing.~ \
+The man steps forward holding some small object. \
+~A priest fellow, such as yourself, told me a long time \
+ago that one day, someone would help us in our time of need, and that \
+I should give him this.~ He gives you a strange round object. \
+~It's the least we can do.~ he says. The couple leaves the hall, \
+with the little boy laughing in their arms."; 
+                   }
+                   else "Little Sydney shrinks back and holds on to his \
+hat. He stares at you fearfully.";
+                }
+                "Little Sydney shrinks back and stares at you fearfully.";
+             }
+             "Sydney shakes his head fretfully.";
+       ],
+  has animate transparent;
+
+
+
+! *****************
+! scrolls/spells
+! *****************
+
+Object crumpled_scroll "crumpled scroll" Palace_cabinet
+  class scroll_class,
+  with name "crumpled",
+;
+
+Object ledak_spell "detect forgery" crumpled_scroll
+  class spell_class,
+  with name "ledak",
+       magic [;
+            if ((location==Palace_Audience) &&
+                (Sydney in Palace_Audience) &&
+                ((second == 0) || (second == Sydney))) {
+"You notice a soft yellow glow around the young boy. \
+The glow fades."; 
+            }
+            if (second==0)
+               "The place appears to be free of forgeries, at the \
+moment.";
+            else {
+               if (second==player) "You appear to be the geniune thing.";
+               CDefArt(second);
+               " appears to be the genuine thing.";
+            }
+       ],
+;
+
+! ****************
+! Misc objects
+! ****************
+
+Object flat_hat "red hat" Sydney
+   with name "hat" "red",
+        description "A little red hat with no brim. It's unusually \
+flat at the top.",
+        before [;
+          Wear:
+            "It's too small for your head.";
+        ],
+        size 10,
+   has clothing;
+
+Object brown_sphere "brown sphere"
+   class sphere_class,
+   with name "brown",
+        description "A tiny perfect brown sphere, made of some strange \
+unknown metal.",
+;
+
+! THIEF'S magic door
+! Contains an unusual amount of properties...
+Object magic_door "strange door"
+   with name "door" "strange",
+        !weight 20,
+        size 30,
+        description [;
+           print "A small door labeled ~STAIRS~, of all \
+things";
+           if (self hasnt static)
+              ". Oddest of all is the fact that it isn't \
+attached to anything!";
+           else ".";
+        ],
+        door_dir [;
+           if (self has static) {
+              if (location == Skyscraper) return e_to;
+              else return w_to;
+           }
+        ],
+        door_to [;
+           if (self has static) {
+              if (location == Skyscraper) return THIEF_Bottom_of_staircase;
+              else return Skyscraper;
+           }
+        ],
+        found_in [;
+           if (self has static) {
+              if (location == Skyscraper or THIEF_Bottom_of_staircase)
+                 rtrue;
+              else rfalse; 
+           }
+           ! else rtrue????
+        ],
+        describe [;
+           ! we force a describe routine here, rather than use
+           ! when_open/closed due to the results that happen
+           ! after an obj has been moved (which the door will be).
+           if (self hasnt static)
+              "^There's an unattached door lying on the ground here.";
+           else {
+              if (self has open) {
+              print "^There's an open door to the";
+              if (location == Skyscraper) 
+                 " east.";
+              else 
+                 " west.";
+              }
+              else {
+              print "^There's a closed door";
+              if (location == Skyscraper) 
+                 " in the eastern wall.";
+              else 
+                 " to the west.";
+              }
+           }
+        ],
+        time_left 0,
+        time_out [;
+           ! after timeout -- Thief locks the door
+           give self ~open locked;
+           if ((location == THIEF_Bottom_of_staircase) ||
+               (location == THIEF_Ent) ||
+               (location == THIEF_Foyer) ||
+               (location == THIEF_Lounge) ||
+               (location == THIEF_Storeroom)) {
+               print "^Suddenly, out of the shadows springs a \
+gentleman dressed in black! ~How did you get in here!~ he \
+cries. Quicker than lightning, he envelopes you in his dark \
+cape, which seems to fade into shadows, leaving you in...^";
+               PlayerTo(Skyscraper);
+               rtrue;
+           }
+           if (location == Skyscraper)
+              "^Out of the shadows, a gentleman dressed in \
+black appears! He sees the door to the east and seems \
+somewhat annoyed. ~Much too busy for unexpected guests,~ \
+you hear him say as he slips through the door and closes \
+it behind him. Moments later you hear the sound of a lock \
+closing on the other side.^"; 
+        ],
+        before [;
+           Enter:
+              if (self has static) {
+                 if (location == Skyscraper) <<Go e_obj>>;
+                 else <<Go w_obj>>;
+              }
+              else
+                "Since the door doesn't currently lead anywhere, \
+entering it seems pointless.";
+           Open:
+             if (self hasnt static)
+                "The door opens onto...thin air. Without a \
+doorway to attach to, it's not terribly useful, it appears.";
+             if ((self has static) && (self hasnt open) &&
+                 (self hasnt general)) {
+                 give self general;
+                 give self open;
+                 StartTimer(magic_door,15);
+                "The door opens. There's a dark chamber \
+on the other side, which seems all but impossible, given \
+that the wall previously appeared solid!";     
+             } 
+           Close:
+             if (self hasnt static)
+                "You close the door, which at this moment \
+means you turn the movable door to a new angle. Without a \
+doorway to attach to, it's not terribly useful, it seems.";
+           Drop:
+             if (location == Skyscraper) {
+                move self to Skyscraper;
+                give self static;
+                Skyscraper.e_to = magic_door;
+                THIEF_Bottom_of_staircase.w_to = magic_door;
+                "As you drop the door, it leaps off the ground \
+and flies towards the eastern wall! Amazingly, it seems to \
+attach itself to the eastern wall!";
+             }
+        ],
+  has door openable;
+
+

@@ -1,0 +1,2034 @@
+
+! ****************************************************************
+! ANTHAR.INF
+! -- Add-on for SPIRITWRAK
+! (Do not use alone!)
+! ****************************************************************
+
+Object ANTHAR_GUSStop "Entrance to Greater Anthar"
+   with description "You're just west of Greater Anthar on the \
+island nation of Antharia. The bright sunlight \
+seems to make the city streets east of here glitter. \
+A stairway leads down.",
+        name "sunlight" "streets" "glitter" "stairway",
+        d_to ANTHAR_GUSStation,
+        e_to ANTHAR_West, 
+   has light;
+
+Object ANTHAR_West "Anthar West"
+   with description "You are standing in a busy section of \
+West Greater Anthar City. The city seems to thin \
+out to the west. A roadway heads east, \
+the ever-popular Flathead \
+Stadium lies to the northeast, and a pub lies to the \
+south.",
+        name "roadway" "stadium" "pub",
+        w_to ANTHAR_GUSStop,
+        e_to ANTHAR_East,
+        s_to Delbins,
+        in_to Delbins,
+        ne_to Stadium_entrance,
+        cant_go "You walk around the area, take in the local scene, and \
+                 find yourself back here.",
+        before [;
+           Smell:  "You can smell scents of local cooking coming \
+                   from the south.";
+        ],
+   has light;
+
+Object ANTHAR_East "Anthar East"
+   with description "You are standing in a busy section of \
+East Greater Anthar City. The city continues to \
+the west. There is a large odd structure to the \
+east, made mostly of glass. The ever-popular Flathead \
+Stadium lies to the northwest. A short walk down \
+to a waterfront area is to the south.",
+        name "structure" "glass" "stadium" "waterfront",
+        w_to ANTHAR_West,
+        e_to Conservatory_entrance, 
+        s_to ANTHAR_Waterfront,
+        nw_to Stadium_entrance,
+        cant_go "You walk around the area, take in the local scene, and \
+                 find yourself back here.",
+        before [;
+           Smell:  "You smell rather nice floral scents coming \
+                   from the east.";
+        ],
+   has light;
+
+
+Object ANTHAR_Waterfront "Swank Waterfront"
+   with description "A pleasant waterfront walk is your current \
+location. You can see the Great Sea stretching out \
+before you to the south, a breath-taking sight. \
+A rail runs along the south end, preventing \
+an untimely fall into the rock shore below. The \
+city is back to the north.",
+        name "waterfront" "sea" "great" "railing" "rail" "rock" "shore",
+        n_to ANTHAR_East,
+   has light;
+
+Object telescope "viewing telescope" ANTHAR_Waterfront
+   with name "telescope" "viewing" "scope",
+        capacity 1,
+        when_closed "There's a viewing telescope here, attached to the railing.",
+        when_open [ x ;
+              print "There's a viewing telescope here, attached to the \
+railing. One of the lenses seems loose";
+              if (children(self) == 0) ".";
+              else {
+                 print ". Inside you see:^";
+                 x = FULLINV_BIT + INDENT_BIT + NEWLINE_BIT + RECURSE_BIT;
+                 WriteListFrom (child(telescope), x, 1); rtrue;
+              }
+        ],
+        description "A nice tourist toy. Perfect for getting a good view.",
+        before [;
+           Open:  print "You pry loose a lens. ";
+           Close: print "You push the lens back in place. ";
+           Search: 
+              if (self hasnt open) {
+                 print "You take a peak through the telescope";
+                 if (children(self) ~= 0)
+                    " but oddly, there's something blocking your \
+                    view.";
+                 else {
+                 if (random(40)==1)
+                    " and see a ship in the distance! Wait, perhaps not. \
+It's gone.";
+                 " and see a nice expanse of the Great Sea.";
+                 }
+              }
+        ],
+        size 10,
+   has static container openable;
+
+! (Conservatory gardens)
+
+Object Conservatory_entrance "Conservatory Entrance"
+   with description "You stand before the entrance to a large public \
+conservatory. You can enter the greenhouses to the northeast \
+and southeast, or walk back to Anthar to the \
+west.",
+        name "greenhouse" "greenhouses",
+        w_to ANTHAR_East,
+        ne_to Con_Desert_garden,
+        se_to Con_Flower_garden,
+        before [;
+           Smell: "You can smell floral scents from the southeast.";
+        ],
+   has light;
+
+Object Con_Desert_garden "Desert Garden"
+   with description "A nicely arranged collection of desert plants \
+is here in the ~Desert Garden~. Bright sunlight \
+and a sandy ground enhance the overall effect. \
+The conservatory entrance is to the southwest, or \
+more gardens lie to the south and east.",
+        name "sunlight" "plants" "sand" "gardens",
+        sw_to Conservatory_entrance,
+        e_to Con_Forest_garden,
+        s_to Con_Decor_garden, 
+   has light;
+
+
+Object Con_Flower_garden "Flower Garden"
+   with description "A rather lovely flower garden lies before you. \
+The multi-colored flowers are turning the air into \ 
+perfume. The conservatory entrance is northwest, \
+or more greenhouse gardens lie to the north and \
+east. A tiny trail leads south past the flower \
+beds.",
+        name "perfume" "entrance" "trail" "greenhouse",
+        nw_to Conservatory_entrance,
+        e_to Con_Jungle_garden,
+        n_to Con_Decor_garden,
+        s_to Con_storehouse,
+        before [;
+          Smell:  "The bouquet of flowers is quite intoxicating.";
+        ],
+   has light;
+
+Nearby flowers "flowers"
+   with name "flowers" "flower" "garden",
+        description "A lovely assortment of flowers.",
+        before [;
+          Take: "Don't pick the flowers.";
+          Cast: 
+             if (the_spell_was == throck_spell)
+                "Suddenly, a few more flowers spring out of the \
+                ground!";
+        ],
+   has scenery;
+
+Object Con_storehouse "Gardener's Storehouse"
+   with description "This must be a storehouse for the conservatory \
+gardeners. There are soil stains and plant debris all over. \
+The only exit is north.",
+        name "soil" "stains" "debris" "plant",
+        n_to Con_Flower_garden,
+   has light;
+
+Nearby toolshed "toolshed"
+   with name "toolshed" "shed",
+        description "A plain toolshed.",
+        with_key shed_key,
+        capacity 10,
+        size 20,
+        when_closed "A toolshed stands closed against the wall.",
+        when_open [ x;
+         print "The toolshed is open. ";
+         x = children(self);
+         if (x == 0) "It is empty.";
+         print "Inside ";
+         if (x == 1) print "is: "; else print "are: ^";
+         x = FULLINV_BIT + INDENT_BIT + NEWLINE_BIT + RECURSE_BIT;
+         WriteListFrom (child(self), x, 1); 
+         rtrue;
+       ],
+   has static container openable lockable locked;
+
+! (contents of shed)
+Object gardeners_cap "cap" toolshed
+   with name "cap",
+        description "A cap with an odd green emblem stitched on \
+the front that looks like a clover.",
+        size 10,
+   has clothing;
+Object hedge_clipper "hedge clipper" toolshed
+   with name "clipper" "clippers",
+        description "Basically a long pair of scissors.",
+        size 15,
+;
+Object rubber_gloves "rubber gloves" toolshed
+  with name "gloves" "pair" "rubber",
+       article "a pair of",
+       description "A pair of yellow rubber gloves, slightly \
+worn. Good for gardening, or washing dishes, I suppose.",
+       size 10,
+has clothing;
+
+! (cracked -- magic has questionable source, doesn't always work)
+Object p3 "cracked parchment" toolshed
+   class parchment_class,
+   with name "cracked",
+description "~...is true that those who go by the title of \
+'Enchanters' need not wear any holy symbol through which \
+to draw magical power. Indeed, it seems as though the very \
+amulets we must wear are our only link to magical powers \
+at all. Worse yet, the powers are indeed granted from \
+powers above, but the Ancient Ones? I think not. For indeed, \
+I have found places where magic powers will not work, with or \
+without the amulet. Likewise, I have found places where \
+magic works, but praying to the Ancient Ones goes unanswered! \
+What this all...~";
+
+Object Con_Decor_garden "Decorative Plants Garden"
+  with description "\ 
+You are standing in a small well-kept garden. The plots surrounding the \
+paths are filled with a variety of general ground-cover plants, all \
+appropriate for most discerning homeowners. Exits lie north and south.",
+       name "ground-cover" "plots" "flamingo" "tinsel" "ornament",
+       n_to Con_Desert_garden,
+       s_to Con_Flower_Garden,
+  has light;
+
+Object Con_Forest_garden "Forest Garden"
+   with description "A garden path winds through this narrow \
+greenhouse, which is stocked with various forest plants. \
+The path winds back to the west and south.",
+        name "path",
+        w_to Con_Desert_garden,
+        s_to Con_Fountain,
+   has light;
+
+Nearby plants1 "plants"
+   with name "plants" "plant" "tree" "forest",
+        description "You are reminded of a hiking trip you took once.",
+        before [;
+           Cast: 
+              if (the_spell_was == throck_spell)
+                 "The forest seems a bit livelier now.";
+        ],
+   has scenery;
+
+Object Con_Jungle_garden "Jungle Garden"
+   with description "A garden path winds through this \
+long greenhouse, which is filled with plants native to \
+jungle settings. The environment is somewhat \
+humid. The path heads west and north from here.", 
+        name "path" "humid",
+        w_to Con_Flower_garden,
+        n_to Con_Fountain,
+        e_to [;
+          if (waterfall hasnt general)
+             "You can't go that way.";
+          else return Con_Nursery;
+        ],
+        before [;
+           Smell: "You smell flowers to the west.";
+        ],
+   has light;
+
+Nearby plants2 "plants"
+   with name "plants" "plant" "tree" "jungle",
+        description "Reminds you of a picture you once saw of \
+the Miznia jungles.",
+        before [;
+           Cast: 
+              if (the_spell_was == throck_spell)
+                 "The jungle seems a bit livelier now.";
+        ],
+   has scenery;
+
+Object waterfall "small waterfall" Con_Jungle_garden
+   with name "waterfall" "fall" "falls",
+        initial [;
+            if (self hasnt general)
+               print "A nice little waterfall enhances the jungle \
+setting";
+            else 
+               print "A fake waterfall hides a passage";
+            " to the east.";
+        ],
+        description [;
+            print "A small";
+            if (self has general) print " fake";
+            " waterfall drops out of a mock-stucco \
+wall to the east.";
+        ],
+        before [;
+           Pull, Push, Touch, Search, Rub:
+              give self general;
+              "You reach out, expecting to get your hands wet, but \
+              to your surprise, you feel a cloth-like substance. \
+              On closer examination, you realize that the waterfall \
+              is a clever realistic-looking fake, made of cloth \
+              and wood. Stepping around some low plants, you also \
+              notice the waterfall covers a passage east!";
+           ThrownAt:
+              move noun to Con_Jungle_garden;
+              CDefArt(noun); ", to your surprise, literally \
+              bounces off the waterfall, and lands with a thump \
+              nearby.";
+        ],
+   has static;
+
+Object Con_Nursery "Nursery"
+   with description "This small back room is apparently the \
+conservatory nursery. Bits of soil and plant \
+debris are everywhere, along with immature \
+seedling plants. A exit lies west, partially \
+covered by some cloth.",
+         name "soil" "plant" "debris" "seedling" "cloth", 
+        w_to Con_Jungle_garden,
+   has light;
+
+Object smallpot "small flower pot" Con_Nursery
+   with name "pot",
+        description "A small red-ceramic flower pot, \
+ideal for small plants, I suppose.",
+        before [;
+           Push, Take:
+              if ((location == Con_Nursery) && (self hasnt general))  {
+                 give self general;
+                 move shed_key to Con_Nursery;
+                 print "Moving the pot uncovers a small key hidden \
+underneath it.^";
+                 if (action==##Push) rtrue; else rfalse;
+              }
+           LookUnder:
+              if ((location == Con_Nursery) && (self hasnt general))  {
+                 "The pot does appear to be sitting crooked. But \
+                 you can't see whatever is under it.";
+              }
+           Cast:
+              if ((the_spell_was == huncho_spell or luncho_spell) &&
+                  (self hasnt general)) {
+                     give self general;
+                     move shed_key to Con_Nursery;
+                     rfalse;
+                  }                 
+        ],
+        size 15,
+   has container open transparent;
+
+
+Object Con_Fountain "Fountain"
+   with description "A tasteful fountain intercepts a north-south \
+garden trail here.",
+        name "trail",
+        n_to Con_Forest_garden,
+        s_to Con_Jungle_garden,
+        each_turn [;
+          if (random(20) == 1)
+             "^You hear someone whistling nearby, but there doesn't \
+seem to be anyone around.";
+        ],
+   has light;
+
+Nearby fountain "fountain"
+   with name "fountain", 
+        description "A stone basin with a central fountain spout \
+shaped like a fish. There's no water running currently.",
+        before 
+        [ x;
+           Search: 
+              if (self hasnt general) {
+                  give self general;
+              move c3 to self;
+              "You fish in the fountain for a bit and find a coin!";
+              }
+              else {
+                 print "Mostly wet plant debris";
+                 x = children(self);
+                 if (x == 0) 
+                    ", nothing interesting.";
+                 print ". You also notice:^";
+         x = FULLINV_BIT + INDENT_BIT + NEWLINE_BIT + RECURSE_BIT;
+         WriteListFrom (child(self), x, 1); rtrue;
+              }
+           Receive:
+              if (noun has is_coin)
+                 print "Hoping for a little luck, I presume?";
+        ],
+        capacity 10,
+        size 25,
+   has scenery container open;
+
+Object glasses "pair of glasses" Con_Fountain
+   with name "glasses",
+        initial "It looks like someone left their glasses here.",
+        description "Thick lenses and a heavy frame.",
+        before [;
+           Wear: "You put the glasses on for a moment, and it's like \
+                 looking through a fishtank. Deciding \
+                 against continuing your quest without adequate \
+                 vision, you take them off.";
+        ],
+        size 5,
+   has clothing;
+
+Object c3 "coin" class coin_class;
+
+Object shed_key "small key" 
+   with name "key" "small",
+        description "A small metal key.",
+        size 4,
+; 
+
+
+! (Delbin's Pub)
+
+Object Delbins "Delbin's Pub"
+   with description [;
+           print "Delbin's Pub has been a popular food and drink spot in \
+           South Anthar for quite a while. ";
+           if (self hasnt general)
+           print "Usually, you need to \
+           fight off barbarians to find a place to sit. At the moment, \
+           however, the place is unusually quiet. A group of \
+           barbarians seem paralyzed with fear near the back wall, \
+           glancing nervously at the front of the bar.";
+           else print "A group of barbarians \
+           are making a lot of noise nearby.";
+           " The exit is to the north.";
+        ],
+        name "back" "front",
+        number 0,
+        before [;
+          Listen:
+             if (self has general)
+                "The barbarians are a rather noisy bunch.";
+          Go:
+            if ((noun == n_obj) || (noun==out_obj))
+print "Delbin calls out ~Visit us again!~ as you leave.^";
+        ],
+        n_to ANTHAR_West,
+        out_to ANTHAR_West,
+        each_turn [ i ;
+           if (Morgan in Delbins) {
+              i = random(3);
+              if ((i==1) && (Delbins.number == 0)) {
+                Delbins.number = 1;
+                 "^The man in black makes a lightning fast move for the \
+glass of ale, but is countered by an equally fast move by the warrior. \
+~Lose something, thief?~ the woman says. ~No need to get violent, Morgan,~ \
+the thief says.";
+              }
+              if ((i==1) && (Delbins.number == 1)) {
+                Delbins.number = 2;
+                 "^The wizard looks at his companions. ~Say, did I ever \
+show any of you my famous disappearing glass trick?~ He starts to take \
+off his wizard's hat, but the gentleman and ranger stop him. ~Don't \
+even try it, Frobar.~ the woman warrior says.";
+              }
+              if ((i==1) && (Delbins.number == 2)) {
+                Delbins.number = 3;
+                 "^The female ranger fixates on the glass of ale. \
+~Look you two, some of us have better things to do, like fight wars.~ \
+The wizard scowls. ~Oh save it, Morgan.~ he says.";
+              }
+            }
+          ], 
+   has light;
+ 
+Nearby barbarians "barbarians"
+   with name "barbarians" "group",
+        description "A group of dirty barbarians. One of them \
+           sees you staring at them, and gives you a dirty look.",
+        life [;
+           default:
+ if (Morgan in Delbins)
+    "The barbarians are somewhat paralyzed with fear at the moment.";
+ else 
+    "The barbarians are far too busy telling rude jokes \
+at the moment.";
+        ],
+   has animate concealed;
+
+Object headdress "headdress" Delbins
+   with name "headdress",
+        initial "A gaudy headdress of some kind is \
+hanging on a nearby wall.",
+        description "A large headdress made of animal fur and colorful \
+bird feathers.",
+        size 15,
+   has clothing;
+
+Object bar "bar" Delbins
+   with name "bar",
+        description "A long flat wood bar that could probably use a \
+washing.",
+        before [;
+           Cast:
+             if (the_spell_was == egdelp_spell) {
+                print "The bar is covered with a waxy film. \
+Delbin notices this and shrugs.";
+             }
+           LetGo:
+             if (noun==ale_glass) {
+                <Take ale_glass>; rtrue; }
+        ],
+   has scenery supporter;
+
+Object ale_glass "glass of ale" bar
+   with name "glass" "ale",
+        description "A small glass filled with an amber liquid.",
+        before [;
+           Take:
+              "You receive cold stares from the three individuals \
+              at the bar. ~Get your own,~ the Ranger says and \
+              pushes you back.";
+           Drink:
+              "You receive cold stares from the three individuals \
+              at the bar. ~Get your own,~ the Thief says and \
+              takes the glass from you before you can bring it \
+              to your lips.";
+           Turn, Push, Pull, Shake:
+              "You receive cold stares from the three individuals \
+              at the bar. ~Get your own,~ the Wizard says and \
+              prevents you."; 
+           ThrownAt:
+              deadflag = 1;
+              CDefArt(noun); " hits the glass and nearly topples it! \
+              A voice from the back of the room says ~Garn! He \
+              nearly ruined a perfectly good glass of ale, he did.~ \
+              The three individuals at the bar turn to you with \
+              angry stares, but before you can respond, some \
+              barbarians pummel you to death for poor bar manners.";
+          Cast:
+             if (the_spell_was == zemdor_spell) {
+                give Delbins general;
+                remove self;
+                Achieved(8);
+                ! set up three NPCs
+                ! -- Morgan, fairly easy
+                move Morgan to Ravine_pass;
+                ! -- Frobar, a little tougher
+                move Frobar to FROBAR_Study;
+                if (Ench_mag in Frobar_mailbox)
+                   move Ench_mag to Frobar;
+                StartDaemon(Frobar);
+                ! -- Thief, trickiest
+                remove Thief;  ! he'll be back
+                if ((Painting_REAL in Museum_north) &&
+                    (glass_wall notin Museum_north))
+                    move Painting_REAL to THIEF_Storeroom;
+                    ! Thief steals painting (no door left behind!)             
+                "You quickly make the zemdor chant and watch the glass \
+of ale start to shimmer! In short time, there are three glasses filled \
+with ale on the bar!^^\
+Morgan the Ranger looks suspiciously at Frobar the Enchanter. \
+~Is this your doing, wizard?~ Frobar shakes his head. ~Surely not, \
+you know I can't do magic anymore.~ He glances briefly in your \
+direction. ~No matter,~ the thief says, and raises a glass. \
+~To the spirit of adventure!~ The three down their glasses quickly. \
+Morgan smiles. ~Now, that's good ale.~ She adjusts her broadsword. \
+~I'm off to the Egreth front. Want to help end a war, Frobar?~ \
+Frobar chuckles. ~Thank you, no. I've got, err, something to do \
+at home,~ he says and quickly leaves. ~Well, then, what about you, \
+thief?~ Morgan asks, and notices that the thief has already slipped \
+away. She shrugs and leaves the bar as well. ~Good hunting!~ Delbin \
+calls after her.";                
+             }
+             if (the_spell_was == huncho_spell or luncho_spell) 
+"You begin the chant, but something about it gets the \
+Enchanter's attention. ~If you have something to say, \
+why don't you share it?~ With a subtle gesture, the Enchanter \
+dispels the chant.";
+        ],
+;
+
+Object rag "dirty rag" bar
+   with name "rag" "dirty",
+        description "A slightly dirty cleaning rag.",
+        !weight 5,
+;
+
+
+! (Flathead stadium)
+
+Object Stadium_entrance "Entrance to Flathead Stadium"
+   with description "Here stands the entrance into the still \
+           popular Flathead Stadium, home to esoteric \
+           sports activities you never fully understood. \
+           Walkways lie southeast and southwest from here, or \
+           you can enter the stadium to the north.",
+        name "stadium" "walkways" "entrance",
+        sw_to ANTHAR_West,
+        se_to ANTHAR_East,
+        n_to Stadium_top,
+        in_to Stadium_top,
+        before [;
+           Listen:  
+	"You can hear the roars of a good crowd from \
+   inside the stadium. Must be playoff season.";
+           Go:
+              if ((noun==n_obj) || (noun==in_obj))
+                print "You walk right into the stadium. The ticket-takers \
+                must be on strike or something.^";
+        ],
+   has light;
+
+! (fake stadium entrance, for "past")
+
+Object Stadium_entrance2 "Entrance to Flathead Stadium"
+   with description "You appear to be in front of Flathead Stadium once \
+again, however something seems different. Even the stadium itself seems \
+dissimilar, newer. Walkways lie southeast and southwest from here, or \
+you can enter the stadium to the north.",
+        name "stadium" "walkways" "entrance",
+        sw_to "A strange feeling compels you to stay.",
+        se_to "A strange feeling compels you to stay.",
+        n_to [;
+            deadflag = 1;
+            "As you head towards the entrance, a mob of crazed fans \
+rushes out of the stadium (~Isn't that Babe Flathead?~ you hear someone \
+scream) and tramples you to death.";
+        ],
+        before [;
+           Listen:  
+              "The place is surprisingly quiet.";
+        ],
+   has light;
+
+
+Object stadium_sign "stadium sign" Stadium_entrance
+   with name "sign",
+        initial "A stadium event sign is pasted to one of the stadium walls here.",
+        description  
+                    "~Today's event:^\
+                    	GOLEM FIGHTS!!!^^\
+                    	ALL CHALLENGERS WELCOME!!!^\
+                    	THREE ROUNDS, THREE BOUTS!^\
+                    	BIG CASH FOR THE WINNER!^^\
+                    (All Golems have undefeated records, so^\
+                    only trained golem-wrestlers need apply!)~",
+   has static;
+
+Object stadium_statue "stadium statue" Stadium_entrance
+   with name "statue",
+        initial "A statue depicting the legendary Babe \
+Flathead greets all visitors in front of the stadium.",
+        description 
+           "According to the inscription, this statue honors the legendary Babe Flathead.",
+        before [;
+           LookUnder:
+            	if (self has general) 
+            	   "Oddly, the statue seems to sit slightly tilted.";
+           Push:
+              if (self has general) {
+                 remove self;
+                 move statue_base to Stadium_entrance;
+                 Achieved(9);
+                 "You give the statue a shove, and it wobbles and falls, \
+breaking into useless dust! A passing sportsfan notices your act \
+of vandalism, and says to a friend, ~Look at that. The guy wins one \
+bout of Golem wrestling, and he thinks he's better than Babe \
+Flathead.~";  
+              }
+              else "The statue seems to be firmly fixed in place.";
+        ],
+   has static;
+
+Object statue_base "square hole" Stadium_entrance2
+   with name "hole" "square",
+        describe "In front of the stadium is a square hole.",
+        description "There's a large square hole in the ground near \
+the front of the stadium.",
+        time_left 0,
+        time_out [;
+!          move stadium_sign to Stadium_entrance;
+!          move stadium_statue to Stadium_entrance;
+          print "^You hear voices behind you, and suddenly, a \
+small crowd of people pass by, pushing a statue.^^\
+~Right there,~ someone shouts, and a few people position the \
+statue into the square hole.";
+          if (children(self) == 0) {
+             print " It fits neatly in place.";
+             remove red_rod_piece;
+          }
+          else {
+             give stadium_statue general;
+             print " It fits, but seems just slightly \
+tilted.";
+          }
+!          remove statue_base;
+!          give Stadium_entrance ~general;
+          Mystical_Cave.number = Mystical_Cave.number + 1;  
+          print "^^~That's perfect,~ you hear a voice say, and \
+the crowd murmurs in agreement. Why, it's Babe Flathead himself! \
+He saunters up towards the statue, which is indeed a good \
+likeness, and starts handing out cigars. ~We'll get to \
+autographs later,~ he says while lighting your cigar as you \
+try to protest. Seconds later, the cigar explodes! You see \
+sparkling stars, which seem to change to purple flashes. You \
+blink.^";
+          PlayerTo(Mystical_Cave);
+        ], 
+        capacity 1,
+        size 15,
+has static container open;     
+
+Object Stadium_top "In Flathead Stadium, upper seats"
+   with description "\
+You are near the top cheap seats of Flathead Stadium. \
+The crowd is busy cheering whatever is going on down on the \
+field. Looking at the field, you see two small dots. The Stadium exit \
+is back south, or you can walk down to the front seats to \
+the north.",
+   name "seats" "crowd" "field" "dots" "fans",
+   s_to Stadium_entrance,
+   n_to Stadium_bottom,
+   d_to Stadium_bottom,
+   e_to "You try to push your way through the fans, but fail.",
+   w_to "You climb over a few seats, but the crowd blocks any \
+         further progress west.",
+   before [;
+       Listen:  "The crowd is deafening.";
+   ],
+has light;
+
+
+Object Stadium_bottom "In Flathead Stadium, lower seats"
+   with description "\
+You are near the good seats in Flathead Stadium. \
+The crowd is busy cheering for the current event on the \
+field. Looking at the field, you see two large dots. The \
+seats continue up and south, or you can walk down to the \
+field below.",
+  name "seats" "crowd" "field" "dots" "fans",
+  s_to Stadium_top,
+  u_to Stadium_top,
+  d_to [;
+     if (burly_man hasnt general)
+"The burly man jumps out of his seat as you try to pass. \ 
+~Hey buddy, I'm saving those seats.~ He points to an entire \
+row of seats below you. ~I've been waiting all season, and \
+I don't want an obstructed view, so look for somewhere else to \
+sit.~ He sits back in his seat.";
+     else return Near_locker_room;
+  ],
+  n_to [;
+     if (burly_man hasnt general)
+"The burly man jumps out of his seat as you try to pass. \ 
+~Hey buddy, I'm saving those seats.~ He points to an entire \
+row of seats below you. ~I've been waiting all season, and \
+I don't want an obstructed view, so look for somewhere else to \
+sit.~ He sits back in his seat.";
+     else return Near_locker_room;
+  ],
+  w_to "You try to push past a couple fans, but the angry looks make you stop.",
+  e_to "You try to push past a couple fans, but the rude looks make you stop.",
+   before [;
+       Listen:  "The crowd is deafening.";
+   ],
+has light;
+
+Object Near_locker_room "Near Locker Room"
+   with description "\
+You are near a locker room under Flathead field. \
+You can enter the locker room to the north, or start the climb back into \
+the roaring crowd to the south.",
+   name "crowd" "field" "fans",
+   s_to Stadium_bottom,
+   u_to Stadium_bottom,
+   n_to Locker_room,
+   each_turn [;
+      if (self hasnt general) {
+         give self general;
+         move pale_scroll to Near_locker_room;
+         "^A couple front row fans are getting a bit boisterous. \
+Several of them throw garbage and paper debris towards the field. \
+You notice something flutter down by your feet.";
+      }
+   ],
+   before [;
+       Listen:  "The crowd is deafening.";
+   ],
+   has light;
+
+Object Locker_room "Locker Room"
+   with description "\
+You are inside a locker room under Flathead field. You can hear the \
+crowds outside. The room is empty. There is an exit \
+to the south, and the entrance to the field is to the north.",
+   name "field" "locker" "lockers",
+   n_to Flathead_field,
+   s_to Near_locker_room,
+   before [;
+       Listen:  "You can hear the crowd outside.";
+   ],
+   has light;
+
+Object Flathead_field "Flathead Field"
+   with description "You're on Flathead field, in front of millions of zany \
+fans, a lifetime dream. Or not. Well, anyway, \
+there's a locker room to the south.",
+   name "field" "fans",
+   s_to [;
+       if (self has general)
+"You head for the showers, but the coach springs out and blocks \
+your way. ~Come on kid, keep your head in the game.~";
+       else return Locker_room;
+   ],
+   each_turn [ i;
+      if (self has general) {
+         i = random(20);
+         if (i == 1) 
+            "^Someone in the crowd yells out, ~Get him a body bag!~ \
+            We assume he was referring to the golem, not you.";
+         if (i == 5)
+            "^The crowd does 'the wave'.";
+         if (i == 7)
+            "^The crowd waves some strange colorful objects. \
+Rather distracting.";
+         if (i == 10)
+            "^Someone in the crowd screams ~Flathead that golem!~";
+      }
+   ],
+   before [;
+       Listen:  "The crowd is deafening.";
+   ],
+   has light;
+
+
+
+
+! ****************
+! People/creatures
+! ****************
+
+Object Christmas_tree_monster "Christmas tree monster" Con_Decor_garden
+   with name "tree" "monster" "Christmas",
+        initial "A Christmas Tree stands in one plot, swaying back and forth.",
+        description "\
+The Christmas Tree monster has obviously seen some good years. It towers \
+above you, wrapped with tinsel that sparkles marvelously. The \
+plastic flamingo ornaments are a rather gaudy touch. Surprisingly, it seems to \
+have taken root in the soil.",
+        each_turn [ i ;
+           i = random(10);
+           if (i==1) 
+"^The Christmas Tree Monster belts out a few bars of 'I'm dreaming \
+of a Black Cavern' arranged by Bing Frozby.";
+           if (i==2)
+"^The Christmas Tree Monster sings a few measures from Berknip's own \
+rendition of 'Silent Night', a rather morbid version.";
+           if (i==3)
+"^The Christmas Tree Monster hums a few notes from 'Dornbeasts \
+Roasting on an Open Pyre'.";
+           if (i==4)
+"^The Christmas Tree Monster whistles a part of 'Frosty the Snow Wight'.";
+           if (i==6)
+"^The Christmas Tree Monster sways in time to 'Let it snow, let it snow, \
+let it snow'.";
+           if (i==8)
+"^The Christmas Tree Monster treats you to an abridged version of \
+Handel's 'Messiah'.";
+        "^The Christmas Tree Monster hums to itself.";  
+        ],
+        before [;
+           Cut:
+              if (hedge_clipper notin player)
+                 "You'll need a gardening implement to do that.";
+              if (self has general)
+                 "The gardener said he'd make you dig for slugs, and \
+                 that doesn't sound too exciting, so let's leave the tree \
+                 alone.";
+              if (self hasnt general) {
+print "You being to clip a few of the lower branches of the Christmas Tree \
+Monster, who bellows in pain!^^\
+Out of nowhere, a short old man appears, wearing full gardener \
+regalia. He drags your hand away from the tree.^^\
+~What are ya trying to do there, kill the thing?~ he says. ";
+                 if ((glasses hasnt moved) || (glasses in Con_Fountain)) {
+                    remove glasses;
+                    remove hedge_clipper;
+"He pulls \
+out a pair of glasses and puts it on. ~Say, I don't know you,~ \
+he says. ~If you want to practice introductory horticulture, do \
+it in someone else's garden!~ He grabs the clippers from your hands \
+and stalks off.";
+                 }
+                 else {
+print "He seems \
+to be squinting at you. ~Who are you sonny?~ he asks. He starts 
+searching his pockets. ~Confound it, lost my glasses again.~ ";
+                    if (gardeners_cap hasnt worn) {
+                       remove hedge_clipper;
+"He squints again, and says, ~Well, whoever you are, the gardens are \
+for looking at, not practicing landscape design!~ He grabs the \
+clippers out of your hands and stalks off.";
+                    }
+                    if (gardeners_cap has worn) {
+                       give self general;
+                       Achieved(10);
+"He looks at you again, and notices your cap. ~You must be one of the \
+new boys. Here, look, I'm not going to show you twice.~ He takes \
+the clippers and delicately clips away several lower branches, all \
+the while singing ~It's beginning to look a lot like Christmas~. \
+He finishes trimming the tree, leaving a nice opening exposing the \
+shrub next to it, and stops singing. ~I'm starting to hate \
+that tune,~ he says under his breath. He hands the clippers back \
+to you and says, ~Now if I catch you doing this wrong again, I'm \
+going to make you dig for slugs, understand?~ He disappears as \
+quickly as he appeared.";
+                   }
+                 }
+              }
+           Cast:
+              "You start chanting, but the tree starts singing \
+              ~Plover the river and frotz the woods~ and you \
+              can't help joining in, ruining your chant.";
+        ],
+        react_before [;
+           Sing:
+              "You song is drowned out by a boisterous chorus \
+              by the tree.";
+        ],
+        life [;
+          Show: 
+             if (noun==toy_volcano)
+                "The tree abruptly stops singing, and seems \
+a trifle flustered for some reason. Moments later, it \
+resumes its chorus.";
+          default: "The tree just keeps on singing.";
+        ],
+   has animate;
+
+! (ok, the bush isn't defined as alive.  But it is...)
+Object dornberry_bush "Dornberry bush" Con_Decor_garden
+   with name "shrub" "bush",
+        initial [; 
+          print "A small shrub sits near and under the Christmas Tree";
+          if (Christmas_tree_monster hasnt general)	
+             ", almost covered by it.";
+          else
+             ".";
+        ],
+        description [;
+                if (self hasnt general)
+"The small shrub looks rather poorly tended. Just a few green leaves \
+distinguish it from the surrounding soil."; 
+                else
+"The small shrub looks quite healthy. A cluster of green leaves and \
+branches make a nice plant. It's still smaller than the tree, though.";
+                ],
+        capacity 1,
+        before [;
+            Cast:
+             if (the_spell_was == throck_spell) {
+                if (Christmas_tree_monster hasnt general)	
+"The shrub seems to shake suddenly! A new leaf grows, searchs for the \
+sunlight, fails, and withers.";
+                if ((Christmas_tree_monster has general) &&
+                    (self hasnt general)) {
+                  give self general;
+                  move dornberries to self;
+"The shrub seems to shake suddenly! A new leaf grows, searchs for the \
+sunlight, and finds it! Another leaf follows, and soon the shrub is \
+sprouting new branches. In the sunlight, flowers appear, and a cycle \
+of missed-out seasons is made-up for in minutes! The shrub is now \
+quite a thriving plant, covered with tiny red fruit.";
+                }
+                if (self has general) 
+                   "The shrub shakes a bit, but the plant remains the \
+                   same. For a Dornberry bush, it's already probably \
+                   the healthiest one you've ever seen.";
+              }
+              Receive:
+                 if (noun ~= dornberries)
+                    "I don't think the shrub can support that.";
+           ],
+   has static supporter;
+
+Object dornberries "bunch of dornberries"
+   with name "dornberries" "berries",
+        description "A bunch of tasty-looking red berries.",
+        !weight 5,
+        size 5,
+   has edible scored;
+
+! (moved here so that it shows up 'last' in room descr)
+Object plaque "plaque" Con_Decor_garden
+   with name "plaque",
+        initial "A small plaque sticks out of the soil near the two plants.",
+        description [;
+        print "The plaque reads:^^";
+        font off;
+print "~CHRISTMAS TREE MONSTER               DORNBERRY BUSH^";
+print "<Jinglebellus Adnauseam>              <Smallus Shrubus>~^";
+        font on;
+        ],
+!          ~CHRISTMAS TREE MONSTER               DORNBERRY BUSH^\
+!	   <Jinglebellus Adnauseous>            <Smallus Shrubus>~",
+   has static;
+
+
+! (Characters in Flathead Stadium)
+
+
+Object burly_man "burly man" Stadium_bottom
+   with name "man" "burly",
+        description "A big man who's apparently into sports.",
+        before [;
+  Cast:
+     if ((the_spell_was == foblub_spell) && (self hasnt general)) {
+        give self general;
+        Achieved(11);
+"You begin your sermon. The man starts to tell you to knock \
+it off, but starts to listen with awe. As you finish, the man \
+tries to get up to shake your hand, but realizes he is stuck \
+fast. ~They gotta start cleaning these seats,~ he says.";
+     }
+      if (the_spell_was == espnis_spell) 
+         "You begin a description of the 1700 different kinds of \
+          holy water, but the man seems so enthralled with the \
+          game below, he just isn't paying attention.";
+      ],
+      life [;
+          Show:
+           if (noun==trophy)
+              "~You were amazing pal. Ever think of going pro?~";
+          Ask:
+            if (second=='fight' or 'game' or 'fights')
+               "~It's the three-golem special. One contestant \
+               versus three golems, one after the other. Great \
+               stuff.~";
+          default:
+            "~Give it a rest pal, I'm watching the game.~";
+      ],
+   has animate;
+
+Object coach "tough-looking coach" Locker_room
+   with name "coach",
+        description [;
+print "An old fellow with bushy eyebrows and \
+a gruff demeanor. He's dressed like a sports coach";
+if (trophy in self)
+". You also notice he's holding some sort of trophy.";
+else ".";
+        ],
+        number 1,
+        each_turn [;
+            if (self hasnt general) {
+              if (Flathead_field hasnt general) {
+                 give Flathead_field general;
+print "^The coach looks up and notices you. ~Oh, you must be the \
+replacement,~ he says. He drags you over to the field entrance. \
+~Well, I hoped you're warmed up, cuz you're up.~ He shoves you \
+north. ~Remember, these guys are tough, so give 'em your \
+best stuff.~^";
+                 PlayerTo(Flathead_field);
+              }
+              else {
+                 print "^The coach looks up and notices you. \
+~Where have you been? The ref was about to default \
+it to the golems!~ He shoves you north. ~Now get in there and \
+make me proud.~^";
+                 PlayerTo(Flathead_field);
+              }
+            }
+            if ((self has general) && (coach.number == 1)) {
+               move win_bag to player;
+               coach.number = 2;
+               "^The coach gives you a slap on the back that \
+knocks the wind out of you. ~You did it! I didn't think \
+you had it in you!~ He hands you a small bag. ~Here's the \
+winnings. I went ahead and took out my cut, of course.~^";
+            }  
+        ],
+        life [;
+           ! essentially, the only chances to do 'life' things
+           ! will occur when the coach is lingering around 
+           ! the lockerroom after the match.
+           Attack:
+               "~You want a couple rounds with the old man \
+too? Well, I'm ready.~ For an old coach, he still looks \
+like he's in pretty good shape. You decide against violent \
+action.";
+           Answer: 
+               "The coach merely nods.";
+           Ask:
+               if (second == 'trophy')
+                  "~It's a beauty all right.~";
+               if (second == 'winnings' or 'cut') 
+                  "~It's all there, count it if you want.~";
+               if (second == 'life' or 'game' or 'sport')
+                  "The coach looks momentarily reflective. \
+~Life is all about getting into the game,~ he says. \
+~Remember that, it's not about winning or losing, but \
+giving it your best shot.~";
+           Show:
+             if (noun == cereal1 || 
+                 noun == cereal2 ||
+                 noun == cereal3 ||
+                 noun == cerealbox1 ||
+                 noun == cerealbox2 ||
+                 noun == cerealbox3)
+           "~A bowlful of that each morning is bound to make a \
+champion out of you.~";
+           Order:  
+! *** note2: this seems to contradict documentation,
+! i.e. 'ask coach for trophy' results in noun==trophy and
+!       second==(?)coach or player, not the other way
+!       around.
+               if ((action==##Give) && (noun==trophy) && 
+                   (trophy in self)) {
+                  move trophy to player;
+                  remove self;
+"The coach looks lovingly at the trophy, and then at you. \
+~Fair enough kid, you earned it.~ he says, and gives it \
+to you. ~I've seen a lot of golem-wrestlers in my time, \
+but I gotta say, you're the best golem-wrestler I've ever \
+seen.~ He leaves the locker room to greet his fans.";
+               }
+           default:  "At the moment, it looks like the coach is too busy \
+               writing a Hall of Fame acceptance speech to \
+               pay you much attention.";
+         ],
+         react_before [;
+            Cast:
+              "~What's that you're saying? Speak up, I'm your \
+coach, I'm hear to listen.~";
+         ],
+   has animate transparent;
+
+Object referee "referee" Flathead_field
+   with name "referee" "ref",
+        description "A stout looking man in a funny striped shirt.",
+        each_turn [;
+           if (self hasnt general) {
+              give self general;
+"^The ref blows his whistle and says ~Round 1~. The golem, not \
+needing any encouragement, jumps into the fray.";
+           }
+        ],
+        life [;
+           Attack:
+             "Your opponent is the golem, not the referee.";
+           Ask:
+             if (second == 'time' or 'timeout')
+                "~Sorry, no timeouts!~ the ref says.";
+             if (second == 'foul')
+                "~It looked good to me.~";
+             if (second == 'round') {
+                if (wood_golem in Flathead_field)
+                   "~You're in round 1.~";
+                if (stone_golem in Flathead_field)
+                   "~You're in round 2.~";
+                if (iron_golem in Flathead_field)
+                   "~You're in round 3, the final round.~";
+             }
+           default: "The ref makes some completely \
+bewildering hand signal, that could be an insult, for \
+all you know about wrestling. In any event, nothing happens.";
+        ], 
+        before [;
+           Cast:
+if (the_spell_was == espnis_spell) {
+   deadflag = 1;
+   "You start to relate the advantages of Bingo over Double \
+Fanucci to the ref, and sooner that you can say ~Zounds~, the \
+ref is fast asleep! Unfortunately, the golem takes advantage of \
+this opportunity and breathes poison gas at you! You reflect \
+on this display of poor sportsmanship as you slowly lose \
+consciousness.";
+}
+        ],
+   has animate;
+
+! -- the golems...
+!    In general: To be fair, the golems only have a 1 in 30 chance
+!    of actually hitting.  When they do hit, however, it's pretty
+!    painful.  They also tend to have high HP, although I guess 
+!    theoretically, they could be beaten without spells.
+!    (note: I've tried this with the iron golem and never
+!     succeeded.  The odds are definitely not in the players favor)
+Object wood_golem "dangerous-looking wood golem" Flathead_field
+   with name "golem" "wood",
+        number 20,
+        description "\
+The wood golem stands at about twice your height, an animated statue \
+made completely of wood. He may move like an old cabinet, but \
+watch those hands!",
+        each_turn [ i ;
+           i = random(13);
+           if (i == 13)
+              Player_HP_CUR = Player_HP_CUR - 15;
+           if (Player_HP_CUR <= 0) {
+              deadflag = 1;
+              "^The wood golem jumps forward and flattens you, \
+              which feels similar to getting hit by a falling \
+              redwood tree.";
+           }
+           if (i == 13)
+              "^The golem staggers you with a punch that sends you \
+              reeling!";
+           if (i == 20)  
+"^The wood golem tries to move in for a clinch, and you dance \
+away.";
+           if (i == 10)
+"^The wood golem makes a lumbering swing at your head, and misses!";
+"^The wood golem makes a swipe for you, and misses.";
+        ],
+        before [;
+          Cast:
+            if (the_spell_was == egdelp_spell) {
+               remove self;
+               move stone_golem to Flathead_field;
+"The wood golem is suddenly covered with a waxy buildup! \
+Greatly embarrassed, he turns to call foul, and slips! \
+With a great thud, the golem hits the turf, and knocks \
+himself out cold!^^\
+The ref says ~Knockout!~. The crowd cheers in approval.^^\
+Several dwarves appear and cart the wood golem off. \ 
+Unfortunately, a stone golem soon walks into view!^^\
+The coach yells from the doorway ~You're doing great kid, \
+just hang in there.~^^\
+The ref says ~Round 2!~";
+            }
+        ],
+        life [ i ;
+          Attack:
+            i = random(20);
+            if (i > 10) {
+               wood_golem.number = wood_golem.number - 1;
+               if (wood_golem.number <= 0) {
+               remove self;
+               move stone_golem to Flathead_field;
+"With a thundering blow, you smash the golem into \
+kindling!^^\
+The ref says ~Knockout!~. The crowd cheers in approval.^^\
+Several dwarves appear and cart the wood golem off. \ 
+Unfortunately, a stone golem soon walks into view!^^\
+The coach yells from the doorway ~You're doing great kid, \
+just hang in there.~^^\
+The ref says ~Round 2!~";
+               }
+               else {
+                 print "Good shot! You whack the golem, and splinters fly";
+                 if (wood_golem.number > 10)
+                    ". It didn't seem to slow him down, though.";
+                 else ".";
+               }
+            }
+            "You swing, but miss.";
+        ],      
+   has animate;
+
+Object stone_golem "fierce-looking stone golem" 
+   with name "golem" "stone",
+        number 40,
+        description "\
+The stone golem is quite a towering piece of work. He looks like a crude \
+statue made of animated granite. He probably has all the \
+finesse of a giant boulder, so don't let him pin ya!",
+        each_turn [ i ;
+           i = random(13);
+           if (i == 13)
+              Player_HP_CUR = Player_HP_CUR - 20;
+           if (Player_HP_CUR <= 0) {
+              deadflag = 1;
+              "^The stone golem jumps forward and flattens you, \
+              which feels similar to getting crushed by a giant \
+              boulder.";
+           }
+           if (i == 13)
+              "^The golem hits you with a punch that sends you \
+              reeling!";
+           if (i == 20)  
+              "^The golem jabs with his left, and misses!";
+           "^The golem tries to close, and misses.";
+        ],
+        before [;
+          Cast:
+            if (the_spell_was == tossio_spell) {
+               remove self;
+               move iron_golem to Flathead_field;
+"The golem is suddenly replaced with a pile of steaming \
+linguini alfredo!^^\
+The ref yells ~Takeout!~ The crowd goes wild! \
+Several dwarves appear and serve the pasta to the crowd \
+on platters. Unfortunately, an iron golem soon \
+walks into view! ^^\
+The coach yells out from the safety of the locker room ~Okay kid, drop \
+this golem, and we can celebrate.~^^\
+The ref yells ~Round 3!~";
+            }
+        ],
+        life [ i ;
+          Attack:
+            i = random(20);
+            if (i > 10) {
+               stone_golem.number = stone_golem.number - 1;
+               if (stone_golem.number <= 0) {
+               remove self;
+               move iron_golem to Flathead_field;
+"With a thundering blow, you smash the golem into \
+gravel!^^\
+The ref says ~Knockout!~. The crowd cheers in approval.^^\
+Several dwarves appear and cart the stone golem off. \ 
+Unfortunately, an iron golem soon walks into view!^^\
+The coach yells out from the safety of the locker room ~Okay kid, drop \
+this golem, and we can celebrate.~^^\
+The ref yells ~Round 3!~";
+               }
+               else {
+                 print "Solid blow! Stone chips fly.";
+                 if (stone_golem.number > 10)
+                    ". It didn't seem to slow him down, though.";
+                 else ".";
+               }
+            }
+            "You swing, but miss.";
+        ],      
+   has animate;
+
+Object iron_golem "deadly-looking iron golem" 
+   with name "golem" "iron",
+        number 50,
+        description "\
+The iron golem resembles a huge nightmare made out of iron. \
+Towering at least 30 feet high, this animated iron statue isn't \
+something you'd want to meet in a dark alley, much less \
+in an arena filled with screaming fans.",
+        each_turn [ i ;
+           i = random(13);
+           if (i == 13)
+              Player_HP_CUR = Player_HP_CUR - 30;
+           if (Player_HP_CUR <= 0) {
+              deadflag = 1;
+              "^The iron golem jumps forward and flattens you, \
+              which feels similar to getting mashed by a giant \
+              block of iron. Oww.";
+           }
+           if (i == 13)
+              "^The golem staggers you with a punch that sends you \
+              reeling! That felt quite painful.";
+           if (i == 20)  
+             "^The golem tries to flatten you, and you evade just in time!";
+           "^The golem tries to step on you, and you dodge.";
+        ],
+        before [;
+          Cast:
+            if (the_spell_was == bekdab_spell) {
+               remove self;
+               remove referee;
+               give Flathead_field ~general;
+               give coach general;
+               move trophy to coach;
+               Achieved(12);
+"The golem suddenly develops many unsightly patches of rust. \
+Mortified, the golem calls for his oil trainer, but to no \
+avail! It soon falls apart into several rusty metal pieces!^^\
+The ref calls out ~The winner!~ and holds your hand aloft. \
+The crowd is on its feet! They'd probably be chanting your \
+name, if they knew it.^^\
+Several dwarves appear and drag off the rusty metal plates. \
+The ref explains that the prize money and a championship \
+trophy will be awarded in the \
+locker room, and exits.";
+            }
+        ],
+        life [ i ;
+          Attack:
+            i = random(20);
+            if (i > 10) {
+               iron_golem.number = iron_golem.number - 1;
+               if (iron_golem.number <= 0) {
+               remove self;
+               remove referee;
+               give Flathead_field ~general;
+               give coach general;
+               move trophy to coach;
+               Achieved(12);
+"With a thundering blow, you smash the golem into \
+ball-bearings.^^\
+The ref calls out ~The winner!~ and holds your hand aloft. \
+The crowd is on its feet! They'd probably be chanting your \
+name, if they knew it.^^\
+Several dwarves appear and collect the ball-bearings. \
+The ref explains that the trophy will be awarded in the \
+locker room, and exits.";
+               }
+               else {
+                 print "Solid blow! You make a small dent.";
+                 if (iron_golem.number > 10)
+                    ". It didn't seem to slow him down, though.";
+                 else ".";
+               }
+            }
+            "You swing, but miss.";
+        ],      
+   has animate;
+
+! (Three important NPCs)
+
+Object Morgan "Morgan the Ranger" Delbins
+   with name "ranger" "warrior" "Morgan" "captain" "maiden",
+        number 1,
+        initial [;
+             if (self in Delbins)
+                "There's a warrior-maiden sitting at the bar, her \
+eyes riveted to the glass of ale.";
+             else 
+             "Morgan the Ranger is here.";
+        ],
+        description "She's nearly twice your height, and \
+probably twice your strength too. She's armed and armored in \
+typical military Ranger gear. She gives you the impression of \
+being the type who'd hunt dragons as a hobby -- assuming there were \
+any dragons left to hunt, of course.",
+        each_turn [;
+           if ((self in Ravine_pass) && (Morgan.number == 1)) {
+              Morgan.number = 2;
+              "^The Ranger sees you approach and recognizes you. \
+              ~Well met again, Priest. I have need of your \
+        assistance to end the kobold border war that has been going \
+        on far too long.~ She pauses. ~To the \
+        west and east are two of my lieutenants and their \
+        soldiers, cut off from the rest of us by previous kobold \
+        raids. I have the power to end this war and call a truce, \
+        but to do so, I need \
+        to inform both of my lieutenants to \
+        stop fighting via \
+        windcat message carriers.~ She points to the two windcats \
+        in the wicker cage and the pile of colored flags. \
+        ~The 'red' flags indicate 'attack', the \
+        'blue', truce. When my lieutenants receive the instructions, \
+        they will verify my commands by sending additional messengers \
+        with 'attack' or 'truce' instructions to each other. \
+        Based on the two \
+        received messages, each lieutenant will act accordingly.~ \
+        She slaps you on the back, jolting you to attention. \
+        ~Herein lies my problem, Priest. I know for a fact, that \
+        one of my lieutenants is a traitor, who will \
+        disobey my orders. Any instruction I send to the traitor, \
+        the opposite will be sent by the traitor to my remaining \
+        good lieutenant. The traitor will also take the two orders \
+        he receives and do the opposite, if there is a majority, or \
+        attack outright, if there are messages of 'truce' and 'attack'. \
+        Thankfully, my good lieutenant will faithfully copy my \
+        instructions to the other lieutenant, and will follow orders \
+        received, if there is a majority, or follow a 'truce' if \
+        there are mixed messages. My greatest problem, Priest, is that \
+        I do not know which lieutenant is the traitor! If you \
+        can bring peace once and for all to Southern Egreth, many \
+        will remember your good deeds.~";
+         } 
+        ],
+        life [;
+            Answer:
+               if (special_word == 'hello') {
+                  print "~Hello";
+                  if (Morgan.number == 2)
+                     print " again";
+                  ", priest.~";
+               }
+            Attack, ThrowAt:
+               "She's well-armed and probably dangerous.";
+            Give, Show:
+               "A gracious gesture, perhaps, but she isn't \
+interested.";
+            Kiss:
+               "She nearly splits your skull with the flat of \
+a huge broadsword before you even get close. ~For a man of \
+the cloth, you've got a lot of nerve,~ she says.";
+            Ask:
+               if (((second == 'cat') || (second=='cats') ||
+                    (second == 'windcat') || (second=='windcats')) &&
+                   (Morgan.number == 2))
+                "~Right, the windcats. \
+                The speckled cat will find the lieutenant to the east. \
+                The spotted cat will find the lieutenant to the west.";
+               if (second == 'frobar' or 'wizard' or 'enchanter') {
+                  print "She laughs. ~You've never heard of \
+Frobar, the dullest Enchanter? The Enchanter who was so dull \
+that his fellow wizards forgot to invite him to the last \
+great meeting? This saved him from becoming an amphibian, so \
+perhaps dullness has its virtues";
+                  if (self in Delbins)
+                     ".~ The wizard looks rather insulted. \
+~Oh hush up, Morgan.~ the wizard says.";
+                  else ".~";
+               }
+               if (second == 'thief' or 'gentleman') {
+                  print "She smiles. ~I can't say as I know \
+much about ";
+                  if (self in Delbins)
+                     "this fellow over here,~ she says and \
+gives the gentleman a whack on the back that nearly knocks his \
+teeth out. ~But I hear he's something of a thief.~ ~Nothing \
+of the sort!~ the gentleman protests.";
+                  else 
+                     "that thief fellow. I've been told \
+he has a hideout somewhere, nearly impossible to find.~";
+               }
+               if (second=='kobold' or 'war')
+"~The war wages on, priest, even though the battle was lost \
+long ago, and there were no winners, kobold or man.~";
+               if (second=='dragon' or 'dragons')
+"Morgan becomes momentarily thoughtful. ~Some of the best \
+dragon-hunting I ever did was up in Frostham long ago. \
+Those white frost dragons are quite a vicious lot. Best not \
+to wake a sleeping white dragon unless you have a weapon handy \
+and know how to use it!~";
+            else "~Sorry, I'm not sure about that.~";
+            default: "Morgan the Ranger appears to be \
+thinking important thoughts at the moment.";
+        ],
+        before [;
+            Cast:
+               "~What's that you're mumbling there priest?~";
+        ],
+   has animate female proper;
+
+Object  Frobar "Frobar" Delbins
+ with   name "Frobar" "wizard" "sorcerer" "enchanter",
+        initial [;
+           if (self in Delbins)
+           "There's an old wizard sitting at the bar, his \
+eyes riveted to the glass of ale.";
+           else "Frobar the Enchanter is here.";
+        ],
+        description "A wizardly old figure of a man.",
+        life [;
+         Attack, ThrowAt:
+         "You make a threatening move. The wizard practically yawns! \
+~Just what the world needs, another violent Priest.~ You stop, \
+somewhat embarrassed.";
+         Answer:
+            if (special_word=='hello')
+               "The wizard nods. ~Hello, hello, and all that rubbish.~";
+         Ask:
+            if (self in Delbins)
+               "The wizard is somewhat occupied at the moment.";
+            else {
+               if (second=='magic' or 'mystic') {
+                  print "Frobar scowls. ~Magic? We've seen the last \
+of magic, let me tell you. Does anyone remember what it did \
+for us? Does anyone mention the Enchanters that saved Quendor \
+from certain ruin many a time? Of course not. A bunch of \
+ingrates";
+if (term_paper notin self)
+". I just hope they're teaching the kids at Tech what magic \
+was all about, before we got all this 'new science' stuff everyone's \
+blabbering about.~";                     
+else ".~";
+               }
+               if (second=='golem' or 'golems')
+"Frobar sighs. ~Golems used to be useful, you know. But now, \
+without magic to control them, they go off and get into all \
+sorts of mischief.~";               
+               if (second == 'thief' or 'gentleman') 
+                  "~Some fellow I've had some dealings with \
+in the past. Not a bad chap, but he does like to \
+supplement his income, if you know what I mean. Far \
+too risky a profession for my taste.~";
+               if (second == 'morgan' or 'ranger' or 'warrior')
+                  "~Morgan Grueslayer, top military Ranger \
+in her graduating class, I hear. If she asks you to join \
+her on one of her campaigns, just walk away. All that \
+fighting -- too stressful if you ask me.~";
+               if (second == 'barsap' or 'snaboz')
+!"~I don't even want to talk about it.~";
+"~Don't even get me started.~";
+            }
+         Show:
+            if (self in Delbins)
+               "The wizard is somewhat occupied at the moment.";
+            if (noun == Ench_mag) {
+               move Ench_mag to Frobar;
+               "Frobar snatches the magazine out of your hands. \
+               ~What are you doing with my mail?~ he says, irritated.";
+               }
+            if (noun has is_scroll) 
+               "~A magic scroll, eh? Doesn't do me a lot of good \
+these days.~";
+            if ((noun has is_rod) || (noun has is_sphere)) {
+               print "Frobar looks at ", (the) noun;
+               " for a moment. ~Something \
+more than meets the eye here. Couldn't tell you what, though.~";  
+               } 
+            if (noun==wood_book)
+               "~So, you're a carpenter too?~ Frobar says, somewhat \
+               sarcasticly.";
+            if ((noun==term_paper) && (glossy_scroll in self))
+            {
+               FrobarGetsPaper();
+            }            
+            "~Hmm. Not very interesting.~";                
+
+         Give:
+            if ((noun==term_paper) && (glossy_scroll in self))
+            {
+               if (self notin Delbins)
+               FrobarGetsPaper();
+               else "The wizard pushes your offering aside. \
+~I'm somewhat busy at the moment,~ he says, his eyes glued to \
+the glass of ale.";
+            }            
+            if (noun == Ench_mag) {
+               move Ench_mag to Frobar;
+               "Frobar grabs the magazine. \
+               ~What are you doing with my mail?~ he says, irritated.";
+               }
+            "~No, thank you.~";
+            
+         default: "~I'm rather busy at the moment.~";
+        ],
+        each_turn [ i ;
+            ! Handle Frobar's actions here...ALWAYS CHECK PARENT AND LOCATION
+            
+            if ((self in location) && (player in FROBAR_Bed)) {
+               print "Frobar seems annoyed. ~Get out of my bed!~ he says, \
+               and drags you to your feet. ";
+               <<Exit>>;
+            }
+                         
+            ! Misc housekeeping actions...
+            if (random(3) < 3) {
+            if ((frobar_plant in parent(self)) && (self in location)) 
+                print "^Frobar tends to the plant.^";
+            if (FROBAR_Bed in parent(self) && self in location) 
+                print "^Frobar arranges some quilts on the bed.^";            
+            if (FROBAR_shelves in parent(self) && self in location) 
+                print "^Frobar pulls a book off the shelves, glances through it, and puts it back.^";
+            if (parent(self) == FROBAR_Lounge && self in location) 
+                print "^Frobar dusts the furniture a bit.^";
+            }
+            
+           ! Random self mutterings...
+           i = random(5); 
+           if (self in location && self notin Delbins) {
+              switch(i) {
+              1 : "^Frobar mutters to himself, ~They didn't even invite \
+           me to the Last Enchanter's Guild Meeting.~";
+              2 : "^Frobar mutters to himself, ~Good old dependable Frobar. Bah!~";
+              3 : if (Ench_mag in self)
+                  "^Frobar leafs through a magazine he holds. ~What happened to \
+                  Barsap? Hah! Did they ask me? No, of course not.~";
+                  else
+                  "^Frobar checks his pockets. ~What did I do with this \
+                  month's 'Enchanter Monthly'?~ he muses outloud.";
+              default: rtrue;
+              }
+           }
+        ],
+        daemon [ i j k Mdest Mdir;
+            ! This daemon will only deal with NPC movement...
+            ! (no doors either)
+            if (random(3) ~= 1) rfalse;  ! doesn't always immed. move
+            
+            ! Count the available exits quickly
+            objectloop(i in Compass)
+                if (ZRegion(parent(self).(i.door_dir)) == 1)
+                    k ++;
+            if (k == 0) rtrue;  ! no exits...
+            
+            ! Pick a place to move to.
+            ! In Frobar's case, most of the time he only has one exit.
+            ! Also, we can block the sw exit of home here.
+            if (parent(self) == FROBAR_Foyer) {
+               Mdir = n_obj;
+               Mdest = FROBAR_Parlor;
+               MovePrintNPC(Frobar,Mdest,Mdir);                 
+               rtrue;
+            }   
+                        
+            ! Pick an exit at random and attempt to travel that way
+            j = random(k); k = 0;
+            objectloop(i in Compass) {
+                if (ZRegion(parent(self).(i.door_dir)) == 1) {
+                    k ++;
+                    if (k == j) {              
+                        Mdir = i;          
+                        Mdest = parent(self).(i.door_dir);
+                        MovePrintNPC(Frobar,Mdest,Mdir);  
+                        rtrue;                      
+                    }
+                }
+            }
+        ],
+  has animate proper;
+
+[ FrobarGetsPaper ;
+    Achieved(24);
+    move term_paper to self;
+    move glossy_scroll to player;
+    "Frobar glances over the term paper and his eyes widen. \
+~Wilbur -- why, that's my great nephew!~ He takes the paper and \
+reads. ~So true, so true,~ he mumbles and smiles. ~A fine boy, \
+perhaps he'll become a great man someday, if he stops skipping class. \
+He reminds me of my days at Tech -- all filled with dreams and hopes.~ \
+He pauses, and searches his pockets. ~I even perfected a spell, did \
+you know? Good old loyal, boring Frobar perfected a spell, and, \
+if it hadn't been for that Snaboz show-off who had to go and perfect the \
+izyuk spell, I might have even tried to publish mine.~ He finds a \
+scroll amongst his robes and hands it to you. ~You don't believe me? Here, \
+see for yourself.~";            
+];
+
+Object Thief "thief" Delbins
+   with name "thief" "character" "gentleman",
+        number 1,
+        initial [;
+            if (self in Delbins)
+               "There's a gentleman dressed in black sitting at the \
+bar, his eyes riveted to the glass of ale.";
+        ],
+        description "A lean crafty-looking individual, dressed mostly \
+in black. He seems a bit too scruffy to be a nobleman, but also \
+a bit too distinguished to be a common thug. Probably a thief, I'd \
+guess.",
+        life [;
+         Attack, ThrowAt:
+         "You make a threatening move, but the thief seems to \
+move twice as fast! You find yourself looking at the sharp end \
+of a stiletto. ~I'm too much of a gentleman to harm a Priest,~ \
+the thief says, ~so don't force me to make an exception.~";
+         Answer:
+           if (special_word == 'hello')
+              "The gentleman gives a sharp nod in your direction.";
+         Ask:
+           if (second == 'magistrate')
+"The thief gives you a knowing nod. ~The Aragain magistrate? \
+A honorless cur, if I ever saw one.~";
+           if (second == 'painting')
+"The thief shrugs. ~I hear there's a nice new painting on \
+exhibit at the royal museum. You might want to check it out.~";
+           if (second == 'lock' or 'locks')
+"The thief shrugs. ~Do I look like a locksmith?~";
+
+         Give:
+           if (noun has is_coin || noun==trophy) {
+              move noun to Thief;
+              "Confused, the thief pockets your offering. \
+~Quite generous of you, sir.~ he says.";
+           } 
+
+          default: "The gentleman glances at you with \
+dark suspicious eyes.";
+        ],
+        before [;
+            Cast:
+               "You speak the chant perfectly, but nothing \
+seems to happen! The gentleman smiles and pats his dark cloak, \
+which seems to glow briefly with mystic energy, then fade!";
+        ],
+   has animate;
+
+Object thief_cloak "dark cloak" Thief
+   with name "dark" "cloak",
+        description "A coal-black cloak, which blends into \
+the surrounding shadows.",
+before [;
+            Cast:
+               "You speak the chant perfectly, but nothing \
+seems to happen! The gentleman smiles and pats his dark cloak, \
+which seems to glow briefly with mystic energy, then fade!";
+        ],
+has clothing;        
+
+Object Delbin "Delbin" Delbins
+   with name "Delbin" "bartender" "owner",
+        number 1,
+        initial "Delbin himself is standing behind the bar.",
+        description "Delbin is a stout bald fellow with laughing eyes and \
+a heavy beard. He somehow seems both young and old at the same \
+time.",
+        each_turn [ ;
+           if (random(20) == 1)
+              "^Delbin cleans some glasses behind the bar.";
+        ],
+        react_after [;
+           Take:
+              if (noun == headdress)
+                "~You're welcome to that unsightly thing, sir. \
+Been trying to get rid of it for sometime.~";
+              if (noun == rag)
+                "Delbin give you a curious look, \
+but says nothing.";
+        ],
+        life  
+        [ i ;
+           Attack, Kiss, ThrowAt:  "Leave good old Delbin alone.";
+           Answer:
+              if (special_word == 'hello')
+                 "~Welcome to Delbin's, good sir.~";
+           Give:
+              if (noun has is_coin) {
+                 print "Delbin refuses your offering. \
+~Keep your change, sir. If you're looking for a good tip, \
+I can tell you what I hear.~^^";
+                 <<Ask Delbin 'rumor'>>;
+              }
+              if (noun == rag) {
+move rag to bar;
+"Delbin takes the rag and cleans a spot on the bar, leaving \
+it in a familiar place.";
+              }
+              "Delbin politely refuses.";
+           Show:
+              if (noun == headdress)
+"~There's a good story behind that ugly thing. Maybe if you \
+keep reminding me, I'll remember it.~";
+           print "~A nice ", (name) noun;
+           " you've got yourself there.~";
+           Ask:
+              if (second == 'ale' or 'situation') {
+                 if (Morgan in Delbins) 
+                    "~Quite a situation we've got sir. Those three at \
+the front of the bar all ordered a glass of Special Borphee Ale. Well, \
+with the shutdown of the Brewers Guild in Borphee since the Great \
+Change, I can't keep that particular beverage in stock, but I've got \
+that one left there. Seems none of them's leaving until they decide \
+who gets the ale -- and let me tell you, those three are folks who \
+don't like to be disappointed!~";
+                 "Delbin smiles. ~All out of ale sir. But I suppose \
+ye already knew that?~";
+              }
+              if (second == 'rod')
+                 "Delbin shrugs. ~Sounds vaguely familiar sir, \
+maybe I heard a rumor about it once. Can't really say, though.~";
+              if (second == 'headdress')
+"~There's a good story behind that ugly thing. Maybe if you \
+keep reminding me, I'll remember it.~";
+              if (second == 'rag')
+"~Not much more than a rag, sir.~";
+              if (second == 'minirva')
+                 "~I think that's the name of some old \
+Antharian Sea Goddess. Like a patron saint to sailors, in \
+the old days.~";
+              if (second == 'morgan' or 'warrior' or 'ranger')
+                 "~Morgan Grueslayer's a skilled ranger.~";
+              if (second == 'frobar' or 'wizard' or 'enchanter')
+                 "~Frobar's probably one of the last \
+enchanters around. He's a regular here.~";
+              if (second == 'thief' or 'gentleman')
+                 "~Don't really know that fellow's name. \
+He tips well, though.~";
+              if (second == 'rumor' or 'rumors' or 'story') {
+                 i = random(7);
+                 print "Delbin scratches his ear and says, \
+~Yes, now, what did I hear...~^^";
+                 if (i==1)
+                    "~People tell me this new Flathead king is \
+a fake, plain and simple. Hasn't stopped people from trying to \
+get on his good side, though. Now, I haven't seen the fellow \
+myself, but if you ask me, somebody somewhere is up to no good.~";
+                 if (i==2)
+                    "~They say the kobold war up north is gonna \
+end real soon. I'll believe that when it happens.~";
+                 if (i==3) {
+                    print "~Oh, this one's a good one.";
+                    if (headdress in Delbins)
+                       print " You see that headdress over there? \
+Well, this explorer fellow left it here, along with quite a story. \
+He";
+else print " Some explorer fellow";
+" claimed he found some lost ancient city in the Miznia \
+jungles. Said he made a map to the place, but lost it when bargaining \
+for his life with some jungle natives. I just nodded and let \
+the poor man talk.~";
+                 }
+                 if (i==4)
+                    "~This crazy-looking old fellow stops in \
+the other day. Said that he was a professor, at GUE Tech, but \
+that he was giving that all up! Something about his \
+research going bad, on something he called 'an ethereal gate'. \
+What all of that means, I can't say.~";
+                 if (i==5)
+                    "~Say, you sorta remind me of this other Priest \
+fellow who stopped by here a long long time ago. Delbin \
+never forgets, you know? This fellow, who didn't give a name, \
+told me he was on an important \
+quest for something called -- now what was it -- 'The \
+Rod of the Ancients', or something like that. That \
+mean anything to you?~";
+                 if (i==6) {
+                    print "~An artist friend of mine tells me that \
+this new Leonardo Flathead painting they've recently discovered \
+on display at the Royal Museum has a special secret. They \
+say that Leonardo painted over something else under the canvas, but no one's \
+saying what. They're keeping a watchful eye on it too, just \
+in case curiosity gets the better of some folk. In fact, \
+I hear they've already had a few people trying to steal the \
+thing";
+   if (Thief in Delbins)
+      "!~ The thief suddenly starts to cough, and controls himself.";
+   else "!~";
+                 }
+             ! Add further rumors here...
+                 "Delbin shrugs. ~Guess I'm getting old, \
+nothing comes to mind at the moment. Maybe if you \
+give me a moment, I'll think of something.~";
+              }
+        ],
+        before [;
+           Cast:
+if (the_spell_was == foblub_spell)
+   "You relate a fine sermon to Delbin about spirits -- \
+both the liquid kind and the not-so-liquid kind. Were \
+Delbin sitting rather than standing behind the bar, \
+he might even be glued to his seat by now. ~A fine \
+speech there, reverend.~";
+if (the_spell_was == espnis_spell)
+   "You relate a dull sermon to Delbin about the various \
+types of wood casks used in brewing Mithicus beer. \
+Delbin, being a bartender, is a good listener, and \
+manages to stay awake.";
+        ],
+   has animate proper;
+
+! ****************
+! spells/scrolls
+! ****************
+
+Object musty_scroll "musty scroll" telescope
+  class scroll_class,
+  with name "musty",
+;
+
+Object fiznav_spell "make boat sea-worthy" musty_scroll
+  class spell_class,
+  with name "fiznav",
+       magic [;
+          if (second has animate)
+             "Your chant goes unanswered. It's not intended for \
+              living creatures.";
+          else 
+             "Your chant goes unanswered. It's intended for boats apparently.";
+       ],
+;
+
+Object pale_scroll "pale scroll" 
+  class scroll_class,
+  with name "pale",
+;
+
+Object shazok_spell "call lightning from storm" pale_scroll
+  class spell_class,
+  with name "shazok",
+       magic [;
+             if (second==0 && location==GURTH_Forest) {
+                <<Cast shazok_spell storm1>>;
+             }
+             "Your chant goes unanswered. You need a genuine \
+natural storm, I suppose.";
+       ],
+;
+
+Object glossy_scroll "glossy scroll" Frobar
+   class scroll_class,
+   with name "glossy"
+;
+
+Object feeyuk_spell "allow creature to resist gravity" glossy_scroll
+   class spell_class
+   with name "feeyuk",
+        magic [;
+           if ((second == 0) || (second hasnt animate))
+              "The chant backfires, and your feet feel numb!";
+           if (second == player) {
+              has_resist_gravity = 1;
+              StartTimer(self,75);
+              "You speak the chant in clear tones. Initially, you \
+feel no different. And then, strangely, your back feels better \
+than it has in years, and your step seems lighter!";
+           }
+           CDefArt(second);
+           " is no doubt thankful for the power to resist gravity.";
+        ],
+        time_left 0,
+        time_out [;
+            has_resist_gravity = 0;
+            "You feet feel heavy again."; 
+        ],
+; 
+
+! **********
+! Misc objects
+! **********
+
+Object trophy "trophy"
+   with name "trophy",
+        description "A lovely gold and platinum grail-like trophy that looks \
+          very antique. The letter ~D~ is inscribed on the side. \
+          You notice three odd bumps on the bottom of the circular base.",
+        !weight 20,
+        size 8,
+!        capacity 1,
+!        before [;
+!           Receive:
+!              if (noun hasnt is_sphere)
+!                 "That doesn't seem to fit.";
+!              ! else fancy light tricks
+!        ],
+   has scored;
+! container open transparent;
+
+Object win_bag "bag"
+   with name "bag",
+        description "A small cloth bag.",
+        capacity 50,
+        !weight 10,
+        size 15, 
+   has container open;
+
+Object c20 "coin" win_bag class coin_class;
+Object c21 "coin" win_bag class coin_class;
+Object c22 "coin" win_bag class coin_class;
+Object c23 "coin" win_bag class coin_class;
+Object c24 "coin" win_bag class coin_class;
+Object c25 "coin" win_bag class coin_class;
+Object c26 "coin" win_bag class coin_class;
+Object c27 "coin" win_bag class coin_class;
+Object c28 "coin" win_bag class coin_class;
+Object c29 "coin" win_bag class coin_class;
+!Object c30 "coin" win_bag class coin_class;
+
+   

@@ -1,0 +1,892 @@
+! *******************************************************************
+! MIZNIA -- add-on for SPIRITWRAK
+! *******************************************************************
+
+
+Object MIZNIA_GUSStop "Mizniaport"
+   with description "The Great Change certainly hasn't changed the \
+ultra-swank city of Mizniaport. The entire place is filled with \
+splashy color and a disturbing sense of moderness. There's a \
+stairway down here, while side walkways head west and \
+northeast.",
+        name "color" "moderness" "stairway" "walkway" "walkways",
+        d_to MIZNIA_GUSStation,
+        w_to MIZNIA_Park,
+        ne_to FROBAR_Ent,
+    has light;
+    
+Object MIZNIA_Park "Miznia Suburbs"
+   with description "Overly cozy-looking homes sprout up all over \
+the place here. Ridiculously \
+well-trimmed front lawns remind you that you're still in Miznia. \
+A nice pebble path heads east and west. You see the entrance to \
+a swank-looking boutique to the south.",
+        name "homes" "lawns" "pebble" "path",
+        e_to MIZNIA_GUSStop,
+        w_to MIZNIA_Outskirts,
+        s_to MIZNIA_Boutique,
+        in_to MIZNIA_Boutique,
+   has light;
+
+Object MIZNIA_Boutique "Swank Boutique"
+   with description "A ultra-swank accessory store, filled with \
+flashy items for the fashion-unconscious shopper. \
+An exit lies north.",
+        name "items" "accessory",
+        out_to MIZNIA_Park,
+        n_to MIZNIA_Park,
+   has light;
+
+Object boutique_sign "small sign" MIZNIA_Boutique
+   with description "The sign reads ~PLEASE RING BELL FOR SERVICE~",
+        name "small" "sign",
+   has static;
+   
+Object MIZNIA_Outskirts "City Limits"
+   with description "The city stops here abruptly. The Miznia jungle \
+makes its presence known for real here, forming a natural barrier. A \
+path leads east, while an almost overgrown path leads into the jungle \
+to the southwest.",
+        name "path" "jungle" "barrier",
+        e_to MIZNIA_Park,
+        sw_to Jungle_Edge,
+   has light;
+  
+Object c8 "coin" MIZNIA_Boutique class coin_class;
+
+Object Jungle_Edge "Edge of Jungle"
+   with description "Wild birds and wilder vegetation distract you from \
+a faint trail through the jungle here. The path leads northeast and \
+southwest.",
+        name "birds" "vegetation" "trail",
+        ne_to MIZNIA_Outskirts,
+        sw_to Deep_Jungle,
+   has light;
+
+Object Deep_Jungle "Deep Jungle"
+   with description "You're in very deep jungle, just on the verge of \
+getting lost. Your surroundings are green and untamed. A path \
+leads northeast, while a muddy path heads south.",
+        name "mud" "path",
+        ne_to Jungle_Edge,
+        s_to Swamp,
+   has light;
+
+Object Swamp "Swamp"
+   with description [;
+          print "You're knee-deep in a murky swamp. Huge swamp grasses \
+wall you in";
+          if (self has general)
+             print ", except for a section to the west";
+          ". Drier land is north or south.";
+        ],
+        name "swamp" "land",
+        n_to Deep_Jungle,
+        s_to Jungle_Clearing,
+        w_to [;
+           if (self hasnt general)
+              "You can't go that way.";
+           else return Jungle_Ruins;
+        ],
+   has light;
+
+Nearby grasses "grasses"
+   with name "grass" "grasses",
+        description "Tall, thick swampgrass.",
+        before [;
+           Push, Pull, Cut, Attack:
+               "The grass is extremely hardy.";
+           Search:
+               if ((Jungle_Map notin player))
+                  "You hunt around in the grasses for a while and find nothing.";
+               else {
+                  give Swamp general;
+                  Achieved(21);
+                  "You check the jungle map. Sure enough, there's a loose \
+patch of grass that you could duck under to the west.";
+               }
+           Cast:
+               if (the_spell_was == throck_spell)
+                  "Grasses don't grow much more than this.";
+        ],
+   has scenery;
+
+
+Object Jungle_Clearing "Jungle Clearing"
+   with description "The Jungle clears out a bit here, so you can actually \
+see patches of sky and walk ten paces without running into a tree. There's \
+a path into the jungle undergrowth to the north. \
+You notice a group of jungle natives gathered here.",
+        name "sky" "path",
+        number 1,
+        n_to Swamp,
+        each_turn [ ;
+           if (Jungle_Clearing.number == 2) {
+              move Shaman to Jungle_Clearing;
+              Jungle_Clearing.number = 5;
+              "^A single native tribesman breaks away from the group and \
+approaches you.";
+           }
+           if (Jungle_Clearing.number == 1)
+              Jungle_Clearing.number = 2; 
+        ],
+   has light;
+
+Nearby natives "natives"
+   with name "natives" "group",
+        description "A group of jungle natives in elaborate feather and \
+        fur clothing. They appear to be armed with large spears.",
+        life [;
+default:  "The group of natives looks at you with distrusting stares.";
+        ],
+        before [;
+Cast: 
+   if (the_spell_was == espnis_spell or foblub_spell)
+"They can't understand your language, thus the meaning of \
+the sermon is lost on them.";
+        ],
+   has animate concealed;
+   
+        
+        
+Object Jungle_Ruins "Hidden Ruins"
+   with description "Hidden here in some extremely deep jungle \
+        are the ruins of some ancient civilization. Broken sandstone \
+        structures are nearly covered with jungle vines and mosses. \
+        There is a partially intact structure to the north. \
+        It seems to be a short pyramid-like building, with a single \
+        dark entrance hidden amongst vines. Definitely a find to \
+        write the Monastery about, or at least your local \
+        Archeology Guild.",
+        name "sandstone" "structures" "structure" "vines" 
+"pyramid" "entrance" "mosses",
+        e_to Swamp,
+        n_to TEMPLE_Ent,
+   has light;
+   
+! (The ancient temple, unlit, of course)
+Object TEMPLE_Ent "Pyramid Entrance"
+   with description "A damp, dark, unmarked stone room. You can hear \
+        the sounds of the jungle from the exit to the south. There \
+        are dark passages north and east.",
+        s_to Jungle_Ruins,
+        e_to TEMPLE_Statue_room,
+        n_to TEMPLE_Trap,
+        before [;
+           Listen: "You hear noises of the jungle from the south.";
+        ],
+;
+  
+Object TEMPLE_Statue_room "Statue Room"
+   with description "A tiny dark chamber, with a passage west.",
+        w_to TEMPLE_Ent,
+;
+
+Nearby TEMPLE_Statue "large statue"
+   with name "statue",
+        description "A stone statue of some ancient \
+        warrior, probably intended to frighten off visitors.",
+        before [;        
+           ! manual dealing with PushDir (only 3 possible locs anyway)
+           PushDir:
+              if (self has general)
+                 "The statue is stuck fast and doesn't budge.";
+              if ((self in TEMPLE_Statue_room) && (second == w_obj)) {
+               print "^There's a grinding noise as you push the statue west.^";
+               AllowPushDir(); rtrue;
+              }
+              if ((self in TEMPLE_Ent) && (second == s_obj))
+                 "^The statue doesn't appear to fit through the \
+                 entranceway.";
+              if ((self in TEMPLE_Ent) && 
+                  ((second == n_obj) || (second == e_obj))) {
+                 print "^There's a grinding noise as you push the statue.^";
+                 AllowPushDir(); rtrue;
+              }
+              if ((self in TEMPLE_Trap) && (second == s_obj)) {
+               print "^There's a grinding noise as you push the statue south.^";
+                 AllowPushDir(); rtrue;
+              }
+              if ((self in TEMPLE_Trap) && (second == n_obj)) {
+                 give self general;
+                 move rollers to TEMPLE_Trap;
+                 "You start to push the statue north, and hear a strange \
+                 click. Suddenly, two enormous stone rolling pins slide \
+                 down from the east and west sides of the room! \
+                 Desperately, you topple the statue and hide behind it. \
+                 You hear a huge crash!^^\
+                 You open your eyes, surprised to find yourself not \
+                 squashed into pancake. The statue has wedged itself \
+                 neatly between the two giant rollers, effectively \
+                 blocking them!";
+              }
+              "You can't push the statue that way.";
+            Take:
+              "The statue rocks back and forth a bit, but is \
+far too heavy to take.";
+            Push:
+              print "The statue ";
+              if (self hasnt general)
+              "rocks back and forth a bit.";
+              else "seems to be stuck.";
+           ],                 
+   has static;
+   
+Object TEMPLE_Trap "Strange Chamber"
+   with description "This is an odd long hallway running north and south. \
+The stone floor is noticeably concave, sloping upwards to \
+the east and west. It's like being in a long stone \
+channel.",
+        name "slope" "channel",
+        s_to TEMPLE_Ent,
+        e_to "The floor gets too steep, and you slide back down.",
+        w_to "The floor gets too steep, and you slide back down.",        
+        n_to [;
+           if (TEMPLE_Statue hasnt general) {
+              deadflag = 1;
+              "You head north, and hear a strange click. Suddenly, \
+              two huge stone rolling pins roll down from the east \
+              and west sides of the room! Desperately, you try to \
+              escape, but the hall is too long, and the stone \
+              rollers too fast. You are crushed to jelly.";
+           }
+           else {
+              print "You step over and around the jammed rollers and \
+              the statue and head north.^";
+              return TEMPLE_1;
+           }
+        ],
+;
+
+Object rollers "stone rollers"
+   with name "roller" "rollers" "stone",
+        initial "There are two stone rollers pinned against the statue.",
+        description "Massive stone rolling pins.",
+        before [;
+Push, Pull, Attack, Turn, Shake, Squeeze:
+"The rollers are huge and stuck fast.";
+        ],
+   has static;
+   
+Object TEMPLE_1 "Bare Chamber"
+   with description "You are in a bare stone chamber with passages leading \
+north, east, south and west. A stone ladder also heads upwards through a \
+dark hole in the ceiling.",
+       name "ladder" "hole",
+       s_to TEMPLE_Trap,
+       n_to TEMPLE_1N,
+       e_to TEMPLE_1E,
+       w_to TEMPLE_1W,
+       u_to TEMPLE_2,
+;       
+        
+Object TEMPLE_1W "Small Chamber"
+   with description "You're in a small bare chamber. On one of the walls, \
+   you notice an engraving, almost worn away with age. It seems to be a \
+   picture of a jungle village, and you recognize the pyramid you are currently in. \
+   An exit lies east.",
+      e_to TEMPLE_1,
+;
+
+Object TEMPLE_1N "Small Chamber"
+   with description "You're in a rather bare chamber. On one of the walls, \
+   you see a worn engraving depicting a group of robed figures standing in \
+   some chamber. They are carrying several long reeds. An exit lies south.",
+        s_to TEMPLE_1,
+;
+
+Object TEMPLE_1E "Small Chamber"
+   with description "You're in a small stone chamber. In the center of the \
+   floor is a strange funnel-like depression, which starts as a large \
+   circular opening, and narrows into a very small tunnel below, \
+   probably no wider than your hand. You also see a small round hole \
+   in the ceiling above. An exit heads west.",
+      w_to TEMPLE_1,
+      d_to "You'd never fit down that opening.",
+      u_to "You can't reach the hole, and besides, you'd never fit through \
+it if you could.",
+;
+
+Object TEMPLE_1_HOLEU "hole" TEMPLE_1E
+   with name "hole",
+        description "You see a dark small hole in the center of the \
+ceiling.",
+        before [;
+Rub, Push, Pull, Touch, Receive, LetGo, Search:
+"The hole is far above your head.";
+        ],
+   has scenery;
+
+Object TEMPLE_1_Opening "opening" TEMPLE_1E
+   with name "opening" "funnel" "depression" "tunnel",
+        description "A smooth funnel in the stone in the floor, that descends \
+        into darkness as it narrows.",
+        describe [ x;
+           print "^The opening ";
+           if (children(self) == 0)
+              "appears to be empty.";
+           else {
+         print "contains:^";
+         x = children(self);
+         x = FULLINV_BIT + INDENT_BIT + NEWLINE_BIT + RECURSE_BIT;
+         WriteListFrom (child(self), x, 1); 
+         rtrue;
+           }
+        ],
+        before [;
+           Receive:
+             if (noun ~= TEMPLE_Artifact)  {
+                print "That doesn't quite fit -- ";
+                if (noun.size > TEMPLE_Artifact.size)
+                   "the funnel becomes too narrow too quickly.";
+                else "strangely...";
+             }
+           LetGo:
+              "You stick your hand down the small hole, but it must be \
+              quite deep, and you can't quite reach.";
+         ],
+         capacity 1,
+         size 10,
+   has static container open;
+   
+Object TEMPLE_2 "Bare Chamber"
+   with description "You are in a bare stone chamber with passages leading \
+north, east, south and west. A stone ladder leads upwards and downwards \
+into dark holes.",
+       name "ladder" "hole",
+       s_to TEMPLE_2S,
+       n_to TEMPLE_2N,
+       e_to TEMPLE_2E,
+       w_to TEMPLE_2W,
+       u_to TEMPLE_3,
+       d_to TEMPLE_1,
+;   
+
+Object TEMPLE_2N "Small Chamber"
+  with description "You're in a small bare chamber. Engravings on the \
+  wall show several robed figures in a low domed chamber. Some of \
+  the figures are pushing what appears to be reeds down a small hole \
+  in the ground, while others stand by and seem to be praying or \
+  engaged in some ceremony. In a separate scene, similar robed \
+  figures can be seen throwing some poor bound individual off the \
+  top of the pyramid, apparently in some sort of ritualistic \
+  sacrifice. An exit heads south.",
+     s_to TEMPLE_2,
+;
+
+Object TEMPLE_2W "Small Chamber"
+   with description "You're in a small bare chamber. Engravings on \
+   the wall depict several robed figures in a room mostly filled \
+   with water. The figures are watching reeds that seem to fall \
+   from the sky and land in the water. Several reeds are floating \
+   towards an apparent drain in the water, where a few reeds that are thin \
+   enough fall through with the flow of the water. An exit lies east.",
+      e_to TEMPLE_2,
+;
+
+Object TEMPLE_2S "Small Chamber"
+   with description "You're in a rather small chamber. Engravings on \
+   the walls depict several robed figures in a strange room with a \
+   circular depression in the ground, filled with water. Water also \
+   flows into the pool in a thin stream from some undrawn source above. \
+   With the stream of water, a few reeds appear to be falling. A single \
+   figure is collecting the reeds as they fall and placing them in \
+   a long thin vase or container. The significance of \
+   this is uncertain. An exit lies north.",
+      n_to TEMPLE_2,
+;
+
+Object TEMPLE_engravings "engravings"
+   with name "engravings" "engraving",
+        description [; <Look>; ],
+        found_in TEMPLE_1W TEMPLE_1N TEMPLE_2N TEMPLE_2W TEMPLE_2S,
+   has scenery;
+
+Object TEMPLE_2E "Small Chamber"
+   with description [;
+   print "You're in a bare stone chamber which is partially \
+filled with a sunken pool of dirty blackish water. Near the south wall \
+is a depression in the floor that was probably a drain for the pool, given the \
+apparent water stains; however the level of the pool is below \
+the point where it would overflow into the drain. Near the center \
+of the ceiling is a small round hole, right above the pool. An \
+exit lies west";
+   if ((self hasnt general) && (TEMPLE_3 hasnt general) &&
+        (amulet has worn)) {
+      give self general;
+      ".^^Your amulet suddenly gives off a bright purple flash!";
+   }
+   else ".";
+   ],
+   name "stains",
+   before [;
+      Fill:
+"The blackish water seems like something you really don't want.";
+   ],  
+   w_to TEMPLE_2,
+;  
+   
+Object TEMPLE_2_HOLEU "hole" TEMPLE_2E
+   with name "hole",
+        description "You see a dark small hole in the center of the \
+ceiling.",
+        before [;
+Rub, Push, Pull, Touch, Receive, LetGo, Search:
+"The hole is far above your head.";
+        ],
+   has scenery;
+
+Object TEMPLE_2_Opening "opening" TEMPLE_2E
+   with name "opening" "drain" "depression",
+        description "A smooth drain opening in the stone in the floor, \
+        that descends into darkness.",
+        before [;
+           Receive:
+             if ((noun ~= TEMPLE_Artifact) && (noun hasnt is_rod)) ! TODO ADD?
+              "Oddly, that doesn't fit through the small round drain.";
+             else {
+                if (children(TEMPLE_1_Opening) == 0) 
+                   move noun to TEMPLE_1_Opening;
+                if (TEMPLE_Artifact in TEMPLE_1_Opening &&
+                    children(TEMPLE_Artifact) == 0)
+                   move noun to TEMPLE_Artifact;
+                else move noun to TEMPLE_1E;  
+                CDefArt(noun); " drops into the drain and disappears \
+                out of sight. Moments later you hear a thump from \
+                somewhere below.";
+             }
+         ],
+         capacity 1,
+         size 10,
+   has scenery container open;
+
+Object TEMPLE_Pool "pool" TEMPLE_2E
+   with name "pool" "water",
+        describe [;
+print "^The black pool is disturbingly calm";
+if (umbrella in self)
+   ". Floating on the surface is a black open umbrella.";
+else ".";
+        ],
+        description [;
+           print "Murky black water that seems disturbingly calm";
+           if (umbrella notin self)
+           ".";
+           else
+           ". Floating on the surface is a black open umbrella.";
+           ],
+        before [;
+           Cast:
+              if (the_spell_was == frotz_spell)
+                 "There's a strange gurgling noise as you finish the \
+                 chant, and the black water starts to glow! But, \
+                 to your horror, the inky water seems to absorb the \
+                 light and return to its original blackness! The \
+                 chant fails.";
+                 
+          Enter:
+             deadflag = 1;
+             "You notice the water seems unusually cold as you enter \
+             the pool. Without warning, something grabs your legs and \
+             pulls you under! In pitch black liquid that seems to \
+             absorb all light, you can't defend yourself, or even \
+             see your adversary, who devours you shortly.";
+          Search:
+             "You can't see a thing, the water is blacker than night.";
+          Receive:
+             if (noun == toy_volcano) {
+                remove noun;
+                "You drop the toy volcano into the black pool and \
+watch it sink. Moments later, a large large bubble rises, and \
+pops at the surface, followed by a strange, belch-like noise!";
+             }
+             if ((noun ~= umbrella) || (umbrella hasnt open)) {
+             remove noun;
+             CDefArt(noun); 
+print " falls into the pool and slowly sinks into the black water. \
+Suddenly, ", (the) noun, " seems to get pulled into the pool, \
+and is soon gone! Something dwells in that pool, apparently, \
+hidden well in a cover of"; " blackness!";
+             }
+             else {
+                move umbrella to TEMPLE_Pool;
+                give umbrella ~light;  ! a 'special-effect'?
+                "The open umbrella sits in the pool, floating on the \
+                surface like a cloth dome.";
+             }                      
+        ],
+        size 25,
+   has static container open;
+
+               
+Object TEMPLE_3 "Collapsed Chamber"
+   with description [;
+   print "You are in a stone chamber that has broken and \
+   eroded walls in several places. Broken stones and dirt are everywhere. \
+   It appears there was once an open archway east, however the heavy stones \
+   that framed it have collapsed. A tiny hole remains, \
+   but it would be an exceptionally tight squeeze. \
+   A stone ladder leads downwards into a dark hole";
+   if ((self hasnt general) && (TEMPLE_2E hasnt general) &&
+       (amulet has worn)) {
+      give self general;
+      ".^^Your amulet suddenly gives off a bright purple flash!";
+   }
+   else ".";
+   ],
+   name "stones" "dirt" "archway" "ladder" "hole",
+       e_to [;
+          if (children(player) ~= 0)
+             "You try to squeeze through the hole, to \
+             no avail. You're carrying too much to fit.";
+          else return TEMPLE_3E;
+       ],
+       d_to TEMPLE_2,
+;
+
+Object TEMPLE_3E "Low Chamber"
+   with description "You're in a tiny low room, dimly lit by strange \
+   glowing lichens and mosses. A tiny exit lies west between some \
+   collapsed rock -- it looks like a very tight squeeze. The room is \
+   otherwise filled with broken rock and the like. A tiny round hole \
+   is in the very center of the floor.",
+   name "lichens" "mosses" "rock",
+   w_to [;
+      if (children(player) ~= 0)
+             "You try to squeeze through the hole, to \
+             no avail. You're carrying too much to fit.";
+          else return TEMPLE_3;
+       ],
+   d_to "You can barely fit your hand in the hole.",
+has light;
+              
+Nearby TEMPLE_3_Opening "opening"
+   with name "opening" "hole" "tiny" "round",
+        description "A smooth round hole in the stone in the floor \
+        that descends into darkness.",
+        before [;
+           Receive:
+             if (noun hasnt is_rod)  
+                "Oddly, that doesn't quite fit.";
+             else {
+                print "The rod slips through with ease. \
+Moments later you";
+                if (umbrella notin TEMPLE_Pool) {
+                   remove noun;  
+                   " hear a splash from somewhere below.";
+                }
+                else {
+                if (children(TEMPLE_1_Opening) == 0) 
+                   move noun to TEMPLE_1_Opening;
+                else {
+                if (TEMPLE_Artifact in TEMPLE_1_Opening &&
+                    children(TEMPLE_Artifact) == 0) 
+                   move noun to TEMPLE_Artifact;
+                else move noun to TEMPLE_1E;  
+                Achieved(22);
+                }
+                !   if (TEMPLE_Artifact notin TEMPLE_1_Opening)
+                !      move noun to TEMPLE_1_Opening;
+                !   else 
+                !      move noun to TEMPLE_Artifact;
+                   " hear a thump from below, followed by a rattling noise, \
+                   and finally another thump, much fainter.";
+                }
+             }
+         ],
+         capacity 1,
+         size 10,
+   has scenery container open;
+
+
+! (Super Zmart) (REMOVED)
+
+Object stuffed_toy "stuffed toy" MIZNIA_Park
+   with name "toy" "stuffed" "alligator",
+        initial "A stuffed toy has been left unattended on someone's lawn.",
+        description "A cute little stuffed toy alligator.",
+        !weight 5,
+        size 15,
+;
+
+
+   
+Object FROBAR_Ent "In Front of Swank House"
+   with description "You're in front of a rather swank looking house to the \
+        northeast. To the southwest is the rest of Mizniaport.",
+        name "house",
+        sw_to MIZNIA_GUSStop,
+        ne_to [;
+           if (Frobar in Delbins)
+              "You walk up to the front door, only to find it locked.";
+           else return FROBAR_Foyer;
+        ],
+        in_to [;
+           if (Frobar in Delbins)
+              "You walk up to the front door, only to find it locked.";
+           else return FROBAR_Foyer;
+        ],
+   has light;
+   
+Nearby Frobar_mailbox "mailbox"
+   with name "mailbox" "box",
+        description "A mailbox stands in front of the house. The letter \
+        ~F~ is on one side.",
+        capacity 5,
+        size 15,
+        ! block a receive here?
+   has static container openable;
+   
+Object Ench_mag "copy of ~Enchanter Monthly~" Frobar_mailbox
+   with name "magazine" "monthly" "enchanter" "copy",
+        description "~Enchanter Monthly~ has been somewhat lacking in \
+        quality content these days (The absence of magic probably \
+        being a large factor behind this). For filler, the editors have \
+        been turning in mostly tabloid drivel articles about ~What ever \
+        happened to so-and-so?~. This month's cover story \
+        suggests that Barsap the magician was actually turned into a tortoise \
+        during the Great Cataclysm, and underwent a slow mutation into a \
+        newt.",
+        !weight 5, 
+        size 15,
+;
+              
+
+
+
+! **********
+! critters/people
+! **********
+
+Object Shaman "jungle shaman"
+   with name "shaman" "tribesman" "native",
+        description [;
+print "A jungle native with a rather elaborate costume \
+        make of bird feathers and animal hides. He seems old, but wise";
+if (self hasnt general) 
+        ". Unlike the rest of the natives, this one is not wearing a \
+        fancy feather-and-fur headdress.";
+else ".";
+        ],        
+        life [;
+           Order:
+              if ((action==##Give) && (noun==Jungle_Map) && (Jungle_Map in self))
+                 "You try to convey your desire for the map with \
+                 gestures. The shaman seems to understand. He \
+                 points to the map, then you. Then, he raises his \
+                 hand in a 'stop' gesture. Then, he points to his \
+                 bare head.";
+              "The shaman does not seem to understand.";
+           Give:
+              if (noun==headdress) {
+                 move Jungle_Map to player;
+                 move headdress to Shaman;
+                 give self general;
+                 "The shaman takes the headdress and places it on his \
+                 head. He smiles, and gives you a strange map in return.";
+              }
+              "The shaman smiles and shakes his head.";
+           Attack, ThrowAt:
+              deadflag = 1;
+              "As you make a threatening move, several of the natives \
+              step forward and pierce your body with stout spears. \
+              It appears they've had bad dealings with outsiders \
+              before.";
+           Show: 
+            if (noun == headdress)
+               "The shaman nods and points to the headdress, then \
+               himself.";
+             "The shaman says something in a language you've never \
+             heard before.";             
+           default: "You can't seem to communicate with him; their \
+           language is completely foreign to you.";           
+        ],
+        before [;
+           Cast:
+              if (the_spell_was == foblub_spell or espnis_spell)
+                 "You begin the sermon, but the shaman and natives \
+                 seem very puzzled by your speech, and clearly \
+                 can't understand a word you're saying. The chant \
+                 fails.";
+        ],
+   has animate;  ! transparent?
+   
+Object Jungle_Map "jungle map" Shaman
+   with name "map" "jungle",
+        description [;
+        print "The map is somewhat crudely drawn:^^";
+        font off;
+        spaces 23; print "xxxx^";
+        spaces 23; print "xxxx^";
+        spaces 23; print "XXXX^";
+        spaces 22; print "/^";
+        spaces 18; print "XXXX^";
+        spaces 18; print "XXXX^";
+        spaces 18; print "XXXX^";
+        spaces 20; print "I^";
+        spaces 18; print "oooo^";
+        spaces 12; print "<#>---oooo^";
+        spaces 18; print "oooo^";
+        spaces 20; print "I^";
+        spaces 18; print "XXXX^";
+        spaces 18; print "XXXX^";
+        spaces 18; print "XXXX^";
+        font on;
+        ],
+         ! weight 10, 
+        size 10,
+;
+
+Object earth_spirit "earth spirit" TEMPLE_3 ! TEMPLE_3E
+  with name "spirit",
+       description "It looks like a large moving mass of mud and earth, \
+                  in a somewhat man-like shape.",
+       each_turn [ i ;
+       ! spirit attack
+       ! (in general, the 4 spirits are _very_ dangerous.
+       ! There's a 1/5 chance of killing outright, and 2
+       ! chances of doing 10 and 5 points of damage respectively.
+       ! In short, the player needs to realize it's time to swanko,
+       ! and do so, quickly)
+       if (self hasnt general) {
+          give self general ~concealed;    
+          "^Some of the dirt and mud in one corner stirs! A form \
+          made of mud and earth suddenly rises to attack!";
+       }
+       i = random(5);
+       if (i == 1) {
+          deadflag = 1;
+          "^The earth creature moves quickly, and blinds you with \
+          a spray of dirt! You clear your eyes, only to see the \
+          brown mass move forward and bury you! You struggle, but \
+          suffocate in short time.";
+       }
+       if (i == 2) 
+          Player_HP_CUR = Player_HP_CUR - 10;
+       if (i==3) 
+          Player_HP_CUR = Player_HP_CUR - 5;
+       if (Player_HP_CUR <= 0) {
+          deadflag = 1;
+          "^The last blow from the earth spirit was too much for \
+          you, I'm afraid to say. The spirit slowly sludges \
+          towards you for the final blow...";
+       } 
+       print "^The earth spirit ";
+       if (i==2)
+          "clubs you with a heavy pseudopod \
+          made of animated soil and rock. Ouch!";
+       if (i==3) {
+          print "throws some loose soil and sand in \
+          your face! The attack knocks you back, and \
+          you fall into the chamber below!";
+          PlayerTo(TEMPLE_2);
+          rtrue;          
+       }
+       "sends a spray of sharp rocks \
+       your way, and you just dodge in time!";
+       ],
+       before [;
+          Cast:
+            if (the_spell_was == swanko_spell) {
+               remove self;
+               "As you speak the chant, the earth spirit falls back \
+               in fear! You finish the chant, and the earth spirit \
+               collapses into a heap of dirt and mud, banished!";
+            }
+            print "The creature makes a banshee-howl as you chant.^"; 
+       ],
+       life [ ;
+          Attack: 
+            print "You ";
+            if (random(20) >= 8)
+            "strike the earth creature, but your attack passes \
+            harmlessly through it! You hear a strange noise from \
+            the creature -- akin to mad laughter from someone \
+            trapped underground in a coffin.";
+            "attack the earth spirit, but miss!";
+          default: "It's too busy trying to kill you.";
+       ],
+   has animate concealed;   
+        
+! **********
+! spells/scrolls
+! **********
+
+! TODO (Dan, why is this declared _here_?)
+Object white_scroll "white scroll" 
+  class scroll_class,
+  with name "white",
+;
+
+Object huncho_spell "send object to higher plane" white_scroll
+  class spell_class,
+  with name "huncho",
+       magic [;
+          if (second == 0)
+"You see a brief flash of light, but nothing happens.";
+          if (second == player) {
+             print "You finish the chant";
+!             if ((location == ATRII_8) && (ATRII_8 hasnt general) &&
+! (white_rod_piece in player) && (black_rod_piece in player) &&
+! (smoke_rod_piece in player) && (gray_rod_piece in player)) {
+             if ((location == ATRII_8) && (ATRII_8 hasnt general)) {
+               give ATRII_8 general;
+               spell_block = 1;
+               print " and notice the \
+white streaks of light above widen, as though a rift was \
+being torn in the sky! You feel a force pulling you \
+upwards, into the unknown!^";
+               StartTimer(Imp_Liv,10);
+               PlayerTo(Imp_Liv);
+               rtrue;
+             }
+             else 
+                ", and see a short-lived flash
+of light above, but nothing else.";
+          }
+          if (second has animate) {
+             "You feel a slight rumbling overhead, but nothing else \
+happens.";
+          }
+          else {
+             if ((second hasnt static) && (second hasnt scenery) &&
+                 (in_atrii == 0)) {
+                if (second has clothing) give second ~worn;
+                move second to ATRII_8;
+                print "There is a flash of light, and "; DefArt(second); 
+                " suddenly vanishes!";
+             }
+             "Your chant goes unanswered.";
+          }
+      ],
+;
+
+Object muddy_scroll "muddy scroll" Deep_Jungle
+  class scroll_class,
+  with name "muddy",
+       initial "Partially buried in the mud is a scroll.",
+;
+
+Object throck_spell "grow plant" muddy_scroll
+  class spell_class,
+  with name "throck",
+       magic [;
+             "Your chant goes unanswered. It's intended for plants only.";
+       ],
+;
+
+! **********
+! misc objs
+! **********
+
+
+! 'earth' rod piece -- BLACK
+Object black_rod_piece "black rod piece" TEMPLE_3E
+  class rod_class,
+  with name "black",
+       initial "In the center of the room is a short black rod.",
+       description "It's a short section of a rod made of some \
+undeterminable hard substance, \
+colored an inky black. A piece of the Rod of \
+the Ancients, I'd warrant!",
+;

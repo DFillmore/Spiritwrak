@@ -1,0 +1,1162 @@
+
+! **************************************************************
+! frostham.inf
+! ------------
+! Frostham locations in SPIRITWRAK, included in spirit.inf
+! (Do not compile and/or use separately!)
+! **************************************************************
+
+Object FROSTHAM_Outskirts "Frostham Outskirts"
+   with description [;
+           print  "You are at the northern outskirts of Frostham. \
+The city proper is to the south. A few \
+snow covered residences are nearby. \
+A trail leads into a valley to the north";
+           if (self hasnt general) {
+              give self general;
+ ".^^The last time you saw Frostham was before you \
+entered the Monastery -- many years ago at least. \
+Oddly, it seemed bigger and less desolate then.";
+           }
+           else ".";
+        ],
+        name "city" "snow" "residences" "trail" "valley",
+        n_to Valley_trail,
+        s_to FROSTHAM_2,
+        cant_go "You walk around the local area a bit, finding \  
+                 nothing of interest.",
+   has light;
+
+Object FROSTHAM_2 "Frostham"
+   with description "You are in Frostham City, the famous winter-\
+lover's haven. The once booming ski vacation spot seems \
+to be a bit more run-down than in times past. \
+The city thins out towards the north, while \
+another section of town is to the south. To the west is \
+a large wood structure. To the southwest is a small \
+building. To the southeast is another small building, possibly a \
+store.",
+        name "wood" "structure" "building" "store",
+        n_to FROSTHAM_Outskirts,
+        w_to FROSTHAM_Resort,
+        sw_to FROSTHAM_Governer1,
+        s_to FROSTHAM_GUSStop,
+        se_to FROSTHAM_Store,
+        cant_go "You walk around the local streets a bit, finding \  
+                 nothing of interest.",
+        each_turn [ i ;
+           if (GROC_hall1 has general)
+              i = CheckHall();
+! Why check the grocery hallway here?  
+! Conceptually, if the player dies in the hallway (rather
+! difficult, but possible by swearing, for example),
+! the hallway should 'adjust' itself to the new weight.
+! I simply check this here, because the player must go
+! this way to reach the hallway for a second time.
+        ],
+   has light;
+
+Object FROSTHAM_Store "General Store"
+   with description [; 
+print "This appears to be a small grocery store, \
+strangely abandoned at the moment. Shelves line the walls, \
+although, since no one is minding \
+the store, the current stock seems to be a bit depleted. \
+You notice an exit south marked ~EMPLOYEES ONLY~ that \
+appears to lead to ";
+if (GROC_hall1.number == 1)
+print "some hallway.";
+else
+print "a dark hole.";
+" The way back out is to the northwest.";
+],
+        name "stock" "shelves",
+        nw_to FROSTHAM_2,
+        s_to [;
+if (GROC_hall1.number == 1) return GROC_hall1;
+else 
+   "You pull back before falling into what appears to be a deep \
+pit of some sort beyond the south exit."; 
+],
+   after [ i ;
+      Go:
+         if (noun == n_obj) {
+            i = CheckHall();
+            if (i == 1)
+               print "You hear a grinding noise from behind \
+you.^";
+         }
+   ],
+   has light;   
+
+Class Barrel_class
+   with name "crate",
+        before [;
+           Take, Pull, Turn: "It's rather heavy.";
+           Push:  "It's heavy, but you manage to make it slide \
+along the floor a bit.";
+           PushDir:
+if (location == FROSTHAM_Store && second == nw_obj)
+   "A portion of the door seal blocks the crate from going outside.";
+if (location == GROC_hall1 && second == s_obj) {
+   print "^You give the crate a good shove.^";
+   move self to GROC_hall2;
+   <<Go s_obj>>;
+}
+if (location == GROC_hall1 && second == n_obj) {
+   print "^You give the crate a good shove.^";
+   move self to FROSTHAM_Store;
+   <<Go n_obj>>;
+}
+if (location == GROC_hall2 && second == n_obj) {
+   print "^You give the crate a good shove.^";
+   move self to GROC_hall1;
+   <<Go n_obj>>;
+}
+if (location == FROSTHAM_Store && second == s_obj && GROC_hall1.number == 1) {
+   print "^You give the crate a good shove.^";
+   move self to GROC_hall1;
+   <<Go s_obj>>;
+}
+! (we do our own version to allow the CheckHall() to
+! work properly)
+AllowPushDir(); rtrue;
+        ],   
+   has static;
+
+Object BARREL1 "dusty crate" FROSTHAM_Store
+   class Barrel_class,
+   with name "dusty",
+        description "A dust-covered crate.",
+;
+Object BARREL2 "moldy crate" FROSTHAM_Store
+   class Barrel_class,
+   with name "moldy",
+        description "A mold-covered crate.",
+;
+Object BARREL3 "filthy crate" FROSTHAM_Store
+   class Barrel_class,
+   with name "filthy",
+        description "A filth-covered crate.",
+;
+
+Object GROC_hall1 "North end of Hallway"
+   with name "end" "hallway",
+        number 1,
+        description [;
+          print "You're at the north end of a short N-S hall. \
+The hallway";
+ switch (GROC_hall1.number) {
+ 1: print " slopes sharply upwards to the south. \
+You notice two dark doorways above you along the northern wall, \
+one above the other, \
+but no obvious means of getting to them";
+ 2: print " travels evenly to the south. \
+You notice a dark doorway above you along the northern wall, \
+but no obvious means of getting to it";
+ 3: print " slopes sharply downwards to the south";
+ }
+ ". To the north is an exit."; 
+],
+   each_turn [;
+      if (self hasnt general) {
+         give self general;
+         "^The hallway suddenly creaks underfoot! The floor \
+shakes briefly and dust seems to rise from cracks near the \
+walls. Apparently, your unexpected presence has jarred \
+some old mechanisms back to life!";
+      }
+   ],
+   n_to [;
+switch (GROC_hall1.number) {
+   1: return FROSTHAM_Store;
+   2: return GROC_stockroom;
+   3: return GROC_attic;
+}
+   ], 
+   after [ i ;
+      Go:
+         if (noun == n_obj or s_obj) {
+            i = CheckHall();
+            if (i == 2)
+print "^You hear a low grinding noise. \
+The hallway underfoot suddenly shifts and drops!^";
+         }
+   ],
+   s_to GROC_hall2,
+   before [;
+      Jump:  "You jump for a bit. The floor feels strangely \
+unsteady.";
+   ],
+   has light;
+
+
+Object GROC_hall2 "South end of Hallway"
+   with name "end" "hallway",
+        number 3,
+        description [;
+          print "You're at the south end of a short N-S hall \
+that seems to lead nowhere. The hallway";
+ switch (GROC_hall2.number) {
+ 1: "  slopes sharply upwards to the north.";
+ 2: "  travels evenly to the north.";
+ 3: "  slopes sharply downwards to the north.";
+ }
+ ],
+   after [ i ;
+      Go:
+         if (noun == s_obj) {
+            i = CheckHall();
+            if (i == 1)
+print "^You hear a low grinding noise. \
+The hallway underfoot suddenly shifts and drops!^";
+         }
+   ],
+   before [;
+      Jump:  "You jump for a bit. The floor feels strangely \
+unsteady.";
+   ],
+   n_to GROC_hall1,
+   has light;
+
+! (Routine for checking 'weights' of two sides of hallway)
+! (assumes called from room's _after_ routine, thus all
+! barrels and players are in their after_turn places)
+! RETURNS: 0 if no change
+!          1 if NORTH END now higher than before
+!          2 if NORTH END now lower than before
+[ CheckHall
+    i ! local total of weight points for north end
+    j ! local total of weight points for south end
+    k ! local -- orig setting of north end (.number)
+    ;
+  i = 0;  j = 0;
+  k = GROC_hall1.number;
+  if (player in GROC_hall1) 
+     i = i + 2;
+  if (player in GROC_hall2) 
+     j = j + 2;
+  if (BARREL1 in GROC_hall1) i = i + 1;
+  if (BARREL1 in GROC_hall2) j = j + 1;
+  if (BARREL2 in GROC_hall1) i = i + 1;
+  if (BARREL2 in GROC_hall2) j = j + 1;
+  if (BARREL3 in GROC_hall1) i = i + 1;
+  if (BARREL3 in GROC_hall2) j = j + 1;
+  if (i == j) {
+     GROC_hall1.number = 2;
+     GROC_hall2.number = 2;
+  }
+  if (i > j) {
+     GROC_hall1.number = 1;
+     GROC_hall2.number = 3;
+  }
+  if (i < j) {
+     GROC_hall1.number = 3;
+     GROC_hall2.number = 1;
+  }
+  if (GROC_hall1.number == k)
+     return 0;
+  if (GROC_hall1.number > k)
+     return 1;
+  if (GROC_hall1.number < k)
+     return 2;
+];  
+
+
+Object GROC_stockroom "Stockroom" 
+    with description [; 
+print "This is a tiny poorly lit room, that \
+is covered in dust. An exit south leads to a"; 
+if (GROC_hall1.number == 2) print " short hallway"; 
+else print " dark hole"; 
+if (GROC_attic has general) 
+   print ". Above, a hole has been exposed in the ceiling structure"; 
+"."; 
+     ],  
+      name "dust", 
+      u_to [; if (GROC_attic hasnt general)
+"You can't go that way.";
+           else return GROC_attic;
+        ],
+        s_to [;
+if (GROC_hall1.number == 2) return GROC_hall1;
+else 
+   "You pull back before falling into what appears to be a deep \
+pit of some sort beyond the south exit."; 
+        ],
+   after [ i ;
+      Go:
+         if (noun == n_obj) {
+            i = CheckHall();
+            if (i == 2 or 1)
+               print "You hear a low grinding noise behind you.^";
+         }
+   ],
+        has light;
+
+Object GROC_attic "Attic"
+   with description [;
+print "This is an exceptionally cramped attic, obviously \
+unused for some time. The floorboards are starting to crack.";
+if (self has general)
+   print " One section of the floor is particularly poor, and has \
+a gaping hole leading downwards into darkness.";
+" An exit heads south.";
+        ],       
+        name "sag" "crack" "hole",
+        d_to [;
+           if (GROC_attic hasnt general)
+"You can't go that way.";
+           else return GROC_stockroom;
+        ],
+        s_to [;
+if (GROC_hall1.number == 3) return GROC_hall1;
+else 
+   "You pull back at the edge of the exit. The floor, it \
+appears, is too far below you!";
+        ],
+   after [ i ;
+      Go:
+         if (noun == n_obj) {
+            i = CheckHall();
+            if (i == 2)
+               print "You hear a low grinding noise behind you.^";
+         }
+   ],
+        has light;
+
+Object attic_floorboards "floorboards" GROC_attic
+   with name "boards" "floorboards",
+        description [;
+print "Some badly rotting floorboards";
+if (GROC_attic has general)
+   " with a noticeable hole in one section.";
+else {
+   if (self has general)
+      " with a noticeable sag in one section.";
+   else ".";
+}
+        ],
+   before [;
+     Take: "They're nailed into the floor.";
+     Push, Pull, Attack, Shake:
+if (self has general)
+   "The floor shakes a bit, but nothing else happens.";
+else {
+   move loose_board to GROC_stockroom;
+   give self general;
+   "The floor shakes under your abuse, and suddenly, a \
+portion in the middle sags considerably! But nothing else \
+happens.";
+}
+   ],     
+   has scenery;
+
+Object loose_board "loose board"
+   with name "loose" "board",
+        initial "You notice a loose board, partially \
+broken, hanging from the ceiling structure.",
+        description "A portion of the ceiling boards \
+has apparently broken loose.",
+        before [;
+           Pull, Attack, Shake:
+give GROC_attic general;
+remove self;
+"You give the board a good couple of yanks. The board \
+soon breaks off, taking a small portion of the ceiling \
+with it! After the dust settles, you notice the rather \
+poor remodeling job you've done to the ceiling.";
+        ], 
+has static;
+
+
+! (the coffee was moved to the cafe in Borphee)
+Object decaf_coffee_can "can of decaf coffee" 
+   with name "can" "coffee" "decaf",
+        description "The can reads: ~Frobozz coffee crystals~^^\
+                    ~Rich, mountain-grown flavor.~^^DECAFFEINATED.",
+        before [;
+           Open:
+            "You'd need a good can-opener for that.";
+        ],
+        size 15,
+;
+   
+Object icebox_key "square key" GROC_attic
+   with name "key" "square",
+   size 5,
+;   
+   
+   
+Object icebox "icebox" GROC_stockroom
+   with name "icebox" "box",
+        description "A rather old-looking icebox.",
+        capacity 10,
+        size 20,
+        with_key icebox_key,
+        when_closed "A dust-covered icebox stands closed against \
+the northern wall.",
+        when_open [ x;
+         print "The icebox is open. ";
+         x = children(self);
+         if (x == 0) "It is also empty.";
+         print "Inside ";
+         if (x == 1) print "is: "; else print "are: ^";
+         x = FULLINV_BIT + INDENT_BIT + NEWLINE_BIT + RECURSE_BIT;
+         WriteListFrom (child(self), x, 1); 
+         rtrue;
+       ],
+   has static container openable lockable locked;
+
+Object cerealbox1 "blue cereal box" icebox
+   with name "box" "blue" "Crunchies",
+        description "A blue paper box with lettering that reads:^^\
+                    ~Grueslayer Crunchies!^^\
+                    (It's not just for adventurers anymore!)^^\
+                    [Free bonus scroll surprise inside!]~^^\
+                    Writing on the box reads ~50zm~.",
+        size 10, capacity 5,
+        before [;
+           Receive:
+              if (noun == cerealbox2 or cerealbox3) {
+                 "That doesn't quite fit.";
+              }
+           Cast:
+              if (the_spell_was == zemdor_spell) {
+                 if (self hasnt general) {
+                    give self general;
+                    move cerealbox2 to parent(cerealbox1);
+                    move cerealbox3 to parent(cerealbox1);
+                    Achieved(1);
+                    "The box of cereal suddenly seems to dance with magic! \
+                    Before your very eyes, the box suddenly splits into \
+                    three boxes! The magic fades, but the boxes remain.";
+                 }
+                 else
+                    "The magic fights against the cereal box, but fails. \
+                    I guess you can only triplicate once.";
+              }
+        ],                            
+   has container openable;
+   
+Object cerealbox2 "navy-blue cereal box"
+   with name "box" "navy-blue" "Sugarglobs",
+        description "A navy-blue paper box with lettering that reads:^^\
+                    ~Frobozz Super Sugar Globs!^^\
+                    (Seventeen times the sugar of any other cereal!)^^\
+                    [Free bonus Frobozz toy inside!]~^^\
+                    Writing on the box reads ~50zm~.",
+        !weight 10,
+        size 10, capacity 5,
+        before [;
+           Receive:
+              if (noun == cerealbox1 or cerealbox3) {
+                 "That doesn't quite fit.";
+              }
+        ],        
+   has container openable;
+
+Object cerealbox3 "royal-blue cereal box"
+   with name "box" "royal-blue" "Dornflakes",
+        description "A royal-blue paper box with lettering that reads:^^\
+                    ~Dornflakes^^\
+                    (Just like Grandma Dimwit used to make!)^^\
+                    [Free bonus Frobozz toy inside!]~^^\
+                    Writing on the box reads ~50zm~.",
+        !weight 10,
+        size 10, capacity 5,
+        before [;
+           Receive:
+              if (noun == cerealbox1 or cerealbox2) {
+                 "That doesn't quite fit.";
+              }
+        ],        
+   has container openable;
+      
+! A Breakfast cereal class -- what a concept   
+Class cereal_class   
+   with name "cereal",
+        description "A quantity of overly-sweetened breakfast cereal.",
+        !weight 5,
+        size 8,
+        before [;
+           Eat:  
+              remove self;
+              "You consume the cereal. The sugar rush occurs five seconds \
+              later and ends just as quickly.";
+        ],
+   has edible;
+   
+Object cereal1 "crunchy cereal" cerealbox1
+   class cereal_class
+   with name "crunchy";      
+Object cereal2 "sugary cereal" cerealbox2
+   class cereal_class
+   with name "sugary";      
+Object cereal3 "flaky cereal" cerealbox3
+   class cereal_class
+   with name "flaky";   
+   
+Object baking_powder "packet of baking powder" icebox
+   with name "powder" "baking" "packet",
+        short_name "packet of baking powder",
+        description "A single-use packet of baking powder from \
+~Port Foozle Bakers Guild~ products.",
+        !weight 5,
+        size 5,
+        before [;
+           Eat:
+             remove self;
+             "You eat the baking powder. Yuck.";
+        ],
+   has edible;
+
+Object butter "stick of butter" icebox
+   with name "butter" "stick" "fat",
+        description "A good-sized stick of butter.",
+        !weight 5,
+        size 5,
+        before [;
+           Eat:
+             remove self;
+             print "You eat the entire stick of butter.";
+             if (random(20) < 15)
+" Your heart will no doubt thank you for that someday.";
+             deadflag = 1;
+             " The sudden \
+intake of concentrated fat is too much of a shock to your \
+system, and an important artery somewhere bursts.";
+        ],
+   has edible;
+
+Object FROSTHAM_Resort "Ski Resort"
+   with description "You are inside a large ski resort. Perhaps \
+                    it's not ski-season, as the entire place is \
+                    basically empty. Frostham city lies to the \
+                    east.",
+        name "resort" "city" "ski" "skis" "earmuff" "earmuffs",
+        e_to FROSTHAM_2,
+        out_to FROSTHAM_2,
+        w_to "You don't have a lift-ticket. Also, you don't have \
+             skis. Most importantly, however, the slopes look \
+             pretty lousy.",
+   has light;
+
+Object FROSTHAM_Governer1 "Governor's House, Waiting Room"
+   with description "You are in a waiting room in the house of the Frostham \
+                    Governor. The carpet is surprisingly plush. \
+                    The walls have been painted a rather bland \
+                    peach-like color. The furnishings \
+                    are also colored peach, which complements the \
+                    walls without being too nouveau. The way out \
+                    is to the northeast.",
+        name "carpet" "furnishings",
+        ne_to FROSTHAM_2,
+        out_to FROSTHAM_2,
+        s_to Gov_door,
+        after [;
+           Go:
+              if (noun==n_obj) {
+                 give Gov_door ~open locked;
+                 print "You hear the door slam and lock behind you.^";
+              }
+        ],
+   has light;
+
+Object Gov_couch "couch" FROSTHAM_Governer1 
+   with name "couch" "peach",
+        initial "A comfortable-looking peach-colored couch is here.",
+        description "It looks pretty comfy, but the color wouldn't \
+have been your first choice.",
+        before [;
+           Search:
+              if (self hasnt general) {
+                 give self general;
+                 move c1 to FROSTHAM_Governer1;
+                 "You rummage through the cushions and a coin falls out!";
+              }
+              "You find nothing of interest.";
+        ],
+   has static enterable supporter;
+
+Object travel_posters "travel brochure" FROSTHAM_Governer1
+   with name "brochure" "travel",
+        description "The brochure has pictures of various cheerful-looking \
+                     people in rather cheerful-looking places. \
+                     Bold lettering reads ~FEEL BETTER IN MIZNIA~, \
+                     ~IT'S ARAGAIN, AGAIN~, \
+                     and ~NEW BORPHEE, EVERYONE'S FAVORITE CITY~",
+        size 10,
+   ;
+
+Object c1 "coin" class coin_class;
+
+Object Gov_desk1 "desk" FROSTHAM_Governer1
+   with name "desk" "waiting" "room",
+        description "A fairly plain-looking desk",
+   has scenery supporter;
+
+Object Gov_ledger "ledger" Gov_desk1
+   with name "ledger",
+        description [;
+           if (receptionist in FROSTHAM_Governer1) 
+              "The receptionist seems to be using it at the moment.";
+           "The ledger reads:^^\
+           ~ -- New signed petition for presentation and coronation of \
+new King delivered to Aragain Magistrate, awaiting word of \
+event schedule.~^^That's all. I guess the governor hasn't been \
+very busy as of late.";
+        ],
+        !weight 20,
+        size 15,
+        before [;
+           Take: 
+              if (receptionist in FROSTHAM_Governer1) 
+                 "The receptionist gives you a rather menacing look.";
+        ],
+;
+
+
+Object alarm_clock "alarm clock" Gov_desk1
+   with name "clock" "alarm",
+        description [; 
+print "A small round desk-clock, with a set of bells \
+on the top, and a small pull-knob on the back. \
+Strangely, the clock seems to be stopped. Two hands, black and golden, \
+are sitting at ",alarm_clock.number," and ",
+alarm_clock_dial.number;
+        " respectively.";
+                     ],
+        article "an",
+        number 9,   ! setting of the clock hand
+        time_left 0,
+        time_out [ x ;
+           alarm_clock.number = alarm_clock.number + 1;
+           if (alarm_clock.number > 12) alarm_clock.number = 1;
+           x = TestScope(alarm_clock,player);
+           if (x==1) print "^The alarm clock suddenly makes an \
+awful grinding noise";
+           if (alarm_clock.number == alarm_clock_dial.number) {
+              ! alarm goes off
+              if (x==1) print ", followed by a ear-splitting clang!^";
+              ! certain events follow:
+              ! if receptionist still in office and self in office,
+              ! receptionist leaves (if player in office, he'll
+              ! see this, or see it outside the office)
+              if ((receptionist in FROSTHAM_Governer1) &&
+          (((self in FROSTHAM_Governer1) || (self in Gov_desk1)) ||
+           ((self in player) && (player in FROSTHAM_Governer1))) ) {
+                 remove receptionist;  ! a long lunch hour, apparently...
+                 ! give alarm_clock general;
+                 Achieved(2);
+                 if (player in FROSTHAM_Governer1) 
+                    "^The receptionist suddenly jumps from her \
+seat and rushes out of the room, screaming ~Lunchtime!~";
+                 if (player in FROSTHAM_2)
+                    "^You see a woman rush out of the building \
+to the southwest, and quickly vanish.";
+                 rtrue;
+              }
+              ! future: boutique in Miznia -- brings salesman to front
+              if (((self in MIZNIA_Boutique) || (self in player)) && 
+                   (player in MIZNIA_Boutique)) {
+                   print "^From somewhere in the back of the \
+store, a tailor rushes out and";
+                   if (MIZNIA_Boutique hasnt general) {
+                      give MIZNIA_Boutique general;
+                      move fancy_scroll to player;
+                      Achieved(23);
+" sees you. ~We've got a rather \
+busy schedule,~ he explains, ~but let me see what I can do.~  \
+He gives you a somewhat unapproving look. ~The ascetic-monk \
+look is out, you know. Here.~ He pins a rolled paper object \
+to your clothes. ~The latest craze -- wearing magic scrolls. \
+Beats using them nowadays, I hear. Now, like I said, we're \
+very busy.~ He goes off to the back of the store."; 
+                   }
+                   else 
+" recognizes you. \
+~I've done all I can for you right now,~ he explains as \
+goes off to the back of the store."; 
+              }
+              rtrue;
+           }
+           else if (x==1) "!";
+        ],
+        size 5,
+        add_to_scope alarm_clock_dial alarm_clock_bells alarm_clock_hands,
+   has transparent;
+
+Object alarm_clock_dial "knob" 
+   with name "pull" "knob",
+        description "A small, pullable knob on the back of the clock.",
+        number 12,
+        before [;
+           Push:
+              print "The knob ";
+              if (self has general) {
+                 give self ~general;
+                 "pushes in a short bit.";
+              }
+              else "is as far in as it can go.";
+           Pull:
+              print "The knob ";
+              if (self hasnt general) {
+                 give self general;
+                 "pulls out a short bit.";
+              }
+              else "is as far out as it can go.";
+           Turn:
+              if (self hasnt general) {
+                 ! wind clock
+                 StartTimer(alarm_clock,1); 
+                 "The knob turns -- barely. You \
+hear a small clicking noise as well.";
+              }
+              else {
+                 ! set alarm hand
+                 alarm_clock_dial.number = alarm_clock_dial.number + 1;
+                 if (alarm_clock_dial.number > 12)
+                    alarm_clock_dial.number = 1;
+                 print "The knob turns easily. You notice the \
+golden hand on the front sweep to ",alarm_clock_dial.number;
+                 ".";
+              }
+            !  if (alarm_clock hasnt general) {
+            !  }
+            !  "It doesn't turn anymore.  I guess the receptionist \
+            !  broke the clock (not that it was in good shape to \
+            !  begin with).";
+       ],
+   has static;
+
+Object alarm_clock_hands "hands"
+   with name "hand" "hands"
+   has static;
+
+Object alarm_clock_bells "bells"
+   with name "bell" "bells"
+   has static;
+
+Object FROSTHAM_Governer2 "Governor's Office"
+   with description "You are in a rather spacious office. The \
+carpeting is quite plush, and all the furnishings seem \
+excessively lavish.",
+        name "carpeting" "furnishings", 
+        n_to Gov_door,
+   has light;
+
+Object Gov_desk2 "desk" FROSTHAM_Governer2
+   with name "desk" "office",
+        description "A fairly impressive looking desk, made from \
+                    a massive lacquered piece of black oak wood.",
+        before [;
+          Cast:
+           if (the_spell_was == egdelp_spell)
+              "The desk is covered with a ugly waxy film. \
+The governor looks extremely annoyed and wipes the desk clean with \
+a stack of papers.";
+          Push, Pull, Rub, Attack, Search:
+              "~Do you mind?~ the governor says.";
+        ],
+   has scenery supporter;
+
+Object Gov_door "door" 
+   with name "door" "office",
+        when_closed [;
+             print "There's a closed door to the ";
+             if (self in FROSTHAM_Governer1) 
+                   "south.";
+             else "north.";
+        ],
+        when_open [;
+             print "There's an open door to the ";
+             if (self in FROSTHAM_Governer1) 
+                   "south.";
+             else "north.";
+        ],
+        description "It's just a thick door.",
+        door_dir [ ; if (location==FROSTHAM_Governer1) return s_to;
+                    return n_to;
+                 ],
+        door_to [ ; if (location==FROSTHAM_Governer1)
+                      return FROSTHAM_Governer2;
+                   return FROSTHAM_Governer1;
+                ],
+        before [ ;
+           Open:
+              if ((location==FROSTHAM_Governer1) &&
+                  (receptionist in FROSTHAM_Governer1))
+              "The receptionist puts a hand in your way and says, \
+               ~The governor is currently busy.~";
+           Close:
+              if (location==FROSTHAM_Governer2)
+                 "~Close it on your way _out_~, the governor snarls.";
+        ],
+        found_in FROSTHAM_Governer1 FROSTHAM_Governer2,
+   has static door openable lockable;
+
+Object FROSTHAM_GUSStop "Subway Entrance"
+   with description "You're near the southern end of the city. \
+                     The rest of the city lies to the north. \
+                     There's also a rather conspicuous \
+                     stairway down here.",
+        name "stairway",
+        n_to FROSTHAM_2,
+        u_to "You can't go that way.",
+        d_to FROSTHAM_GUSStation,
+        cant_go "You walk around the local streets a bit, finding \  
+                 nothing of interest.",
+   has light; 
+
+            
+! ******************************************************************
+! People/Creatures
+! ******************************************************************
+
+Object ski_instructor "ski instructor" FROSTHAM_Resort
+   with name "instructor" "dude" "skier" "guy" "tall" "lanky",
+        initial [;
+           print "A tall lanky guy is here, holding two colorful \
+skis. He seems to be ";
+           if (waxy_scroll in self)
+               "waxing them with a scroll.";
+            "concentrating greatly on waxing \
+            his skis."; 
+        ],
+        description "A tall lanky guy, like I said. He's \
+            decked out in fancy bright winter clothes.",
+        life [;
+           Attack, ThrowAt:
+              "~Dude, you must chill.~";
+           Answer, Tell:
+             if (special_word == 'hello' or 'hi')
+                "The skier gives you the 'thumbs-up' sign. \
+~Hey, dude.~";
+             else "~Uh, whatever, dude.~";
+           Show:
+             if (noun==rag)
+                "~Hey dude, can I borrow that?~";
+             "~Uh, whatever, dude.~";
+           Order:
+             if (action==##Give) {
+             if (noun=='skis')
+                "~No way, dude.~";
+             if (((noun==waxy_scroll) && (self hasnt general)) ||
+                 ((noun==rag) && (self has general)))
+                "~I'm using it, dude.~";
+             }
+             "~Dude, I have no idea what you're talking about.~";
+           Ask: 
+             if (second=='rag')
+                "~A rag makes an excellent ski-maintenance accessory, dude.~";
+             if ((second=='scroll' or 'waxy') && (self hasnt general))
+                "~Something I found at the top of a run. \
+                 Doesn't work too well, but hey, I gotta wax.~";
+             if (second=='skis') 
+                "~My rad Grayslopes Slaloms. If you don't wax 'em \
+                 every 30 seconds, they lose their speed.~";  
+             if ((second=='slopes') || (second=='slope') ||
+                 (second=='powder') || (second=='runs') ||
+                 (second=='skiing'))
+                "The skier takes you aside. ~Listen dude, \
+                between you and me, the slopes here rot. They \
+                used to be way better. But you know, I hear there \
+                are some _killer_ drops up north.~";
+             "~Dude, I have no idea what you're talking about.~";
+           Give:
+             if (noun==rag) {
+                move waxy_scroll to FROSTHAM_Resort;
+                move rag to self;
+                give self general;
+                Achieved(3);
+                "The skier gladly takes the rag and starts \
+                polishing immediately. He lets the scroll \
+                fall to the ground. ~Excellent man, thanks!~";
+             }
+             "~No thanks, dude.~";
+           default: "At the moment, the skier is too busy waxing.";
+        ],
+        each_turn [;
+            if (waxy_scroll notin self && self hasnt general) {
+                Achieved(3);
+                remove self;
+                "^~Dude, like, that scroll thing just \
+vanished! What a cosmic experience!~ On that note, \
+the skier opts to head for the slopes, and leaves to the west.";
+            }
+            if (random(20) < 5)
+               "^The skier polishes a spot on his skis.";
+        ], 
+        before [;
+           Cast:
+              if (the_spell_was == foblub_spell or espnis_spell)
+                 "A pair of fluffy earmuffs the skier is wearing \
+prevents him from hearing the full impact of your sermon.";
+        ],
+   has animate transparent;
+
+Object receptionist "receptionist" FROSTHAM_Governer1
+   with name "receptionist",
+        initial "A receptionist sits behind a desk, engrossed in \
+                the ledger.",
+        description "A gruff-looking lady who apparently is far \
+                more interested in her work than you.",
+        each_turn [;
+           if (receptionist hasnt general) {
+              give receptionist general;
+              "^Without even looking up, the receptionist says, \
+              ~The governor is busy right now.~";
+           }
+           if (random(10) == 1)
+              "^The receptionist turns a page in the ledger.";
+        ],
+        life [;
+           Answer, Order:
+              print "The receptionist";
+              if (special_word=='hello')
+                 ", without looking up, says \
+                 ~Can I help you?~.";
+              " seems to be ignoring you.";
+           Ask:
+              print "The receptionist";
+              if (second=='governor')
+                 ", without looking up, says \
+                 ~He's very busy right now.~.";
+              " shrugs.";
+           default:
+              "The receptionist seems to be ignoring you.";
+        ],   
+        react_before [;
+           Cast: 
+"The receptionist, in a rather shrill voice says, \
+~If you're gonna wait, do it quietly,~ disrupting your chant.";
+           Blow:
+if (noun==whistle)
+"You make an unusually high-pitched noise. The receptionist, \
+in a rather shrill voice says, \
+~If you're gonna wait, do it quietly.~";
+           Sneeze:
+"~If you want to spread germs, do it outside.~";
+           Yell:
+"~If you're gonna wait, do it quietly.~";
+           Sing:
+"~We're not holding auditions, you know.~";
+        ],
+   has animate female;
+
+Object governor "governor" FROSTHAM_Governer2
+   with name "governor" "gov",
+        initial "The governor of Frostham is sitting behind a \
+                 desk here, trying to look busy.",
+        description "A sour-looking man who tries his best not \
+                 to notice you.",
+        each_turn [ i ;
+           if (governor hasnt general) {
+              give governor general;
+              move c2 to player;
+              "^The governor scowls as you enter. ~What do you want?~ \
+               he says, and doesn't wait for a response. ~Oh, I know. \
+               More complaints about the snow, I suppose? Well \
+               look, I didn't ask for this job. Do you want it? I \
+               didn't think so.~ He shoves something into your hand. \
+               ~Here, buy yourself a cup of coffee, and stop \
+               bothering me.~";
+           }
+           i = random(4);
+           print "^The governor ";
+           if (i == 1) 
+              "thumbs through some papers.";
+           if (i==2)
+              "balances a pencil on his nose.";
+           if (i==3)
+              "scribbles something meaningless.";
+           if (i==4)
+              "looks up and notices you. ~Don't you \
+              have anything else to do?~ he says.";
+        ],
+        life [;
+           Ask:
+              if (second=='key' or 'shiny') {
+                 print "~Some key an important visitor \
+forgot while visiting. Probably useless now";
+                 if (parent(cab_key) == player)
+                    print ". You can keep it, for all I care";
+                 ".~";
+              }
+              if (second=='receptionist')
+                 "~I think she's out to lunch,~ he says, \
+with obvious annoyance.";
+              if (second=='magistrate' or 'king' or 'sydney')
+                 "He looks at you suspiciously. \
+~Never heard of him,~ he says.";
+              if (second=='ledger')
+                 "~I think my receptionist has it.~";
+              if (second=='pencil')
+                 "~Please! I'm a very busy man!~";
+              "~Sorry, that's not my problem. Now run along.~";
+           Kiss:
+              "The governor brushes you off. ~Are you \
+planning on running for office or something?~";
+           Attack, ThrowAt:
+              deadflag = 1;
+              "As you make a threatening move, the governor \
+presses some unseen switch behind his desk. Before you \
+know it, a hidden trapdoor opens in the floor and you \
+plunge to your death. A good politician is always \
+prepared, it seems...";
+           Tell:
+              "~Sure, sure. Scram, will you?~";
+           Answer, Order:
+              if (special_word=='hello')
+                 "~Yeah, sure. So what's your problem?~";
+              "The governor is busy trying to look busy.";
+           Give:
+              "Bribing a politician, eh?";
+           Show:
+              if (noun==Gov_ledger)
+                 "~Hey, return that to the receptionist!~"; 
+              "~Please! I'm a very busy man!~";
+        ],
+        react_after [;
+           Take:
+              if (noun == cab_key)
+                 "~Oh sure, just go ahead and take things \
+from my office. See if I care.~";
+        ],
+        before [;
+           Cast:
+             if (the_spell_was == foblub_spell)
+                "Actually, the governor seems pretty glued to his \
+seat already. In any event, nothing seems to happen.";
+             if (the_spell_was == espnis_spell)
+                "The governor seems to nod off, but only for \
+a second.";
+        ],
+   has animate transparent;
+
+
+! ***************
+! More objects...
+! ***************
+
+Object pencil "pencil" governor
+   with name "pencil";
+
+Object c2 "coin" class coin_class;
+
+! (cereal box prizes)
+Object whistle "whistle" cerealbox2
+   with name "whistle",
+        description "A tiny plastic whistle.",
+        !weight 1,
+        size 1,
+        before [;
+           Blow: 
+              "You make an unusually high-pitched noise.";
+        ],
+;
+! (a fancier packaged prize :)
+Object plastic_wrapper "plastic wrapper" cerealbox3
+   with name "wrapper" "plastic",
+        description "A small plastic see-through package.",
+        before [;
+           Open:
+              while (child(self)~=0) move child(self) to parent(self);
+              remove plastic_wrapper;
+              "The wrapper rips open with ease, and disintegrates, \
+              leaving the contents behind.";
+        ],
+        !weight 0,
+        size 5,
+   has container openable transparent;
+   
+Object toy_volcano "toy volcano" plastic_wrapper
+   with name "toy" "volcano",
+        description "A strange thing indeed -- a miniature \
+              ceramic toy, that has been painted and shaped \
+              in painstaking detail to look like a volcano.",
+        !weight 5,
+        size 5,
+;
+
+Object volcano_note "instruction notice" plastic_wrapper
+   with name "notice" "instruction",
+        article "an",
+        description "~Frobozz Instant Volcano~^^\
+        (parental supervision recommended)^^\
+        To use:  Just add a good quantity of water! We suggest \
+        a very large safety radius.~",
+        size 5,
+;
+        
+
+
+! ******************
+! Scrolls and spells
+! ******************
+
+Object waxy_scroll "waxy scroll" ski_instructor
+   class scroll_class,
+   with name "waxy",
+;
+
+Object egdelp_spell "create waxy build-up on wood" waxy_scroll
+   class spell_class,
+   with name "egdelp",
+        magic [;
+           if (second ~= 0 && second ~= player) {
+           CDefArt(second); " looks pretty polished as is."; }
+           else { "The chant, seeking wood to polish, fails."; }
+        ],
+;
+
+Object sugar_scroll "sugar-coated scroll" cerealbox1
+   class scroll_class,
+   with name "sugar-coated" "coated",
+;
+
+Object zemdor_spell "triplicate object" sugar_scroll
+   class spell_class,
+   with name "zemdor",
+        number 0,
+        magic [;
+           if (second == 0)
+              "The chant, seeking a locus for \
+triplication, fails.";
+           if (second has animate)
+              "The chant, not designed for living creatures, fails.";
+           if (second has is_spell)
+"This violates certain unwritten laws of magic.";
+           if (second has is_coin) {
+              ! new twist for zemdor, as sugg. by player
+              print "The coin shimmers suddenly! You blink in \
+                 disbelief as the coin seems to split \
+                 into three copies of itself! ";
+              if (self hasnt general) {
+                 give self general;
+                 move c12 to parent(second);
+                 move c13 to parent(second);
+                 "You notice there are now three coins where \
+there was once but one!";   
+              }
+              "Suddenly, a financial nymph appears! She gives \
+you a denunciatory look. ~Line 7234-6 of the Pierpont \
+tax laws clearly states that repeated unauthorized \
+triplication of monetary \
+items is strictly forbidden,~ she says, and takes the \
+the two newly created coins before disappearing.";
+           }
+           print (The) second, " shimmers suddenly! You blink in \
+                 disbelief as ", (the) second, " seems to split \
+                 into three copies of itself! ";
+                 "But, as you finish the chant, \
+                 the mystic energy seems to fade, and the copies \
+                 coalesce back into one unchanged object. The \
+chant fails.";
+        ],
+;
+
+Object c12 "coin" class coin_class;
+Object c13 "coin" class coin_class;
+
