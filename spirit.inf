@@ -3021,7 +3021,9 @@ Include "Grammar"; ! (Include grammar _after_ action defs, if we replace any)
 !  * noun "to" number   -> SpecialDial;
 Extend "examine" first
                 * scope=ReadableSpell            -> Examine;
-
+Extend "connect"
+   * noun "to" noun -> Join
+   * noun "with" noun -> Join;
 
 
 ! **** Action defs
@@ -3060,7 +3062,7 @@ Verb "fold"
    * noun       -> Fold;
 Verb "mix" "stir"
    * noun       -> Mix;
-Verb "join" "connect"
+Verb "join"
    * noun "to" noun -> Join
    * noun "with" noun -> Join;
 Verb meta "help" "hint"
