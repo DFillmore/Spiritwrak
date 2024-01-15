@@ -1,75 +1,105 @@
 ! ******************
-! Abbreviations, as produced by using '-u' option for 
-! optimal abbreviations under Inform 5.5
+! Abbreviations, as produced by using ZAbbrevMaker
+! https://github.com/heasm66/ZAbbrevMaker
 ! ******************
 ! LOG
-! -- 2/11/96 -- first created
+! -- 2/11/96 -- first created (using the '-u' option in Inform 5.5)
 ! -- 3/16/96 -- hacked by hand
+! -- 1/15/24 -- completely replaced using ZAbbrevMaker
 
-!Abbreviate ".  ";
-Abbreviate ". ";
-Abbreviate ", ";
-Abbreviate " the ";
-Abbreviate "The";
-Abbreviate "You";
-Abbreviate "ing";
-Abbreviate "'s an odd metal gate that only comes up to about your waist";
-Abbreviate "and";
-Abbreviate "On Giant White Cube";
-Abbreviate "s you";
-Abbreviate " st";
-Abbreviate " you";
-! Abbreviate " that";
-Abbreviate " that ";
-Abbreviate " to";
-Abbreviate " through";
-Abbreviate " no";
-Abbreviate " of";
-Abbreviate " do";
-Abbreviate " train";
-Abbreviate " he";
-Abbreviate " in";
-Abbreviate " li";
-Abbreviate " lo";
-Abbreviate " on";
-Abbreviate " some";
-Abbreviate "'s a";
-Abbreviate " le";
-Abbreviate " for";
-Abbreviate " ch";
-Abbreviate " mo";
-Abbreviate " ou";
-Abbreviate " thi";
-Abbreviate " see";
-Abbreviate " gr";
-Abbreviate " ma";
-Abbreviate " clo";
-Abbreviate " ro";
-! Abbreviate " en";
-Abbreviate " an";
-Abbreviate " with";
-Abbreviate " nich";
-Abbreviate " sa";
-Abbreviate "south";
-Abbreviate " flo";
-Abbreviate " la";
-Abbreviate " sh";
-Abbreviate " ne";
-Abbreviate " br";
-Abbreviate " ca";
-Abbreviate " pa";
-Abbreviate " su";
-Abbreviate " fi";
-Abbreviate " ba";
-Abbreviate " be";
-Abbreviate " from";
-Abbreviate " wal";
-Abbreviate " sp";
-Abbreviate "Brother Joseph";
-Abbreviate "the";
-Abbreviate "round";
-Abbreviate "all";
-Abbreviate " se";
-Abbreviate "you";
-Abbreviate "rang";
-Abbreviate " are";
+Abbreviate "A helpful subway worker says ~Hey pal, get outa there!~";!    12x, saved   636
+Abbreviate "You can't see any such thing."; !    16x, saved   418
+Abbreviate "On Giant White Cube";           !    27x, saved   543
+Abbreviate "^The train ";                   !    42x, saved   408
+Abbreviate " seems to ";                    !   104x, saved   820
+Abbreviate "balsa beam";                    !    46x, saved   356
+Abbreviate "There's a";                     !    71x, saved   488
+Abbreviate " Flathead";                     !    35x, saved   268
+Abbreviate "~ he says";                     !    43x, saved   332
+Abbreviate "ern niche";                     !    72x, saved   495
+Abbreviate " in the ";                      !   225x, saved  1341
+Abbreviate "strange ";                      !    72x, saved   423
+Abbreviate " of the ";                      !   290x, saved  1731
+Abbreviate " to the ";                      !   347x, saved  2073
+Abbreviate "You're ";                       !    70x, saved   411
+Abbreviate "chamber";                       !    55x, saved   266
+Abbreviate "uddenly";                       !    91x, saved   446
+Abbreviate " which";                        !    65x, saved   254
+Abbreviate "small ";                        !   120x, saved   474
+Abbreviate " just ";                        !    59x, saved   286
+Abbreviate ", but ";                        !   147x, saved   582
+Abbreviate " that ";                        !   273x, saved  1086
+Abbreviate "large ";                        !   120x, saved   474
+Abbreviate ". The ";                        !   242x, saved   962
+Abbreviate " with ";                        !   264x, saved  1050
+Abbreviate " your ";                        !   278x, saved  1106
+Abbreviate " have ";                        !   102x, saved   402
+Abbreviate "appear";                        !    96x, saved   378
+Abbreviate "short ";                        !    69x, saved   270
+Abbreviate "round";                         !   169x, saved   501
+Abbreviate " some";                         !   330x, saved   984
+Abbreviate " you ";                         !   526x, saved  1572
+Abbreviate " into";                         !   202x, saved   600
+Abbreviate " and ";                         !   697x, saved  2085
+Abbreviate "under";                         !    81x, saved   237
+Abbreviate "south";                         !   233x, saved   693
+Abbreviate " from";                         !   204x, saved   606
+Abbreviate "north";                         !   212x, saved   630
+Abbreviate " the ";                         !  1551x, saved  4647
+Abbreviate "chant";                         !   115x, saved   339
+Abbreviate "ther ";                         !   139x, saved   411
+Abbreviate " like";                         !   100x, saved   294
+Abbreviate ", and";                         !   138x, saved   408
+Abbreviate "thing";                         !   211x, saved   627
+Abbreviate "stand";                         !    96x, saved   282
+Abbreviate "exit";                          !    86x, saved   252
+Abbreviate " out";                          !   161x, saved   316
+Abbreviate "ight";                          !   258x, saved   510
+Abbreviate "are ";                          !   262x, saved   518
+Abbreviate "hat ";                          !   123x, saved   240
+Abbreviate "tion";                          !   261x, saved   516
+Abbreviate "east";                          !   198x, saved   390
+Abbreviate "n't ";                          !   171x, saved   336
+Abbreviate "ough";                          !   153x, saved   300
+Abbreviate " is ";                          !   434x, saved   862
+Abbreviate " in ";                          !   320x, saved   634
+Abbreviate " see";                          !   224x, saved   442
+Abbreviate " to ";                          !   666x, saved  1326
+Abbreviate " for";                          !   265x, saved   524
+Abbreviate "ing ";                          !   866x, saved  1726
+Abbreviate "one ";                          !   169x, saved   332
+Abbreviate "here";                          !   505x, saved  1004
+Abbreviate " He ";                          !    88x, saved   258
+Abbreviate " of ";                          !   685x, saved  1364
+Abbreviate "The ";                          !   472x, saved   938
+Abbreviate " not";                          !   181x, saved   356
+Abbreviate "You ";                          !   615x, saved  1839
+Abbreviate "his ";                          !   250x, saved   494
+Abbreviate " you";                          !   360x, saved   714
+Abbreviate "look";                          !   202x, saved   398
+Abbreviate "al ";                           !   272x, saved   269
+Abbreviate "ack";                           !   275x, saved   272
+Abbreviate "ind";                           !   269x, saved   266
+Abbreviate " a ";                           !   962x, saved   959
+Abbreviate " it";                           !   257x, saved   254
+Abbreviate "est";                           !   386x, saved   383
+Abbreviate "ing";                           !   602x, saved   599
+Abbreviate "all";                           !   442x, saved   439
+Abbreviate "ver";                           !   451x, saved   448
+Abbreviate "rea";                           !   370x, saved   367
+Abbreviate "ain";                           !   377x, saved   374
+Abbreviate ". ~";                           !   216x, saved   426
+Abbreviate " be";                           !   379x, saved   376
+Abbreviate "es ";                           !   319x, saved   316
+Abbreviate "en ";                           !   281x, saved   278
+Abbreviate "ear";                           !   352x, saved   349
+Abbreviate "ent";                           !   470x, saved   467
+Abbreviate "ly ";                           !   483x, saved   480
+Abbreviate " th";                           !   426x, saved   423
+Abbreviate "an ";                           !   296x, saved   293
+Abbreviate "ed ";                           !   507x, saved   504
+Abbreviate "ter";                           !   503x, saved   500
+Abbreviate " I";                            !   338x, saved   335
+Abbreviate "^^";                            !   172x, saved   338
+Abbreviate "A ";                            !   398x, saved   395
+Abbreviate ".~";                            !   239x, saved   236
