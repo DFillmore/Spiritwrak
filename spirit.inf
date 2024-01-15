@@ -1,3 +1,11 @@
+!% -v5~Se 
+!% $OMIT_UNUSED_ROUTINES=1 
+!% $ZCODE_LESS_DICT_DATA=1 
+!% $OMIT_SYMBOL_TABLE=1 
+!% $ZCODE_MAX_INLINE_STRING=9999 
+!% $MAX_ABBREVS=96 
+
+
 ! *****************************************************************
 ! SPIRITWRAK -- An exercise in copyright infringement :)
 ! 
@@ -30,9 +38,6 @@
 
 ! NUTRITION NOTE:  No Microsoft(tm) products were used in the 
 ! construction of this game
-
-! ** inform compile switches here **
-Switches exv5b;
 
 ! ** abbreviations
 Include "spirita.inf"; 
