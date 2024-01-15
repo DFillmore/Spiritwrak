@@ -2755,7 +2755,6 @@ Object Hades_flameball "Ball of flame" Hades_5
         deadflag = 1;
         "^Well, don't say I didn't warn you. Something horrible \
 with slavering fangs lurks up and devours you!";
-        rtrue;
      }
 ];
                     
